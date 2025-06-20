@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERVIMOTOS</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <link rel="stylesheet" href="style.css" media="screen">
+</head>
+
+<!--  BOTONES DEL INICIO  -->
+
+<body>
+    <nav class="navbar">
+        <div class="navbar__logo">
+            <img src="fotos/logo.svg" alt="Logo Parche" height="90" style="vertical-align:middle;">
+        </div>
+        <div class="navbar__menu-container">
+            <ul class="menu">
+                <li><a href="#home">Inicio</a></li>
+                <li><a href="#services">Nuestros servicios</a></li>
+                <li><a href="#testimonios">Testimonios</a></li>
+                <li><a href="#faq">Preguntas frecuentes</a></li>
+                <li><a href="#contact">Contacto</a></li>
+            </ul>
+        </div>
+        <button class="hire-btn" aria-label="Descargar nuestra aplicación">Descarga nuestra app</button>
+        <button class="menu-icon" aria-label="Abrir menú">☰</button>
+    </nav>
+    <div class="navbar__divider"></div>
+
+    <!--  INICIO  -->
+
+    <header class="main">
+        <section id="home">
+            <div class="home__container">
+                <div class="home__text">
+                    <h4>Tu Moto, Tu Mundo, Tu App.</h4>
+                    <p class="tittle">Gestiona, descubre y ahorra. Todo lo que necesitas para rodar sin límites.</p>
+                    <p class="subtitle">Explora talleres de confianza, encuentra repuestos al instante y únete a la comunidad.</p>
+                    <button class="hire-btn home__cta-btn">Descarga la App</button>
+                </div>
+                <div class="home__image">
+                    <img src="fotos/taller1.jpg" alt="Imagen de un taller de reparación de motos">
+                </div>
+            </div>
+        </section>
+    </header>
+
+    <!--  SERVICIOS Y GARANTIAS -->
+
+    <section id="services">
+        <h2 class="separator">Nuestros Servicios</h2>
+        <article class="services">
+            <div class="service"> <!--uso service en vez de left-->
+                <div class="info">
+                    <p>Explora todo lo que ofrecemos para ti y tu moto.</p>
+                </div>
+            </div>
+            <ul class="service-list">
+                <li><i class='bx bxs-wrench'></i> Talleres de Reparación</li>
+                <li><i class='bx bxs-car-wash'></i> Limpieza y Mantenimiento</li>
+                <li><i class='bx bxs-gas-pump'></i> Gasolineras Cercanas</li>
+                <li><i class='bx bxs-store'></i> Accesorios y Repuestos</li>
+                <li><i class='bx bxs-bell-ring'></i> Asistencia en Carretera</li>
+                <li><i class='bx bx-calendar'></i> Eventos de motociclistas</li>
+                <li><i class='bx bxs-map'></i> Localización</li>
+            </ul>
+        </article>
+        </div>
+        <div class="guarantee">
+            <div class="item">
+                <div class="icon">
+                    <i class='bx bx-check-shield'></i>
+                </div>
+                <div class="info">
+                    <h3>+5</h3>
+                    <p>Años de experiencia</p>
+                </div>
+            </div>
+            <div class="item">
+                <div class="icon">
+                    <i class='bx bx-check-circle'></i>
+                </div>
+                <div class="info">
+                    <h3>+100</h3>
+                    <p>Trabajos Completados</p>
+                </div>
+            </div>
+            <div class="item">
+                <div class="icon">
+                    <i class='bx bx-laugh'></i>
+                </div>
+                <div class="info">
+                    <h3>+50</h3>
+                    <p>Clientes Felices</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIOS -->
+
+    <section id="testimonios">
+        <h2 class="separator">Testimonios</h2>
+        <section class="testimonial">
+            <div class="testimonial__container">
+                <!-- Swiper contenedor principal -->
+                <div class="swiper">
+                    <!-- Swiper wrapper que contiene todas las diapositivas -->
+                    <div class="swiper-wrapper">
+                        <!-- Cada tarjeta debe ser una swiper-slide -->
+                        <div class="swiper-slide">
+                            <article class="testimonial__card">
+                                <header class="testimonial__card-profile">
+                                    <div class="testimonial__card-image">
+                                        <img src="fotos/miguel.jpg" alt="Miguel Lopez, testimonio positivo">
+                                    </div>
+                                    <div class="testimonial__card-info">
+                                        <p class="testimonial-name">- Miguel Lopez</p>
+                                    </div>
+                                </header>
+                                <div class="testimonial__text">
+                                    <blockquote>
+                                        <p>"¡La mejor aplicación para motociclistas!"</p>
+                                    </blockquote>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="swiper-slide">
+                            <article class="testimonial__card">
+                                <header class="testimonial__card-profile">
+                                    <div class="testimonial__card-image">
+                                        <img src="fotos/juan.jpg" alt="Juan Pérez, cliente satisfecho">
+                                    </div>
+                                    <div class="testimonial__card-info">
+                                        <p class="testimonial-name">- Juan Pérez</p>
+                                    </div>
+                                </header>
+                                <div class="testimonial__text">
+                                    <blockquote>
+                                        <p>"Siempre encuentro lo que necesito para mi moto."</p>
+                                    </blockquote>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="swiper-slide">
+                            <article class="testimonial__card">
+                                <header class="testimonial__card-profile">
+                                    <div class="testimonial__card-image">
+                                        <img src="fotos/marco.jpg" alt="Marco Pérez, usuario contento">
+                                    </div>
+                                    <div class="testimonial__card-info">
+                                        <p class="testimonial-name">- Marco Pérez</p>
+                                    </div>
+                                </header>
+                                <div class="testimonial__text">
+                                    <blockquote>
+                                        <p>"Me ayuda a cuidar mi moto como se merece."</p>
+                                    </blockquote>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="swiper-slide">
+                            <article class="testimonial__card">
+                                <header class="testimonial__card-profile">
+                                    <div class="testimonial__card-image">
+                                        <img src="fotos/ana.jpg" alt="Ana Gómez, clienta satisfecha">
+                                    </div>
+                                    <div class="testimonial__card-info">
+                                        <p class="testimonial-name">- Ana Gómez</p>
+                                    </div>
+                                </header>
+                                <div class="testimonial__text">
+                                    <blockquote>
+                                        <p>"Excelente servicio, la app es muy fácil de usar."</p>
+                                    </blockquote>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="swiper-slide">
+                            <article class="testimonial__card">
+                                <header class="testimonial__card-profile">
+                                    <div class="testimonial__card-image">
+                                        <img src="fotos/laura.jpg" alt="Laura Gutiérrez, clienta alegre">
+                                    </div>
+                                    <div class="testimonial__card-info">
+                                        <p class="testimonial-name">- Laura Gutiérrez</p>
+                                    </div>
+                                </header>
+                                <div class="testimonial__text">
+                                    <blockquote>
+                                        <p>"Ahora sé exactamente dónde ir. ¡Es genial!"</p>
+                                    </blockquote>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="swiper-slide">
+                            <article class="testimonial__card">
+                                <header class="testimonial__card-profile">
+                                    <div class="testimonial__card-image">
+                                        <img src="fotos/carlos.jpg" alt="Carlos Ruiz, opinion sincera">
+                                    </div>
+                                    <div class="testimonial__card-info">
+                                        <p class="testimonial-name">- Carlos Ruiz</p>
+                                    </div>
+                                </header>
+                                <div class="testimonial__text">
+                                    <blockquote>
+                                        <p>"Recomiendo 100% esta app, me ha ahorrado tiempo y dinero."</p>
+                                    </blockquote>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="swiper-slide">
+                            <article class="testimonial__card">
+                                <header class="testimonial__card-profile">
+                                    <div class="testimonial__card-image">
+                                        <img src="fotos/javier.jpg" alt="Javier Morales, cliente feliz">
+                                    </div>
+                                    <div class="testimonial__card-info">
+                                        <p class="testimonial-name">- Javier Morales</p>
+                                    </div>
+                                </header>
+                                <div class="testimonial__text">
+                                    <blockquote>
+                                        <p>"Agendo mantenimientos en minutos y con total confianza."</p>
+                                    </blockquote>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="swiper-slide">
+                            <article class="testimonial__card">
+                                <header class="testimonial__card-profile">
+                                    <div class="testimonial__card-image">
+                                        <img src="fotos/sofia.jpg" alt="Sofía Herrera, usuaria positiva">
+                                    </div>
+                                    <div class="testimonial__card-info">
+                                        <p class="testimonial-name">- Sofía Herrera</p>
+                                    </div>
+                                </header>
+                                <div class="testimonial__text">
+                                    <blockquote>
+                                        <p>"Encontré un taller cerca de casa. ¡La recomiendo!"</p>
+                                    </blockquote>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </section>
+
+    <!--PREGUNTAS FRECUENTES-->
+
+    <section id="faq">
+        <h2 class="separator">Preguntas Frecuentes</h2>
+        <dl class="faq">
+            <div class="faq-item">
+                <h6>¿Cómo puedo registrarme en la app?<i class='bx bxs-chevron-down' aria-label="Expandir pregunta"></i>
+                </h6>
+                <p>Simplemente descarga la aplicación, ingresa tus datos y crea una cuenta para empezar a disfrutar
+                    de
+                    nuestros servicios.</p>
+            </div>
+            <div class="faq-item">
+                <h6>¿Qué servicios ofrece la aplicación?<i class='bx bxs-chevron-down'
+                        aria-label="Expandir pregunta"></i>
+                </h6>
+                <p>La app ofrece talleres, repuestos, asistencia en carretera y más servicios especializados para
+                    motocicletas.</p>
+            </div>
+            <div class="faq-item">
+                <h6>¿Cuánto cuesta utilizar la app?<i class='bx bxs-chevron-down' aria-label="Expandir pregunta"></i>
+                </h6>
+                <p>La aplicación es gratuita para descargar y usar, con opciones de pago para algunos servicios
+                    premium.
+                </p>
+            </div>
+            <div class="faq-item">
+                <h6>¿Dónde puedo encontrar los talleres más cercanos?<i class='bx bxs-chevron-down'
+                        aria-label="Expandir pregunta"></i>
+                </h6>
+                <p>La app utiliza tu ubicación para mostrarte los talleres más cercanos a ti.</p>
+            </div>
+            <div class="faq-item">
+                <h6>¿Ofrecen asistencia en caso de accidentes?<i class='bx bxs-chevron-down'
+                        aria-label="Expandir pregunta"></i>
+                </h6>
+                <p>Sí, ofrecemos asistencia en carretera para emergencias. Solo tienes que activar el servicio desde
+                    la
+                    app
+                    y te
+                    enviaremos ayuda.</p>
+            </div>
+            <div class="faq-item">
+                <h6>¿La app es compatible con todos los modelos de motos?<i class='bx bxs-chevron-down'
+                        aria-label="Expandir pregunta"></i>
+                </h6>
+                <p>La app está diseñada para ser compatible con la mayoría de los modelos de motos, pero algunos
+                    servicios
+                    pueden variar dependiendo del tipo de moto.</p>
+            </div>
+            <div class="faq-item">
+                <h6>¿Mis datos personales y de mi moto están seguros?<i class='bx bxs-chevron-down'
+                        aria-label="Expandir pregunta"></i>
+                </h6>
+                <p>Absolutamente. La seguridad de tus datos es nuestra máxima prioridad. Utilizamos encriptación avanzada y seguimos las mejores prácticas de seguridad para proteger toda tu información.</p>
+            </div>
+        </dl>
+    </section>
+
+    <!--  BOTON ABAJO  -->
+
+    <div class="button-container">
+        <button class="hire-btn hire-btn-bottom" aria-label="Descargar nuestra aplicación">Descarga nuestra app</button>
+    </div>
+
+    <!--CONTACTOS-->
+
+    <footer class="footer" id="contact">
+        <div class="footer__container">
+            <!-- Sección de Logo y Descripción -->
+            <div class="footer__section">
+                <h2 class="footer__logo">Parche</h2>
+                <p class="footer__description">
+                    Tu pasión, nuestra misión. Conecta con el mundo del motociclismo: los mejores talleres, eventos y mucho más en la palma de tu mano.
+                </p>
+            </div>
+
+            <!-- Sección de Enlaces Rápidos -->
+            <div class="footer__section">
+                <h3>Enlaces Rápidos</h3>
+                <ul class="footer__links">
+                    <li><a href="#home">Acerca de</a></li>
+                    <li><a href="#services">Servicios</a></li>
+                    <li><a href="#contact">Contacto</a></li>
+                    <li><a href="#faq">Preguntas Frecuentes</a></li>
+                </ul>
+            </div>
+
+            <!-- Sección de Contacto -->
+            <div class="footer__section">
+                <h3>Contacto</h3>
+                <ul class="footer__contact">
+                    <li><i class="fas fa-phone-alt" aria-hidden="true"></i> <a href="tel:+1234567890"
+                            aria-label="Llamar al número de contacto">+1 234 567 890</a></li>
+                    <li><i class="fas fa-envelope" aria-hidden="true"></i> <a href="mailto:soporte@motoapp.com"
+                            aria-label="Enviar un correo a soporte@motoapp.com">soporte@motoapp.com</a></li>
+                    <li><i class="fas fa-map-marker-alt" aria-hidden="true"></i> Calle Principal 123, Ciudad Moto</li>
+                </ul>
+            </div>
+
+            <!-- Sección de Redes Sociales -->
+            <div class="footer__section">
+                <h3>Síguenos</h3>
+                <div class="footer__socials">
+                    <a href="https://web.facebook.com/profile.php?id=61576711569346" target="_blank" aria-label="Facebook de MotoApp"><i class='bx bxl-facebook-circle'></i></a>
+                    <a href="https://www.instagram.com/parcheapp33/" target="_blank" aria-label="Instagram de MotoApp"><i class='bx bxl-instagram-alt'></i></a>
+                    <a href="https://www.tiktok.com/@parche_app" target="_blank" aria-label="TikTok de MotoApp"><i class='bx bxl-tiktok'></i></a>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p><small>&copy; 2024 ParcheApp. Todos los derechos reservados.</small></p>
+            </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <!-- Scripts de Swiper -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="scripts.js"></script> <!-- Tu archivo JS personalizado -->
+</body>
+
+</html>
