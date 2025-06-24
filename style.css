@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
 
 /* =====================
    PALETA DE COLORES PARCHE
@@ -41,6 +41,12 @@ body {
 @media (max-width: 768px) {
     body {
         padding: 0 30px;
+    }
+}
+
+@media (max-width: 480px) { /* Más espacio en pantallas muy pequeñas */
+    body {
+        padding: 0 15px;
     }
 }
 
@@ -89,6 +95,7 @@ body {
 .hire-btn {
     background: linear-gradient(90deg, var(--neon-green), var(--neon-blue));
     color: var(--deeper-dark-blue);
+    text-decoration: none;
     border: none;
     border-radius: 8px;
     padding: 10px 28px;
@@ -141,6 +148,7 @@ body {
     }
     .menu-icon {
         display: block;
+        padding: 8px; /* Aumenta el área táctil */
     }
     .hire-btn {
         margin-left: 0;
@@ -304,14 +312,14 @@ section {
     width: 100%;
 }
 
-.main h4 {
+.main h1 {
     font-size: 3.2rem;
     font-weight: 800;
     color: var(--neon-green);
     margin-bottom: 30px; /* Más espacio antes del botón */
 }
 
-.main h4 span {
+.main h1 span {
   color: var(--neon-blue);
   font-weight: 700;
   background: linear-gradient(90deg, #F2B749, #FF4A1C);
@@ -320,7 +328,7 @@ section {
   color: transparent;
 }
 
-.main h4 span:hover {
+.main h1 span:hover {
   color: #d29d2f;
   text-decoration: underline;
   transition: color 0.3s ease-in-out;
@@ -365,7 +373,7 @@ section {
         margin-bottom: 30px;
     }
 
-    .main h4 {
+    .main h1 {
         font-size: 2.8rem;
     }
 
@@ -385,7 +393,7 @@ section {
     padding: 80px 0 20px 0;
     padding-bottom: 6px;
   }
-  .main h4 {
+  .main h1 {
     font-size: 2rem;
   }
   .main p.tittle, .main p.subtitle {
@@ -947,6 +955,12 @@ section {
         text-align: center; /* Centramos el texto en la vista de una columna */
     }
 
+    .footer__description,
+    .footer__links a,
+    .footer__contact li {
+        font-size: 1.1rem; /* Mejora la legibilidad */
+    }
+
     .footer__socials {
         justify-content: center; /* Centramos los iconos de redes */
     }
@@ -1052,6 +1066,16 @@ section {
         height: 48px;
         margin-right: 10px;
     }
+}
+
+.menu li a:focus, .hire-btn:focus, .hire-btn-bottom:focus, .menu-icon:focus {
+    outline: 1px solid var(--neon-orange);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 1px rgba(255, 109, 29, 0.15);
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 

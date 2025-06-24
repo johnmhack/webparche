@@ -1,25 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parche - Todo para tu moto</title>
-    <link rel="icon" href="fotos/logo.svg" type="image/svg+xml">
+    <link rel="icon" href="fotos/favicon.svg" type="image/svg+xml">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
     <link rel="stylesheet" href="style.css" media="screen">
+    <meta name="description" content="ParcheApp: Descubre talleres, repuestos, eventos y todo lo que necesitas para tu moto. Únete a la comunidad de motociclistas y gestiona tu moto fácilmente desde una sola app.">
+    <!-- Etiquetas Open Graph para redes sociales -->
+    <meta property="og:title" content="Parche - Todo para tu moto">
+    <meta property="og:description" content="Descubre talleres, repuestos, eventos y todo lo que necesitas para tu moto. Únete a la comunidad de motociclistas y gestiona tu moto fácilmente desde una sola app.">
+    <meta property="og:image" content="fotos/logo.svg">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://parcheapp.com">
 </head>
 
 <!--  BOTONES DEL INICIO  -->
 
 <body>
-    <nav class="navbar">
+    <nav class="navbar" role="navigation">
         <div class="navbar__logo">
             <img src="fotos/logo.svg" alt="Logo Parche" height="90" style="vertical-align:middle;">
         </div>
         <div class="navbar__menu-container">
-            <ul class="menu">
+            <ul class="menu" id="menu-list">
                 <li><a href="#home">Inicio</a></li>
                 <li><a href="#services">Nuestros servicios</a></li>
                 <li><a href="#testimonios">Testimonios</a></li>
@@ -27,21 +34,21 @@
                 <li><a href="#contact">Contacto</a></li>
             </ul>
         </div>
-        <button class="hire-btn" aria-label="Descargar nuestra aplicación">Descarga nuestra app</button>
-        <button class="menu-icon" aria-label="Abrir menú">☰</button>
+        <a href="#download" class="hire-btn" role="button" aria-label="Descargar nuestra aplicación">Descarga nuestra app</a>
+        <button class="menu-icon" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-list">☰</button>
     </nav>
     <div class="navbar__divider"></div>
 
     <!--  INICIO  -->
 
-    <header class="main">
+    <header class="main" role="main">
         <section id="home">
             <div class="home__container">
                 <div class="home__text">
-                    <h4>Tu Moto, Tu Ruta, Tu App.</h4>
+                    <h1>Tu Moto, Tu Ruta, Tu App.</h1>
                     <p class="tittle">Gestiona, descubre y ahorra. Todo lo que necesitas para rodar sin límites.</p>
                     <p class="subtitle">Explora talleres de confianza, encuentra repuestos al instante y únete a la comunidad.</p>
-                    <button class="hire-btn home__cta-btn">Descarga la App</button>
+                    <a href="#download" class="hire-btn home__cta-btn" role="button">Descarga la App</a>
                 </div>
                 <div class="home__image">
                     <img src="fotos/taller1.jpg" alt="Imagen de un taller de reparación de motos">
@@ -52,8 +59,8 @@
 
     <!--  SERVICIOS Y GARANTIAS -->
 
-    <section id="services">
-        <h2 class="separator">Nuestros Servicios</h2>
+    <section id="services" role="region" aria-labelledby="servicios-titulo">
+        <h2 class="separator" id="servicios-titulo">Nuestros Servicios</h2>
         <article class="services">
             <div class="service"> <!--uso service en vez de left-->
                 <div class="info">
@@ -104,8 +111,8 @@
 
     <!-- TESTIMONIOS -->
 
-    <section id="testimonios">
-        <h2 class="separator">Testimonios</h2>
+    <section id="testimonios" role="region" aria-labelledby="testimonios-titulo">
+        <h2 class="separator" id="testimonios-titulo">Testimonios</h2>
         <section class="testimonial">
             <div class="testimonial__container">
                 <!-- Swiper contenedor principal -->
@@ -257,8 +264,8 @@
 
     <!--PREGUNTAS FRECUENTES-->
 
-    <section id="faq">
-        <h2 class="separator">Preguntas Frecuentes</h2>
+    <section id="faq" role="region" aria-labelledby="faq-titulo">
+        <h2 class="separator" id="faq-titulo">Preguntas Frecuentes</h2>
         <dl class="faq">
             <div class="faq-item">
                 <h6>¿Cómo puedo registrarme en la app?<i class='bx bxs-chevron-down' aria-label="Expandir pregunta"></i>
@@ -317,16 +324,16 @@
     <!--  BOTON ABAJO  -->
 
     <div class="button-container">
-        <button class="hire-btn hire-btn-bottom" aria-label="Descargar nuestra aplicación">Descarga nuestra app</button>
+        <a href="#download" class="hire-btn hire-btn-bottom" role="button" aria-label="Descargar nuestra aplicación">Descarga nuestra app</a>
     </div>
 
     <!--CONTACTOS-->
 
-    <footer class="footer" id="contact">
+    <footer class="footer" id="contact" role="region" aria-labelledby="contacto-titulo">
         <div class="footer__container">
             <!-- Sección de Logo y Descripción -->
             <div class="footer__section">
-                <h2 class="footer__logo">Parche</h2>
+                <h2 class="footer__logo" id="contacto-titulo">Parche</h2>
                 <p class="footer__description">
                     Tu pasión, nuestra misión. Conecta con el mundo del motociclismo: los mejores talleres, eventos y mucho más en la palma de tu mano.
                 </p>
@@ -347,11 +354,11 @@
             <div class="footer__section">
                 <h3>Contacto</h3>
                 <ul class="footer__contact">
-                    <li><i class="fas fa-phone-alt" aria-hidden="true"></i> <a href="tel:+1234567890"
+                    <li><i class='bx bxs-phone' aria-hidden="true"></i> <a href="tel:+1234567890"
                             aria-label="Llamar al número de contacto">+1 234 567 890</a></li>
-                    <li><i class="fas fa-envelope" aria-hidden="true"></i> <a href="mailto:soporte@motoapp.com"
+                    <li><i class='bx bxs-envelope' aria-hidden="true"></i> <a href="mailto:soporte@motoapp.com"
                             aria-label="Enviar un correo a soporte@motoapp.com">soporte@motoapp.com</a></li>
-                    <li><i class="fas fa-map-marker-alt" aria-hidden="true"></i> Calle Principal 123, Ciudad Moto</li>
+                    <li><i class='bx bxs-map' aria-hidden="true"></i> Calle Principal 123, Ciudad Moto</li>
                 </ul>
             </div>
 
