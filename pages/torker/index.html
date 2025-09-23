@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torker - Gestión de Talleres | Parche</title>
+    <link rel="icon" href="../../assets/images/fotos/logo.svg" type="image/svg+xml">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/torker.css">
+    <meta name="description" content="Torker - Sistema de gestión integral para talleres de motos. Gestiona citas, inventario, clientes y más desde Parche.">
+</head>
+<body>
+    <!-- Header con navegación a Parche -->
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-brand">
+                <a href="../../../index.html" class="logo">
+                    <img src="../../assets/images/fotos/logo.svg" alt="Parche" class="logo-img">
+                    <span class="logo-text">Parche</span>
+                </a>
+            </div>
+            <div class="nav-menu">
+                <a href="../../../index.html" class="nav-link">Inicio</a>
+                <a href="#" class="nav-link active">Torker</a>
+                <a href="../../../index.html#services" class="nav-link">Servicios</a>
+                <a href="../../../index.html#contact" class="nav-link">Contacto</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section de Torker -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">Torker</h1>
+                <h2 class="hero-subtitle">Gestión Integral para Talleres de Motos</h2>
+                <p class="hero-description">
+                    Optimiza tu taller con nuestro sistema completo de gestión. 
+                    Controla citas, inventario, clientes y reportes desde una sola plataforma.
+                    Potencia tu negocio con tecnología de vanguardia.
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary" onclick="showLogin()">
+                        <i class='bx bx-log-in'></i>
+                        Iniciar Sesión
+                    </button>
+                    <button class="btn btn-secondary" onclick="showRegister()">
+                        <i class='bx bx-user-plus'></i>
+                        Registrarse
+                    </button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="../../assets/images/fotos/servicio_1.jpeg" alt="Motor de Moto - Torker" class="hero-img">
+            </div>
+        </div>
+    </section>
+
+    <!-- Formulario de Login (oculto por defecto) -->
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class='bx bx-log-in'></i> Iniciar Sesión</h3>
+                <button class="close-btn" onclick="hideLogin()">&times;</button>
+            </div>
+            <form class="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class='bx bx-log-in'></i>
+                    Iniciar Sesión
+                </button>
+            </form>
+            <p class="form-footer">
+                ¿No tienes cuenta? <a href="#" onclick="showRegister()">Regístrate aquí</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Formulario de Registro (oculto por defecto) -->
+    <div id="registerModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class='bx bx-wrench'></i> Registrar Taller</h3>
+                <button class="close-btn" onclick="hideRegister()">&times;</button>
+            </div>
+            <form class="register-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="workshopName">Nombre del Taller</label>
+                    <input type="text" id="workshopName" name="workshopName" placeholder="Mi Taller de Motos" required>
+                </div>
+                <div class="form-group">
+                    <label for="ownerName">Nombre del Propietario</label>
+                    <input type="text" id="ownerName" name="ownerName" placeholder="Tu Nombre Completo" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Teléfono</label>
+                    <input type="tel" id="phone" name="phone" placeholder="+57 300 123 4567" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Contraseña</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class='bx bx-wrench'></i>
+                    Registrar Taller
+                </button>
+            </form>
+            <p class="form-footer">
+                ¿Ya tienes cuenta? <a href="#" onclick="showLogin()">Inicia sesión aquí</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Dashboard (oculto por defecto) -->
+    <div id="dashboard" class="dashboard hidden">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-wrench'></i> Dashboard - <span id="workshopNameDisplay"></span></h2>
+            <button class="btn btn-outline" onclick="logout()">
+                <i class='bx bx-log-out'></i>
+                Cerrar Sesión
+            </button>
+        </div>
+        <div class="dashboard-content">
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3><i class='bx bx-calendar-check'></i> Citas Hoy</h3>
+                    <p class="stat-number">12</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-wrench'></i> Órdenes Activas</h3>
+                    <p class="stat-number">8</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-user'></i> Clientes</h3>
+                    <p class="stat-number">45</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-box'></i> Inventario</h3>
+                    <p class="stat-number">156</p>
+                </div>
+            </div>
+            <div class="dashboard-modules">
+                <div class="module-card">
+                    <h3><i class='bx bx-calendar'></i> Agenda</h3>
+                    <p>Gestiona citas y horarios de trabajo</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-clipboard'></i> Órdenes de Trabajo</h3>
+                    <p>Controla reparaciones y servicios</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-group'></i> Clientes</h3>
+                    <p>Administra base de datos de clientes</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-package'></i> Inventario</h3>
+                    <p>Gestiona repuestos y stock</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/components.js"></script>
+    <script src="assets/js/torker.js"></script>
+</body>
+</html>

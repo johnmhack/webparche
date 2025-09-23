@@ -1,0 +1,100 @@
+/* Estilos específicos para la Revista */
+
+.hero-revista {
+    background: linear-gradient(135deg, var(--dark-blue), var(--deeper-dark-blue));
+    color: var(--surface);
+    padding: 80px 0;
+    text-align: center;
+}
+
+.hero-revista .hero-title {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: var(--neon-green);
+}
+
+.hero-revista .hero-description {
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.revista-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.featured-article {
+    margin-bottom: 60px;
+}
+
+.featured-article h2 {
+    color: var(--neon-blue);
+    font-size: 2rem;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.article-card {
+    background: var(--surface);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    display: flex;
+    margin-bottom: 30px;
+}
+
+.article-card .article-image {
+    width: 50%;
+    height: 300px;
+    object-fit: cover;
+}
+
+.article-card .article-info {
+    padding: 30px;
+    flex: 1;
+}
+
+.article-card h3 {
+    color: var(--text-dark);
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+.article-card p {
+    color: var(--surface-variant);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.articles-grid h2 {
+    color: var(--neon-blue);
+    font-size: 2rem;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.article-card.small {
+    flex-direction: column;
+}
+
+.article-card.small .article-image {
+    width: 100%;
+    height: 200px;
+}
+
+.article-card.small .article-info {
+    padding: 20px;
+}
+
+.article-card.small h4 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}

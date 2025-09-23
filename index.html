@@ -5,17 +5,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parche - Todo para tu moto</title>
-    <link rel="icon" href="fotos/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/images/fotos/logo.svg" type="image/svg+xml">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
-    <link rel="stylesheet" href="style.css" media="screen">
+    <link rel="stylesheet" href="assets/css/main.css" media="screen">
+    <link rel="stylesheet" href="assets/css/components.css" media="screen">
     <meta name="description" content="ParcheApp: Descubre talleres, repuestos, eventos y todo lo que necesitas para tu moto. Únete a la comunidad de motociclistas y gestiona tu moto fácilmente desde una sola app.">
+    <meta name="keywords" content="app moto, talleres moto, repuestos moto, mantenimiento moto, motociclistas, asistencia carretera, eventos moto, parche app">
+    <meta name="author" content="Parche">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Spanish">
+    <meta name="revisit-after" content="7 days">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://parcheapp.com/">
+    
     <!-- Etiquetas Open Graph para redes sociales -->
     <meta property="og:title" content="Parche - Todo para tu moto">
     <meta property="og:description" content="Descubre talleres, repuestos, eventos y todo lo que necesitas para tu moto. Únete a la comunidad de motociclistas y gestiona tu moto fácilmente desde una sola app.">
-    <meta property="og:image" content="fotos/logo.svg">
+    <meta property="og:image" content="https://parcheapp.com/assets/images/fotos/logo.svg">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://parcheapp.com">
+    <meta property="og:site_name" content="Parche">
+    <meta property="og:locale" content="es_ES">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Parche - Todo para tu moto">
+    <meta name="twitter:description" content="Descubre talleres, repuestos, eventos y todo lo que necesitas para tu moto. Únete a la comunidad de motociclistas.">
+    <meta name="twitter:image" content="https://parcheapp.com/assets/images/fotos/logo.svg">
+    
+    <!-- Google Analytics (reemplaza GA_MEASUREMENT_ID con tu ID real) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Parche",
+      "url": "https://parcheapp.com",
+      "logo": "https://parcheapp.com/assets/images/fotos/logo.svg",
+      "description": "Plataforma líder para motociclistas que conecta talleres, repuestos, eventos y servicios especializados.",
+      "foundingDate": "2019",
+      "sameAs": [
+        "https://web.facebook.com/profile.php?id=61576711569346",
+        "https://www.instagram.com/parcheapp33/",
+        "https://www.tiktok.com/@parche_app"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+1-234-567-890",
+        "contactType": "customer service",
+        "email": "soporte@motoapp.com"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Calle Principal 123",
+        "addressLocality": "Ciudad Moto"
+      },
+      "offers": {
+        "@type": "Offer",
+        "description": "App gratuita para motociclistas con servicios premium disponibles"
+      }
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ParcheApp",
+      "description": "Aplicación móvil para motociclistas que conecta talleres, repuestos y servicios especializados",
+      "url": "https://parcheapp.com",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Android, iOS",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
 </head>
 
 <!--  BOTONES DEL INICIO  -->
@@ -23,11 +100,13 @@
 <body>
     <nav class="navbar" role="navigation">
         <div class="navbar__logo">
-            <img src="fotos/logo.svg" alt="Logo Parche" height="90" style="vertical-align:middle;">
+            <img src="assets/images/fotos/logo.svg" alt="Logo Parche" height="90" style="vertical-align:middle;">
         </div>
         <div class="navbar__menu-container">
             <ul class="menu" id="menu-list">
                 <li><a href="#home">Inicio</a></li>
+                <li><a href="pages/revista/">Revista</a></li>
+                <li><a href="pages/torker/">Torker</a></li>
                 <li><a href="#services">Nuestros servicios</a></li>
                 <li><a href="#testimonios">Testimonios</a></li>
                 <li><a href="#faq">Preguntas frecuentes</a></li>
@@ -51,11 +130,57 @@
                     <a href="#download" class="hire-btn home__cta-btn" role="button">Descarga la App</a>
                 </div>
                 <div class="home__image">
-                    <img src="fotos/taller1.jpg" alt="Imagen de un taller de reparación de motos">
+                    <img src="assets/images/fotos/taller1.jpg" alt="Imagen de un taller de reparación de motos">
                 </div>
             </div>
         </section>
     </header>
+
+    <!--  TORKER  -->
+
+    <section id="torker" role="region" aria-labelledby="torker-titulo">
+        <h2 class="separator" id="torker-titulo">Torker</h2>
+        <article class="torker">
+            <div class="torker__content">
+                <div class="torker__text">
+                    <h3>Gestión inteligente para talleres</h3>
+                    <p>Agenda, órdenes de trabajo, inventario y clientes — todo en un solo lugar. Torker potencia tu taller con flujos simples, rápidos y visibles para tu equipo.</p>
+                    <ul class="torker__features">
+                        <li><i class='bx bxs-calendar-check'></i> Agenda y turnos</li>
+                        <li><i class='bx bxs-wrench'></i> Órdenes y servicios</li>
+                        <li><i class='bx bxs-box'></i> Inventario</li>
+                        <li><i class='bx bxs-user-detail'></i> Historial de clientes</li>
+                    </ul>
+                    <a href="pages/torker/" target="_blank" rel="noopener noreferrer" class="hire-btn" role="button">
+                        <i class='bx bx-external-link'></i>
+                        Abrir Torker en Nueva Pestaña
+                    </a>
+                    
+                    <!-- Dashboard Rápido para Talleres -->
+                    <div class="torker__dashboard-preview">
+                        <h4>Acceso Rápido para Talleres</h4>
+                        <div class="torker__quick-actions">
+                            <a href="pages/torker/" target="_blank" rel="noopener noreferrer" class="quick-action-btn">
+                                <i class='bx bx-log-in'></i>
+                                Iniciar Sesión
+                            </a>
+                            <a href="pages/torker/" target="_blank" rel="noopener noreferrer" class="quick-action-btn">
+                                <i class='bx bx-user-plus'></i>
+                                Registrar Taller
+                            </a>
+                            <a href="pages/torker/" target="_blank" rel="noopener noreferrer" class="quick-action-btn">
+                                <i class='bx bx-help-circle'></i>
+                                Ver Demo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="torker__image">
+                    <img src="assets/images/fotos/servicio_1.jpeg" alt="Panel de Torker para talleres">
+                </div>
+            </div>
+        </article>
+    </section>
 
     <!--  SERVICIOS Y GARANTIAS -->
 
@@ -77,7 +202,6 @@
                 <li><i class='bx bxs-map'></i> Localización</li>
             </ul>
         </article>
-        </div>
         <div class="guarantee">
             <div class="item">
                 <div class="icon">
@@ -124,7 +248,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="fotos/miguel.jpg" alt="Miguel Lopez, testimonio positivo">
+                                        <img src="assets/images/fotos/miguel.jpg" alt="Miguel Lopez, testimonio positivo">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Miguel Lopez</p>
@@ -141,7 +265,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="fotos/juan.jpg" alt="Juan Pérez, cliente satisfecho">
+                                        <img src="assets/images/fotos/juan.jpg" alt="Juan Pérez, cliente satisfecho">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Juan Pérez</p>
@@ -158,7 +282,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="fotos/marco.jpg" alt="Marco Pérez, usuario contento">
+                                        <img src="assets/images/fotos/marco.jpg" alt="Marco Pérez, usuario contento">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Marco Pérez</p>
@@ -175,7 +299,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="fotos/ana.jpg" alt="Ana Gómez, clienta satisfecha">
+                                        <img src="assets/images/fotos/ana.jpg" alt="Ana Gómez, clienta satisfecha">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Ana Gómez</p>
@@ -192,7 +316,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="fotos/laura.jpg" alt="Laura Gutiérrez, clienta alegre">
+                                        <img src="assets/images/fotos/laura.jpg" alt="Laura Gutiérrez, clienta alegre">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Laura Gutiérrez</p>
@@ -209,7 +333,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="fotos/carlos.jpg" alt="Carlos Ruiz, opinion sincera">
+                                        <img src="assets/images/fotos/carlos.jpg" alt="Carlos Ruiz, opinion sincera">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Carlos Ruiz</p>
@@ -226,7 +350,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="fotos/javier.jpg" alt="Javier Morales, cliente feliz">
+                                        <img src="assets/images/fotos/javier.jpg" alt="Javier Morales, cliente feliz">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Javier Morales</p>
@@ -243,7 +367,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="fotos/sofia.jpg" alt="Sofía Herrera, usuaria positiva">
+                                        <img src="assets/images/fotos/sofia.jpg" alt="Sofía Herrera, usuaria positiva">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Sofía Herrera</p>
@@ -344,6 +468,7 @@
                 <h3>Enlaces Rápidos</h3>
                 <ul class="footer__links">
                     <li><a href="#home">Acerca de</a></li>
+                    <li><a href="pages/revista/">Revista</a></li>
                     <li><a href="#services">Servicios</a></li>
                     <li><a href="#contact">Contacto</a></li>
                     <li><a href="#faq">Preguntas Frecuentes</a></li>
@@ -376,10 +501,10 @@
             </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/components.js"></script>
     <!-- Scripts de Swiper -->
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-    <script src="scripts.js"></script> <!-- Tu archivo JS personalizado -->
 </body>
 
 </html>
