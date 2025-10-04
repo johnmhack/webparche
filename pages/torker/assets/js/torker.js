@@ -411,38 +411,34 @@ window.addEventListener('scroll', () => {
     if (!header) return;
     if (window.scrollY > lastScrollY && window.scrollY > 60) {
         // Scroll hacia abajo, ocultar header
-        header.classList.add('navbar--hidden');
+        header.classList.add('header--hidden');
     } else {
         // Scroll hacia arriba, mostrar header
-        header.classList.remove('navbar--hidden');
+        header.classList.remove('header--hidden');
     }
     lastScrollY = window.scrollY;
 });
 
 // Funcionalidad del menú hamburguesa
 function toggleMobileMenu() {
-    const navToggle = document.querySelector('.nav-toggle');
+    const menuIcon = document.querySelector('.menu-icon');
     const navMenu = document.querySelector('.nav-menu');
 
-    if (navToggle && navMenu) {
-        navToggle.classList.toggle('active');
+    if (menuIcon && navMenu) {
+        menuIcon.classList.toggle('active');
         navMenu.classList.toggle('active');
 
-        // Prevenir scroll del body cuando el menú está abierto
-        if (navMenu.classList.contains('active')) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'auto';
-        }
+        // No prevenir scroll del body para menú desplegable
+        // El menú desplegable no cubre toda la pantalla
     }
 }
 
 function closeMobileMenu() {
-    const navToggle = document.querySelector('.nav-toggle');
+    const menuIcon = document.querySelector('.menu-icon');
     const navMenu = document.querySelector('.nav-menu');
 
-    if (navToggle && navMenu) {
-        navToggle.classList.remove('active');
+    if (menuIcon && navMenu) {
+        menuIcon.classList.remove('active');
         navMenu.classList.remove('active');
         document.body.style.overflow = 'auto';
     }
@@ -460,21 +456,23 @@ function setupMobileMenuLinks() {
 function setupMobileMenuOutsideClick() {
     document.addEventListener('click', function(event) {
         const navMenu = document.querySelector('.nav-menu');
-        const navToggle = document.querySelector('.nav-toggle');
+        const menuIcon = document.querySelector('.menu-icon');
 
         if (navMenu && navMenu.classList.contains('active') &&
             !navMenu.contains(event.target) &&
-            !navToggle.contains(event.target)) {
-            closeMobileMenu();
+            !menuIcon.contains(event.target)) {
+            menuIcon.classList.remove('active');
+            navMenu.classList.remove('active');
+            document.body.style.overflow = 'auto';
         }
     });
 }
 
 // Iniciar funcionalidad del menú hamburguesa
 document.addEventListener('DOMContentLoaded', function() {
-    const navToggle = document.querySelector('.nav-toggle');
-    if (navToggle) {
-        navToggle.addEventListener('click', toggleMobileMenu);
+    const menuIcon = document.querySelector('.menu-icon');
+    if (menuIcon) {
+        menuIcon.addEventListener('click', toggleMobileMenu);
     }
 
     setupMobileMenuLinks();

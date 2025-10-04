@@ -72,7 +72,7 @@ body {
     transition: transform 0.6s ease;
 }
 
-.header.navbar--hidden {
+.header.header--hidden {
     transform: translateY(-100%);
 }
 
@@ -122,6 +122,7 @@ body {
     height: 80px;
     width: auto;
     margin-right: 20px;
+    filter: drop-shadow(0 0 8px var(--neon-green));
 }
 
 .logo-text {
@@ -169,8 +170,7 @@ body {
     width: 100%;
 }
 
-/* Botón Hamburguesa */
-.nav-toggle {
+.menu-icon {
     display: none;
     flex-direction: column;
     justify-content: space-around;
@@ -180,28 +180,84 @@ body {
     border: none;
     cursor: pointer;
     padding: 0;
+    margin-left: 24px;
     z-index: 1001;
 }
 
 .hamburger-line {
-    width: 30px;
-    height: 3px;
-    background: var(--neon-green);
-    border-radius: 2px;
-    transition: all 0.3s ease;
-    transform-origin: center;
+    width: 30px !important;
+    height: 3px !important;
+    background: var(--neon-green) !important;
+    border-radius: 2px !important;
+    transition: all 0.3s ease !important;
+    transform-origin: center !important;
+    display: block !important;
 }
 
-.nav-toggle.active .hamburger-line:nth-child(1) {
+.menu-icon.active .hamburger-line:nth-child(1) {
     transform: rotate(45deg) translate(6px, 6px);
 }
 
-.nav-toggle.active .hamburger-line:nth-child(2) {
+.menu-icon.active .hamburger-line:nth-child(2) {
     opacity: 0;
 }
 
-.nav-toggle.active .hamburger-line:nth-child(3) {
+.menu-icon.active .hamburger-line:nth-child(3) {
     transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Mostrar menú hamburguesa en móviles y tablets */
+@media (max-width: 2000px) {
+    .menu-icon {
+        display: flex !important;
+    }
+
+    .nav-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(27, 33, 64, 0.95);
+        backdrop-filter: blur(10px);
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        width: 100%;
+        padding: 20px 0;
+        border-radius: 0 0 15px 15px;
+        box-shadow: 0 8px 32px 0 rgba(0,0,0,0.3);
+        z-index: 1000;
+        border: 1px solid rgba(0, 194, 255, 0.2);
+        border-top: none;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        opacity: 0;
+        transform: translateY(-10px);
+        pointer-events: none;
+    }
+
+    .nav-menu.active {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    .nav-menu .nav-link {
+        display: block;
+        padding: 15px 20px;
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid rgba(0, 194, 255, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .nav-menu .nav-link:last-child {
+        border-bottom: none;
+    }
+
+    .nav-menu .nav-link:hover {
+        background: rgba(0, 194, 255, 0.1);
+        color: var(--neon-pink);
+    }
 }
 
 /* Hero Section */
@@ -574,30 +630,17 @@ body {
         align-items: center;
     }
 
-    .nav-menu {
-        position: fixed;
-        top: 110px;
-        right: -100%;
-        width: 280px;
-        height: calc(100vh - 110px);
-        background: var(--deeper-dark-blue);
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 2rem 0;
-        gap: 2rem;
-        transition: right 0.3s ease;
-        z-index: 1000;
-        border-left: 2px solid var(--neon-blue);
-        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+    .header {
+        padding: 0 20px;
+        height: 80px;
     }
 
-    .nav-menu.active {
-        right: 0;
+    .logo-img {
+        height: 60px;
     }
 
-    .nav-toggle {
-        display: flex;
+    .logo-text {
+        font-size: 1.5rem;
     }
 
     .dashboard-stats {
@@ -827,4 +870,10 @@ body {
 /* Scroll suave */
 html {
     scroll-behavior: smooth;
+}
+
+/* Quitar outline de elementos interactivos */
+button:focus, a:focus, input:focus, textarea:focus, select:focus {
+    outline: none;
+    box-shadow: none;
 }

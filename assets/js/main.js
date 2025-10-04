@@ -53,6 +53,7 @@ document.querySelectorAll('.faq-item h6').forEach(faqItemHeading => {
     }
     menuIcon.addEventListener('click', () => {
             const isActive = menu.classList.toggle('active');
+            menuIcon.classList.toggle('active', isActive);
             menuIcon.setAttribute('aria-expanded', isActive);
     });
 });
