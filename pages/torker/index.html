@@ -17,18 +17,18 @@
         <nav class="nav">
             <div class="nav-brand">
                 <a href="../../../index.html" class="logo">
-                    <img src="../../assets/images/fotos/logo.svg" alt="Torker" class="logo-img">
                     <span class="logo-text">Torker</span>
                 </a>
             </div>
             <div class="nav-menu">
                 <a href="#" onclick="showLogin()" class="nav-link">Iniciar Sesión</a>
                 <a href="#" onclick="showRegister()" class="nav-link">Registrarse</a>
-                <a href="#" class="nav-link">Soporte</a>
-                <a href="#" class="nav-link">Ayuda</a>
             </div>
         </nav>
     </header>
+
+    <!-- Línea decorativa debajo del header -->
+    <div class="header__divider"></div>
 
     <!-- Hero Section de Torker -->
     <section class="hero">
@@ -194,9 +194,53 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <p class="footer-text">by <strong>Parche</strong></p>
+    <footer class="footer" role="region" aria-labelledby="footer-titulo">
+        <div class="footer__container">
+            <!-- Sección de Logo y Descripción -->
+            <div class="footer__section">
+                <h2 class="footer__logo" id="footer-titulo">Torker</h2>
+                <p class="footer__description">
+                    Potenciamos tu taller con tecnología en la nube.<br>
+                    Gestión integral de citas, inventario y clientes<br>
+                    con control total en tiempo real.
+                </p>
+            </div>
+
+            <!-- Sección de Enlaces Rápidos -->
+            <div class="footer__section">
+                <h3>Enlaces Rápidos</h3>
+                <ul class="footer__links">
+                    <li><a href="#" onclick="showLogin()">Iniciar Sesión</a></li>
+                    <li><a href="#" onclick="showRegister()">Registrarse</a></li>
+                    <li><a href="#">Soporte</a></li>
+                    <li><a href="#">Ayuda</a></li>
+                </ul>
+            </div>
+
+            <!-- Sección de Contacto -->
+            <div class="footer__section">
+                <h3>Contacto</h3>
+                <ul class="footer__contact">
+                    <li><i class='bx bxs-phone' aria-hidden="true"></i> <a href="tel:+573194274416"
+                            aria-label="Llamar al número de contacto">+57 319 427 4416</a></li>
+                    <li><i class='bx bxs-envelope' aria-hidden="true"></i> <a href="mailto:soporte@torker.com"
+                            aria-label="Enviar un correo a soporte@torker.com">soporte@torker.com</a></li>
+                    <li><i class='bx bxs-map' aria-hidden="true"></i> Carrera 5 # 7 -17 Villeta Cundinamarca</li>
+                </ul>
+            </div>
+
+            <!-- Sección de Redes Sociales -->
+            <div class="footer__section">
+                <h3>Síguenos</h3>
+                <div class="footer__socials">
+                    <a href="https://web.facebook.com/profile.php?id=61576711569346" target="_blank" aria-label="Facebook de Torker"><i class='bx bxl-facebook-circle'></i></a>
+                    <a href="https://www.instagram.com/parcheapp33/" target="_blank" aria-label="Instagram de Torker"><i class='bx bxl-instagram-alt'></i></a>
+                    <a href="https://www.tiktok.com/@parche_app" target="_blank" aria-label="TikTok de Torker"><i class='bx bxl-tiktok'></i></a>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p><small>by <strong>Parche</strong> - &copy; 2024 Torker. Todos los derechos reservados.</small></p>
+            </div>
         </div>
     </footer>
 

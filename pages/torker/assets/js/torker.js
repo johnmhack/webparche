@@ -404,6 +404,21 @@ function addParticleEffect() {
     animate();
 }
 
+// Navbar auto-hide al hacer scroll
+let lastScrollY = window.scrollY;
+const header = document.querySelector('.header');
+window.addEventListener('scroll', () => {
+    if (!header) return;
+    if (window.scrollY > lastScrollY && window.scrollY > 60) {
+        // Scroll hacia abajo, ocultar header
+        header.classList.add('navbar--hidden');
+    } else {
+        // Scroll hacia arriba, mostrar header
+        header.classList.remove('navbar--hidden');
+    }
+    lastScrollY = window.scrollY;
+});
+
 // Iniciar efecto de partículas cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     // Comentar esta línea si no quieres el efecto de partículas

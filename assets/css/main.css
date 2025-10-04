@@ -967,6 +967,7 @@ section {
 }
 
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /* Línea horizontal con extremos difuminados debajo del navbar */
 .navbar__divider {
   width: calc(100% - 80px);
@@ -1171,6 +1172,65 @@ html {
     .torker__content {
         grid-template-columns: 1fr;
         gap: 24px;
+    }
+    .torker__text h3 {
+        font-size: 1.8rem;
+    }
+    .torker__features {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .torker {
+        padding: 4px 16px 32px 16px;
+    }
+    .torker__text h3 {
+        font-size: 1.6rem;
+    }
+    .torker__text p {
+        font-size: 1.1rem;
+    }
+    .torker__features li {
+        padding: 10px 14px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .torker {
+        padding: 4px 12px 24px 12px;
+        margin-bottom: 48px;
+    }
+    .torker__content {
+        gap: 20px;
+    }
+    .torker__text h3 {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+    }
+    .torker__text p {
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
+    .torker__features {
+        padding: 12px 0 20px 0;
+        margin-bottom: 20px;
+    }
+    .torker__features li {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        gap: 8px;
+    }
+    .torker__features i {
+        font-size: 1.4rem;
+    }
+    .torker__image {
+        margin-top: 1rem;
+    }
+    .torker__image img {
+        border-radius: 12px;
     }
 }
 
