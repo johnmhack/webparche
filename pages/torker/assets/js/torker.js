@@ -419,8 +419,67 @@ window.addEventListener('scroll', () => {
     lastScrollY = window.scrollY;
 });
 
-// Iniciar efecto de partículas cuando se carga la página
+// Funcionalidad del menú hamburguesa
+function toggleMobileMenu() {
+    const navToggle = document.querySelector('.nav-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+
+    if (navToggle && navMenu) {
+        navToggle.classList.toggle('active');
+        navMenu.classList.toggle('active');
+
+        // Prevenir scroll del body cuando el menú está abierto
+        if (navMenu.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+    }
+}
+
+function closeMobileMenu() {
+    const navToggle = document.querySelector('.nav-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+
+    if (navToggle && navMenu) {
+        navToggle.classList.remove('active');
+        navMenu.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Cerrar menú al hacer clic en un enlace
+function setupMobileMenuLinks() {
+    const navLinks = document.querySelectorAll('.nav-menu .nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', closeMobileMenu);
+    });
+}
+
+// Cerrar menú al hacer clic fuera
+function setupMobileMenuOutsideClick() {
+    document.addEventListener('click', function(event) {
+        const navMenu = document.querySelector('.nav-menu');
+        const navToggle = document.querySelector('.nav-toggle');
+
+        if (navMenu && navMenu.classList.contains('active') &&
+            !navMenu.contains(event.target) &&
+            !navToggle.contains(event.target)) {
+            closeMobileMenu();
+        }
+    });
+}
+
+// Iniciar funcionalidad del menú hamburguesa
 document.addEventListener('DOMContentLoaded', function() {
+    const navToggle = document.querySelector('.nav-toggle');
+    if (navToggle) {
+        navToggle.addEventListener('click', toggleMobileMenu);
+    }
+
+    setupMobileMenuLinks();
+    setupMobileMenuOutsideClick();
+
     // Comentar esta línea si no quieres el efecto de partículas
     // addParticleEffect();
 });
