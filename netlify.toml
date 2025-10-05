@@ -1,7 +1,8 @@
+# Netlify configuration for static site
 [build]
   publish = "."
-  command = "echo 'No build step required - Updated 2025'"
 
+# API redirects to Railway backend
 [[redirects]]
   from = "/api/*"
   to = "https://webparche-production.up.railway.app/api/:splat"
@@ -11,7 +12,3 @@
   from = "/pages/torker/*"
   to = "https://webparche-production.up.railway.app/pages/torker/:splat"
   status = 200
-
-[build.environment]
-  # Force redeploy with timestamp
-  UPDATED_AT = "2025-10-05-fix"
