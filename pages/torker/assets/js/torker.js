@@ -7,26 +7,8 @@ let isAuthenticated = false;
 let accessToken = null;
 let refreshToken = null;
 
-// Configuración de la API
-function getApiBaseUrl() {
-    const hostname = window.location.hostname;
-    const port = window.location.port;
-
-    // Desarrollo local
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return 'http://localhost:8000/api';
-    }
-
-    // Red local (IPs privadas)
-    if (hostname.match(/^192\.168\./) || hostname.match(/^10\./) || hostname.match(/^172\./)) {
-        return `http://${hostname}:${port}/api`;
-    }
-
-    // Producción (Railway o Netlify)
-    return 'https://[TU_DOMINIO_RAILWAY].up.railway.app/api';
-}
-
-const API_BASE_URL = getApiBaseUrl();
+// Configuración de la API - SIEMPRE USA RAILWAY
+const API_BASE_URL = 'https://webparche-production.up.railway.app/api';
 
 // Funciones helper para API
 async function apiRequest(endpoint, options = {}) {
