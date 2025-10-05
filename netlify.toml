@@ -1,6 +1,6 @@
 [build]
   publish = "."
-  command = "echo 'No build step required'"
+  command = "echo 'No build step required - Updated 2025'"
 
 [[redirects]]
   from = "/api/*"
@@ -14,3 +14,5 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  # Force redeploy with timestamp
+  UPDATED_AT = "2025-10-05"
