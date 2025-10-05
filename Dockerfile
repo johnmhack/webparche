@@ -27,5 +27,5 @@ RUN useradd --create-home --shell /bin/bash app \
     && chown -R app:app /app
 USER app
 
-# Run migrations and start server
-CMD python manage.py migrate && python manage.py runserver 0.0.0.0:$PORT
+# Run migrations, create test user, and start server
+CMD python manage.py migrate && python manage.py shell < create_test_user.py && python manage.py runserver 0.0.0.0:$PORT
