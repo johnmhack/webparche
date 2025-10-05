@@ -107,7 +107,7 @@ function showDashboard() {
     // Ocultar elementos de la página principal
     dashboard.classList.remove('hidden');
     document.querySelector('.hero').classList.add('hidden');
-    document.querySelector('.header').classList.add('hidden');
+    // Header se mantiene visible para navegación
 
     // Ocultar modales si están abiertos
     hideLogin();
@@ -166,7 +166,7 @@ function updateDashboardStats(stats) {
 function hideDashboard() {
     dashboard.classList.add('hidden');
     document.querySelector('.hero').classList.remove('hidden');
-    document.querySelector('.header').classList.remove('hidden');
+    // Header se mantiene visible
 }
 
 // Función para manejar login

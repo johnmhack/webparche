@@ -515,17 +515,22 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     background: var(--dark-blue);
-    min-height: 100vh;
+    min-height: calc(100vh - 110px); /* Restar altura del header */
     position: relative;
-    z-index: 10;
+    z-index: 5;
 }
 
 .dashboard.hidden {
     display: none;
 }
 
-/* Ocultar footer cuando dashboard o sección de facturas están activos */
-.dashboard:not(.hidden) ~ .footer,
+/* Cambiar apariencia del header cuando dashboard está activo */
+.dashboard:not(.hidden) ~ .header__divider,
+.dashboard:not(.hidden) ~ .footer {
+    display: none !important;
+}
+
+#invoicesSection:not(.hidden) ~ .header__divider,
 #invoicesSection:not(.hidden) ~ .footer {
     display: none !important;
 }
