@@ -16,7 +16,12 @@ from .serializers import (
     WorkOrderSerializer, WorkOrderDetailSerializer, AppointmentSerializer,
     InvoiceSerializer, InvoiceDetailSerializer, CreditNoteSerializer, DebitNoteSerializer
 )
-from .pdf_generator import generate_invoice_pdf
+try:
+    from .pdf_generator import generate_invoice_pdf
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+    generate_invoice_pdf = None
 
 
 class RegisterView(APIView):
@@ -286,6 +291,11 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             if invoice.workshop != request.user.workshop:
                 return Response({'error': 'No tienes permiso para acceder a esta factura'},
                               status=status.HTTP_403_FORBIDDEN)
+
+            # Verificar que PDF esté disponible
+            if not PDF_AVAILABLE or not generate_invoice_pdf:
+                return Response({'error': 'Generador de PDF no disponible. Contacta al administrador.'},
+                              status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             # Generar PDF
             pdf_data = generate_invoice_pdf(invoice.id)
