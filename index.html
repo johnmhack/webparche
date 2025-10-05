@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
     <link rel="stylesheet" href="assets/css/main.css" media="screen">
     <link rel="stylesheet" href="assets/css/components.css" media="screen">
+    <link rel="preload" as="image" href="assets/images/fotos/taller1.jpg">
     <meta name="description" content="ParcheApp: Descubre talleres, repuestos, eventos y todo lo que necesitas para tu moto. Únete a la comunidad de motociclistas y gestiona tu moto fácilmente desde una sola app.">
     <meta name="keywords" content="app moto, talleres moto, repuestos moto, mantenimiento moto, motociclistas, asistencia carretera, eventos moto, parche app">
     <meta name="author" content="Parche">
@@ -35,13 +36,13 @@
     <meta name="twitter:description" content="Descubre talleres, repuestos, eventos y todo lo que necesitas para tu moto. Únete a la comunidad de motociclistas.">
     <meta name="twitter:image" content="https://parcheapp.com/assets/images/fotos/logo.svg">
     
-    <!-- Google Analytics (reemplaza GA_MEASUREMENT_ID con tu ID real) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <!-- Google Analytics (reemplaza G-XXXXXXXXXX con tu ID real de Google Analytics 4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'GA_MEASUREMENT_ID');
+      gtag('config', 'G-XXXXXXXXXX');
     </script>
     
     <!-- Structured Data (JSON-LD) -->
@@ -61,9 +62,9 @@
       ],
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "+1-234-567-890",
+        "telephone": "+57 319 427 4416",
         "contactType": "customer service",
-        "email": "soporte@motoapp.com"
+        "email": "soporte@appparche.com"
       },
       "address": {
         "@type": "PostalAddress",
@@ -100,7 +101,7 @@
 <body>
     <nav class="navbar" role="navigation">
         <div class="navbar__logo">
-            <img src="assets/images/fotos/logo.svg" alt="Logo Parche" height="90" style="vertical-align:middle;">
+            <img loading="lazy" width="72" height="72" src="assets/images/fotos/logo.svg" alt="Logo Parche" height="90" style="vertical-align:middle;">
         </div>
         <div class="navbar__menu-container">
             <ul class="menu" id="menu-list">
@@ -134,7 +135,7 @@
                     <a href="#download" class="hire-btn home__cta-btn" role="button">Descarga la App</a>
                 </div>
                 <div class="home__image">
-                    <img src="assets/images/fotos/taller1.jpg" alt="Imagen de un taller de reparación de motos">
+                    <img src="assets/images/fotos/taller1.jpg" alt="Imagen de un taller de reparación de motos" width="800" height="600">
                 </div>
             </div>
         </section>
@@ -162,7 +163,7 @@
                     
                 </div>
                 <div class="torker__image">
-                    <img src="assets/images/fotos/servicio_1.jpeg" alt="Panel de Torker para talleres">
+                    <img loading="lazy" width="72" height="72" src="assets/images/fotos/servicio_1.jpeg" alt="Panel de Torker para talleres" loading="lazy">
                 </div>
             </div>
         </article>
@@ -234,7 +235,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="assets/images/fotos/miguel.jpg" alt="Miguel Lopez, testimonio positivo">
+                                        <img loading="lazy" width="72" height="72" src="assets/images/fotos/miguel.jpg" alt="Miguel Lopez, testimonio positivo" loading="lazy">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Miguel Lopez</p>
@@ -251,7 +252,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="assets/images/fotos/juan.jpg" alt="Juan Pérez, cliente satisfecho">
+                                        <img loading="lazy" width="72" height="72" src="assets/images/fotos/juan.jpg" alt="Juan Pérez, cliente satisfecho" loading="lazy">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Juan Pérez</p>
@@ -268,7 +269,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="assets/images/fotos/marco.jpg" alt="Marco Pérez, usuario contento">
+                                        <img loading="lazy" width="72" height="72" src="assets/images/fotos/marco.jpg" alt="Marco Pérez, usuario contento">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Marco Pérez</p>
@@ -285,7 +286,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="assets/images/fotos/ana.jpg" alt="Ana Gómez, clienta satisfecha">
+                                        <img loading="lazy" width="72" height="72" src="assets/images/fotos/ana.jpg" alt="Ana Gómez, clienta satisfecha">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Ana Gómez</p>
@@ -302,7 +303,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="assets/images/fotos/laura.jpg" alt="Laura Gutiérrez, clienta alegre">
+                                        <img loading="lazy" width="72" height="72" src="assets/images/fotos/laura.jpg" alt="Laura Gutiérrez, clienta alegre">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Laura Gutiérrez</p>
@@ -319,7 +320,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="assets/images/fotos/carlos.jpg" alt="Carlos Ruiz, opinion sincera">
+                                        <img loading="lazy" width="72" height="72" src="assets/images/fotos/carlos.jpg" alt="Carlos Ruiz, opinion sincera">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Carlos Ruiz</p>
@@ -336,7 +337,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="assets/images/fotos/javier.jpg" alt="Javier Morales, cliente feliz">
+                                        <img loading="lazy" width="72" height="72" src="assets/images/fotos/javier.jpg" alt="Javier Morales, cliente feliz">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Javier Morales</p>
@@ -353,7 +354,7 @@
                             <article class="testimonial__card">
                                 <header class="testimonial__card-profile">
                                     <div class="testimonial__card-image">
-                                        <img src="assets/images/fotos/sofia.jpg" alt="Sofía Herrera, usuaria positiva">
+                                        <img loading="lazy" width="72" height="72" src="assets/images/fotos/sofia.jpg" alt="Sofía Herrera, usuaria positiva">
                                     </div>
                                     <div class="testimonial__card-info">
                                         <p class="testimonial-name">- Sofía Herrera</p>

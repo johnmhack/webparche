@@ -1,12 +1,340 @@
 /* Estilos de componentes reutilizables globales */
-/* Ejemplo: botones, tarjetas, etc. */
+
+/* Notificaciones globales */
+.global-notification {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.global-notification .notification-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.global-notification .notification-content i {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.global-notification .notification-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+}
+
+.global-notification .notification-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Animaciones para notificaciones */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
 
 /* Botones globales */
 .btn {
-    /* Estilos base para botones */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 44px;
+    gap: 8px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Variantes de botones */
+.btn-primary {
+    background: linear-gradient(90deg, var(--neon-green), var(--neon-blue));
+    color: var(--deeper-dark-blue);
+    box-shadow: 0 0 8px var(--neon-green);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(90deg, var(--neon-pink), var(--neon-orange));
+    color: white;
+    box-shadow: 0 0 16px var(--neon-pink);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--neon-blue);
+    border: 2px solid var(--neon-blue);
+}
+
+.btn-secondary:hover {
+    background: var(--neon-blue);
+    color: white;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--surface);
+    border: 2px solid var(--surface);
+}
+
+.btn-outline:hover {
+    background: var(--surface);
+    color: var(--neon-blue);
 }
 
 /* Tarjetas */
 .card {
-    /* Estilos base para tarjetas */
+    background: var(--surface);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* Formularios */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--neon-blue);
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--surface-variant);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--surface);
+    color: var(--text-dark);
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--neon-green);
+    box-shadow: 0 0 16px rgba(37, 255, 122, 0.2);
+    background: var(--surface);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--surface-variant);
+}
+
+/* Estados de validación */
+.form-group input.is-valid {
+    border-color: var(--neon-green);
+    box-shadow: 0 0 8px rgba(37, 255, 122, 0.3);
+}
+
+.form-group input.is-invalid {
+    border-color: var(--neon-pink);
+    box-shadow: 0 0 8px rgba(255, 47, 119, 0.3);
+}
+
+.form-group .validation-message {
+    font-size: 0.8rem;
+    margin-top: 4px;
+    display: block;
+}
+
+.form-group .validation-message.valid {
+    color: var(--neon-green);
+}
+
+.form-group .validation-message.invalid {
+    color: var(--neon-pink);
+}
+
+/* Modales */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+.modal-content {
+    background: var(--deeper-dark-blue);
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 0 32px rgba(0, 194, 255, 0.3);
+    position: relative;
+    border: 2px solid var(--neon-blue);
+    transform: scale(0.9);
+    animation: scaleIn 0.3s ease forwards;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--neon-blue);
+}
+
+.modal-header h3 {
+    color: var(--neon-green);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--neon-pink);
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: var(--neon-pink);
+    color: white;
+    transform: rotate(90deg);
+}
+
+/* Animaciones para modales */
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    to { transform: scale(1); }
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; }
+}
+
+@keyframes scaleOut {
+    to { transform: scale(0.9); }
+}
+
+/* Utilidades */
+.hidden {
+    display: none !important;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--neon-blue);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .global-notification {
+        left: 10px;
+        right: 10px;
+        max-width: none;
+    }
+
+    .modal-content {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+
+    .btn {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+    }
 }

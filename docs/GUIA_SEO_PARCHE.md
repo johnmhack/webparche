@@ -30,11 +30,11 @@ Tu sitio web de Parche no aparece en Google a pesar de tener dominio y hosting.
 3. Verifica la propiedad (usa el archivo `google-verification.html`)
 4. Envía el sitemap: `https://parcheapp.com/sitemap.xml`
 
-### **PASO 2: Google Analytics**
+### **PASO 2: Google Analytics 4**
 1. Ve a [Google Analytics](https://analytics.google.com)
 2. Crea una nueva propiedad para Parche
 3. Copia el ID de medición (G-XXXXXXXXXX)
-4. Reemplaza `GA_MEASUREMENT_ID` en `index.html`
+4. Reemplaza `G-XXXXXXXXXX` en `index.html`
 
 ### **PASO 3: Verificar Archivos**
 Asegúrate de que estos archivos estén en tu servidor:

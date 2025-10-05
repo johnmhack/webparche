@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     swiperContainer.addEventListener('mouseleave', () => {
         swiper.autoplay.start();
-});
+    });
 
         // Preguntas frecuentes (FAQ)
 document.querySelectorAll('.faq-item h6').forEach(faqItemHeading => {
