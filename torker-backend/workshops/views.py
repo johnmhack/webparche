@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate
+from django.http import HttpResponse
 from .models import (
     User, Workshop, Customer, Motorcycle, Employee,
     Part, WorkOrder, WorkOrderDetail, Appointment,
@@ -15,6 +16,7 @@ from .serializers import (
     WorkOrderSerializer, WorkOrderDetailSerializer, AppointmentSerializer,
     InvoiceSerializer, InvoiceDetailSerializer, CreditNoteSerializer, DebitNoteSerializer
 )
+from .pdf_generator import generate_invoice_pdf
 
 
 class RegisterView(APIView):
@@ -273,6 +275,33 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                           status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['get'])
+    def download_pdf(self, request, pk=None):
+        """Descargar PDF de la factura"""
+        try:
+            invoice = self.get_object()
+
+            # Verificar que la factura pertenece al taller del usuario
+            if invoice.workshop != request.user.workshop:
+                return Response({'error': 'No tienes permiso para acceder a esta factura'},
+                              status=status.HTTP_403_FORBIDDEN)
+
+            # Generar PDF
+            pdf_data = generate_invoice_pdf(invoice.id)
+
+            # Crear respuesta HTTP con el PDF
+            response = HttpResponse(pdf_data, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="factura_{invoice.invoice_number}.pdf"'
+            response['Content-Length'] = len(pdf_data)
+
+            return response
+
+        except Invoice.DoesNotExist:
+            return Response({'error': 'Factura no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': f'Error generando PDF: {str(e)}'},
+                          status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class CreditNoteViewSet(viewsets.ModelViewSet):
