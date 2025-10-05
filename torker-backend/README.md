@@ -114,31 +114,91 @@ GET|POST /api/appointments/  - Citas
 - ✅ API externa
 - ✅ Soporte prioritario
 
-## 🚀 Despliegue en Railway
+## 🚀 Despliegue en Colombia (Railway)
 
-### 1. Crear proyecto en Railway
+### **Opción A: Script Automático (Recomendado)**
 ```bash
-railway login
-railway init
+# Desde la raíz del proyecto
+chmod +x deploy_railway.sh
+./deploy_railway.sh
 ```
 
-### 2. Configurar PostgreSQL
+### **Opción B: Manual**
+
+#### 1. Instalar Railway CLI
+```bash
+npm install -g @railway/cli
+# o descarga desde: https://docs.railway.app/develop/cli
+```
+
+#### 2. Autenticarse y crear proyecto
+```bash
+railway login
+cd torker-backend
+railway init torker-backend
+```
+
+#### 3. Agregar PostgreSQL
 ```bash
 railway add postgresql
 ```
 
-### 3. Variables de entorno en Railway
+#### 4. Configurar variables de entorno
 ```bash
 railway variables set DEBUG=False
-railway variables set SECRET_KEY=tu-clave-produccion
-railway variables set DATABASE_URL=${DATABASE_URL}  # Automático
-railway variables set ALLOWED_HOSTS=tu-dominio.com
+railway variables set SECRET_KEY="$(openssl rand -hex 32)"
+railway variables set DATABASE_URL="${DATABASE_URL}"
+railway variables set ALLOWED_HOSTS="${RAILWAY_STATIC_URL}"
 ```
 
-### 4. Desplegar
+#### 5. Desplegar
 ```bash
 railway up
 ```
+
+#### 6. Crear superusuario
+```bash
+railway run python manage.py createsuperuser
+```
+
+### **URLs después del despliegue**
+- **API Base**: `https://[tu-proyecto].up.railway.app/api/`
+- **Admin Django**: `https://[tu-proyecto].up.railway.app/admin/`
+- **Torker Frontend**: `https://[tu-proyecto].up.railway.app/pages/torker/index.html`
+
+## 🌐 **Otras Opciones de Hosting en Colombia**
+
+### **Railway (Recomendado)**
+- ✅ Fácil de usar
+- ✅ PostgreSQL incluido
+- ✅ Plan gratuito decente
+- ✅ Despliegue rápido
+
+### **Heroku**
+```bash
+# Crear app
+heroku create torker-backend
+
+# Agregar PostgreSQL
+heroku addons:create heroku-postgresql:hobby-dev
+
+# Configurar variables
+heroku config:set DEBUG=False
+heroku config:set SECRET_KEY=tu-clave-secreta
+
+# Desplegar
+git push heroku main
+```
+
+### **DigitalOcean App Platform**
+- Arrastrar y soltar para desplegar
+- PostgreSQL managed
+- CDN incluido
+
+### **Vercel + Railway**
+- **Frontend (Parche)**: Desplegar en Vercel
+- **Backend (Torker)**: Desplegar en Railway
+- Mejor separación de responsabilidades
 
 ## 🧪 Testing
 
