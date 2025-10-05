@@ -13,6 +13,5 @@
   status = 200
 
 [build.environment]
-  NODE_VERSION = "18"
   # Force redeploy with timestamp
-  UPDATED_AT = "2025-10-05"
+  UPDATED_AT = "2025-10-05-fix"
