@@ -21,4 +21,6 @@ urlpatterns = [
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/register/', views.RegisterView.as_view(), name='register'),
     path('api/dashboard/', views.DashboardView.as_view(), name='dashboard'),
+    # TEMPORAL: Endpoint para crear usuario de prueba
+    path('api/create-test-user/', views.create_test_user, name='create_test_user'),
 ]

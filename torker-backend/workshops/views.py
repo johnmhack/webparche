@@ -138,3 +138,38 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(workshop=self.request.user.workshop)
+
+
+# TEMPORAL: Endpoint para crear usuario de prueba
+from rest_framework.decorators import api_view
+
+@api_view(['GET'])
+def create_test_user(request):
+    """Endpoint temporal para crear usuario de prueba"""
+    try:
+        if User.objects.filter(email='test@example.com').exists():
+            return Response({'message': 'Usuario ya existe'})
+
+        user = User.objects.create_user(
+            username='test@example.com',
+            email='test@example.com',
+            password='test123',
+            first_name='Usuario',
+            last_name='Prueba'
+        )
+
+        workshop = Workshop.objects.create(
+            name='Taller Demo',
+            owner=user,
+            email='test@example.com',
+            phone='+573001234567'
+        )
+
+        return Response({
+            'message': 'Usuario creado exitosamente',
+            'email': 'test@example.com',
+            'password': 'test123'
+        })
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
