@@ -104,13 +104,27 @@ function hideRegister() {
 
 // Función para mostrar dashboard
 function showDashboard() {
+    // Ocultar elementos de la página principal
     dashboard.classList.remove('hidden');
     document.querySelector('.hero').classList.add('hidden');
     document.querySelector('.header').classList.add('hidden');
 
+    // Ocultar modales si están abiertos
+    hideLogin();
+    hideRegister();
+    hideCreateInvoiceModal();
+
+    // Ocultar sección de facturas si está abierta
+    document.getElementById('invoicesSection').classList.add('hidden');
+
     // Actualizar datos del dashboard si tenemos información del usuario
     if (currentUser && currentUser.stats) {
         updateDashboardStats(currentUser.stats);
+    }
+
+    // Actualizar nombre del taller
+    if (currentUser && currentUser.workshopName) {
+        workshopNameDisplay.textContent = currentUser.workshopName;
     }
 
     // Animación de entrada del dashboard
@@ -304,8 +318,9 @@ function logout() {
     localStorage.removeItem('torker_access_token');
     localStorage.removeItem('torker_refresh_token');
 
-    // Ocultar dashboard y mostrar página principal
+    // Ocultar todas las secciones y mostrar página principal
     hideDashboard();
+    document.getElementById('invoicesSection').classList.add('hidden');
 
     // Mostrar mensaje
     showNotification('Has cerrado sesión correctamente.', 'info');
