@@ -56,6 +56,16 @@ document.querySelectorAll('.faq-item h6').forEach(faqItemHeading => {
             menuIcon.classList.toggle('active', isActive);
             menuIcon.setAttribute('aria-expanded', isActive);
     });
+
+    // Cerrar menú al hacer clic en un enlace
+    const menuLinks = document.querySelectorAll('.menu li a');
+    menuLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            menu.classList.remove('active');
+            menuIcon.classList.remove('active');
+            menuIcon.setAttribute('aria-expanded', 'false');
+        });
+    });
 });
 
 // Navbar auto-hide al hacer scroll
