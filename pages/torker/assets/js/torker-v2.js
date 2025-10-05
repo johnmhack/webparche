@@ -104,9 +104,20 @@ function hideRegister() {
 
 // Función para mostrar dashboard
 function showDashboard() {
+    console.log('Mostrando dashboard...');
+
     // Ocultar elementos de la página principal
+    const heroSection = document.querySelector('.hero');
+    console.log('Hero section encontrada:', heroSection);
+
+    if (heroSection) {
+        heroSection.classList.add('hidden');
+        console.log('Hero section ocultada');
+    }
+
     dashboard.classList.remove('hidden');
-    document.querySelector('.hero').classList.add('hidden');
+    console.log('Dashboard mostrado');
+
     // Header se mantiene visible para navegación
 
     // Ocultar modales si están abiertos
@@ -125,6 +136,7 @@ function showDashboard() {
     // Actualizar nombre del taller
     if (currentUser && currentUser.workshopName) {
         workshopNameDisplay.textContent = currentUser.workshopName;
+        console.log('Nombre del taller actualizado:', currentUser.workshopName);
     }
 
     // Animación de entrada del dashboard
@@ -139,6 +151,8 @@ function showDashboard() {
             element.style.transform = 'translateY(0)';
         }, index * 100);
     });
+
+    console.log('Dashboard completamente mostrado');
 }
 
 // Función para actualizar estadísticas del dashboard
