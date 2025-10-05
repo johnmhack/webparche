@@ -648,3 +648,250 @@ document.addEventListener('DOMContentLoaded', function() {
     // Comentar esta línea si no quieres el efecto de partículas
     // addParticleEffect();
 });
+
+// ====================
+// FUNCIONES DE FACTURACIÓN
+// ====================
+
+// Variables para facturación
+let currentInvoices = [];
+
+// Mostrar sección de facturas
+function showInvoices() {
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('invoicesSection').classList.remove('hidden');
+    loadInvoices();
+    loadCustomersForInvoice();
+    loadCompletedWorkOrders();
+}
+
+// Ocultar sección de facturas y volver al dashboard
+function showDashboard() {
+    document.getElementById('invoicesSection').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+}
+
+// Cargar lista de facturas
+async function loadInvoices() {
+    try {
+        const response = await apiRequest('/invoices/');
+        if (response.ok) {
+            currentInvoices = await response.json();
+            renderInvoices(currentInvoices);
+        } else {
+            showNotification('Error al cargar facturas', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading invoices:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Renderizar facturas en la interfaz
+function renderInvoices(invoices) {
+    const container = document.getElementById('invoicesList');
+
+    if (invoices.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: var(--surface-variant);">
+                <i class='bx bx-receipt' style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p>No hay facturas aún</p>
+                <p>Crea tu primera factura haciendo clic en "Nueva Factura"</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = invoices.map(invoice => `
+        <div class="invoice-card">
+            <div class="invoice-header">
+                <div class="invoice-number">${invoice.invoice_number}</div>
+                <div class="invoice-status ${invoice.payment_status}">${invoice.payment_status_display}</div>
+            </div>
+            <div class="invoice-info">
+                <div class="invoice-info-item">
+                    <div class="invoice-info-label">Cliente</div>
+                    <div class="invoice-info-value">${invoice.customer_name}</div>
+                </div>
+                <div class="invoice-info-item">
+                    <div class="invoice-info-label">Fecha</div>
+                    <div class="invoice-info-value">${new Date(invoice.issue_date).toLocaleDateString('es-CO')}</div>
+                </div>
+                <div class="invoice-info-item">
+                    <div class="invoice-info-label">Vencimiento</div>
+                    <div class="invoice-info-value">${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('es-CO') : 'N/A'}</div>
+                </div>
+                <div class="invoice-info-item">
+                    <div class="invoice-info-label">Total</div>
+                    <div class="invoice-total">$${invoice.total.toLocaleString('es-CO')}</div>
+                </div>
+            </div>
+            <div class="invoice-actions">
+                <button class="btn btn-outline" onclick="downloadInvoicePDF(${invoice.id})">
+                    <i class='bx bx-download'></i>
+                    PDF
+                </button>
+                <button class="btn btn-primary" onclick="viewInvoiceDetails(${invoice.id})">
+                    <i class='bx bx-show'></i>
+                    Ver
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Filtrar facturas
+function filterInvoices() {
+    const statusFilter = document.getElementById('invoiceStatusFilter').value;
+    const searchTerm = document.getElementById('invoiceSearch').value.toLowerCase();
+
+    let filtered = currentInvoices;
+
+    if (statusFilter) {
+        filtered = filtered.filter(invoice => invoice.payment_status === statusFilter);
+    }
+
+    if (searchTerm) {
+        filtered = filtered.filter(invoice =>
+            invoice.invoice_number.toLowerCase().includes(searchTerm) ||
+            invoice.customer_name.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    renderInvoices(filtered);
+}
+
+// Descargar PDF de factura
+async function downloadInvoicePDF(invoiceId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/invoices/${invoiceId}/download_pdf/`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `factura_${invoiceId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showNotification('PDF descargado exitosamente', 'success');
+        } else {
+            showNotification('Error al descargar PDF', 'error');
+        }
+    } catch (error) {
+        console.error('Error downloading PDF:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Ver detalles de factura
+function viewInvoiceDetails(invoiceId) {
+    const invoice = currentInvoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+        // Por ahora solo mostrar notificación, después se puede implementar modal
+        showNotification(`Factura ${invoice.invoice_number} - Total: $${invoice.total.toLocaleString('es-CO')}`, 'info');
+    }
+}
+
+// Mostrar modal de crear factura
+function showCreateInvoiceModal() {
+    document.getElementById('createInvoiceModal').classList.remove('hidden');
+}
+
+// Ocultar modal de crear factura
+function hideCreateInvoiceModal() {
+    document.getElementById('createInvoiceModal').classList.add('hidden');
+}
+
+// Cargar clientes para el select de facturas
+async function loadCustomersForInvoice() {
+    try {
+        const response = await apiRequest('/customers/');
+        if (response.ok) {
+            const customers = await response.json();
+            const select = document.getElementById('invoiceCustomer');
+            select.innerHTML = '<option value="">Seleccionar cliente...</option>' +
+                customers.map(customer =>
+                    `<option value="${customer.id}">${customer.first_name} ${customer.last_name}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading customers:', error);
+    }
+}
+
+// Cargar órdenes de trabajo completadas
+async function loadCompletedWorkOrders() {
+    try {
+        const response = await apiRequest('/work-orders/');
+        if (response.ok) {
+            const workOrders = await response.json();
+            const completedOrders = workOrders.filter(wo => wo.status === 'completed' && !wo.invoice);
+            const select = document.getElementById('invoiceWorkOrder');
+            select.innerHTML = '<option value="">Sin orden de trabajo</option>' +
+                completedOrders.map(wo =>
+                    `<option value="${wo.id}">OT-${wo.order_number} - ${wo.customer_name}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading work orders:', error);
+    }
+}
+
+// Manejar creación de factura
+async function handleCreateInvoice(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const invoiceData = {
+        customer: formData.get('customer'),
+        work_order: formData.get('work_order') || null,
+        due_date: formData.get('due_date') || null,
+        payment_method: 'cash', // Por defecto
+        notes: formData.get('notes') || ''
+    };
+
+    // Validar datos básicos
+    if (!invoiceData.customer) {
+        showNotification('Debe seleccionar un cliente', 'error');
+        return;
+    }
+
+    try {
+        let response;
+        if (invoiceData.work_order) {
+            // Crear factura desde orden de trabajo
+            response = await apiRequest('/invoices/create_from_work_order/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    work_order_id: invoiceData.work_order,
+                    payment_method: invoiceData.payment_method
+                })
+            });
+        } else {
+            // Crear factura manual (por ahora no implementado)
+            showNotification('Creación manual de facturas próximamente', 'warning');
+            return;
+        }
+
+        if (response.ok) {
+            const invoice = await response.json();
+            showNotification(`Factura ${invoice.invoice_number} creada exitosamente`, 'success');
+            hideCreateInvoiceModal();
+            event.target.reset();
+            loadInvoices(); // Recargar lista
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al crear factura', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating invoice:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}

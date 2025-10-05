@@ -194,7 +194,90 @@
                         Acceder
                     </button>
                 </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-receipt'></i> Facturación</h3>
+                    <p>Genera facturas y controla ingresos</p>
+                    <button class="btn btn-primary" onclick="showInvoices()">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Sección de Facturación (oculta por defecto) -->
+    <div id="invoicesSection" class="dashboard hidden">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-receipt'></i> Facturación</h2>
+            <div>
+                <button class="btn btn-secondary" onclick="showDashboard()">
+                    <i class='bx bx-arrow-back'></i>
+                    Volver
+                </button>
+                <button class="btn btn-primary" onclick="showCreateInvoiceModal()">
+                    <i class='bx bx-plus'></i>
+                    Nueva Factura
+                </button>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <div class="invoices-filters">
+                <div class="filter-group">
+                    <label for="invoiceStatusFilter">Estado:</label>
+                    <select id="invoiceStatusFilter" onchange="filterInvoices()">
+                        <option value="">Todos</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="paid">Pagada</option>
+                        <option value="overdue">Vencida</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="invoiceSearch">Buscar:</label>
+                    <input type="text" id="invoiceSearch" placeholder="Número o cliente..." onkeyup="filterInvoices()">
+                </div>
+            </div>
+            <div id="invoicesList" class="invoices-list">
+                <!-- Las facturas se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear factura -->
+    <div id="createInvoiceModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class='bx bx-plus'></i> Crear Nueva Factura</h3>
+                <button class="close-btn" onclick="hideCreateInvoiceModal()">&times;</button>
+            </div>
+            <form class="invoice-form" onsubmit="handleCreateInvoice(event)">
+                <div class="form-group">
+                    <label for="invoiceCustomer">Cliente</label>
+                    <select id="invoiceCustomer" name="customer" required>
+                        <option value="">Seleccionar cliente...</option>
+                        <!-- Los clientes se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoiceWorkOrder">Orden de Trabajo (opcional)</label>
+                    <select id="invoiceWorkOrder" name="work_order">
+                        <option value="">Sin orden de trabajo</option>
+                        <!-- Las OT completadas se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoiceDueDate">Fecha de Vencimiento</label>
+                    <input type="date" id="invoiceDueDate" name="due_date">
+                </div>
+                <div class="form-group">
+                    <label for="invoiceNotes">Notas</label>
+                    <textarea id="invoiceNotes" name="notes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class='bx bx-save'></i>
+                    Crear Factura
+                </button>
+            </form>
         </div>
     </div>
 
