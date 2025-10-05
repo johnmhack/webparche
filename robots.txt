@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://parcheapp.com/sitemap.xml
+Sitemap: https://appparche.com/sitemap.xml
  
 # Crawl-delay
 Crawl-delay: 1 

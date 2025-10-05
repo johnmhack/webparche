@@ -26,9 +26,9 @@ Tu sitio web de Parche no aparece en Google a pesar de tener dominio y hosting.
 
 ### **PASO 1: Google Search Console**
 1. Ve a [Google Search Console](https://search.google.com/search-console)
-2. Agrega tu propiedad: `https://parcheapp.com`
+2. Agrega tu propiedad: `https://appparche.com`
 3. Verifica la propiedad (usa el archivo `google-verification.html`)
-4. Envía el sitemap: `https://parcheapp.com/sitemap.xml`
+4. Envía el sitemap: `https://appparche.com/sitemap.xml`
 
 ### **PASO 2: Google Analytics 4**
 1. Ve a [Google Analytics](https://analytics.google.com)
@@ -39,7 +39,7 @@ Tu sitio web de Parche no aparece en Google a pesar de tener dominio y hosting.
 ### **PASO 3: Verificar Archivos**
 Asegúrate de que estos archivos estén en tu servidor:
 ```
-parcheapp.com/
+appparche.com/
 ├── index.html
 ├── robots.txt
 ├── sitemap.xml
@@ -49,7 +49,7 @@ parcheapp.com/
 
 ### **PASO 4: Probar Indexación**
 1. En Google Search Console, usa "Inspeccionar URL"
-2. Prueba: `https://parcheapp.com`
+2. Prueba: `https://appparche.com`
 3. Solicita indexación
 
 ---
