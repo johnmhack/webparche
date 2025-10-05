@@ -516,10 +516,18 @@ body {
     margin: 0 auto;
     background: var(--dark-blue);
     min-height: 100vh;
+    position: relative;
+    z-index: 10;
 }
 
 .dashboard.hidden {
     display: none;
+}
+
+/* Ocultar footer cuando dashboard o sección de facturas están activos */
+.dashboard:not(.hidden) ~ .footer,
+#invoicesSection:not(.hidden) ~ .footer {
+    display: none !important;
 }
 
 .dashboard-header {
