@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import (
     User, Workshop, Customer, Motorcycle, Employee,
-    Part, WorkOrder, WorkOrderDetail, Appointment
+    Part, WorkOrder, WorkOrderDetail, Appointment,
+    Invoice, InvoiceDetail, CreditNote, DebitNote
 )
 
 
@@ -85,3 +86,44 @@ class AppointmentSerializer(serializers.ModelSerializer):
         model = Appointment
         fields = '__all__'
         read_only_fields = ['workshop']
+
+
+class InvoiceDetailSerializer(serializers.ModelSerializer):
+    part_name = serializers.CharField(source='part.name', read_only=True)
+    part_number = serializers.CharField(source='part.part_number', read_only=True)
+
+    class Meta:
+        model = InvoiceDetail
+        fields = '__all__'
+        read_only_fields = ['invoice', 'subtotal', 'tax_amount', 'total']
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='customer.full_name', read_only=True)
+    workshop_name = serializers.CharField(source='workshop.name', read_only=True)
+    details = InvoiceDetailSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Invoice
+        fields = '__all__'
+        read_only_fields = ['workshop', 'invoice_number', 'consecutive_number', 'subtotal', 'tax_amount', 'total']
+
+
+class CreditNoteSerializer(serializers.ModelSerializer):
+    original_invoice_number = serializers.CharField(source='original_invoice.invoice_number', read_only=True)
+    workshop_name = serializers.CharField(source='workshop.name', read_only=True)
+
+    class Meta:
+        model = CreditNote
+        fields = '__all__'
+        read_only_fields = ['workshop', 'credit_note_number', 'consecutive_number']
+
+
+class DebitNoteSerializer(serializers.ModelSerializer):
+    original_invoice_number = serializers.CharField(source='original_invoice.invoice_number', read_only=True)
+    workshop_name = serializers.CharField(source='workshop.name', read_only=True)
+
+    class Meta:
+        model = DebitNote
+        fields = '__all__'
+        read_only_fields = ['workshop', 'debit_note_number', 'consecutive_number']

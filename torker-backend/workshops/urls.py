@@ -14,6 +14,9 @@ router.register(r'employees', views.EmployeeViewSet)
 router.register(r'parts', views.PartViewSet)
 router.register(r'work-orders', views.WorkOrderViewSet)
 router.register(r'appointments', views.AppointmentViewSet)
+router.register(r'invoices', views.InvoiceViewSet)
+router.register(r'credit-notes', views.CreditNoteViewSet)
+router.register(r'debit-notes', views.DebitNoteViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
