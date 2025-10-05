@@ -4,6 +4,73 @@
 // Estado de la aplicación
 let currentUser = null;
 let isAuthenticated = false;
+let accessToken = null;
+let refreshToken = null;
+
+// Configuración de la API
+const API_BASE_URL = 'http://localhost:8000/api';
+
+// Funciones helper para API
+async function apiRequest(endpoint, options = {}) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const config = {
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        },
+        ...options
+    };
+
+    // Agregar token de autenticación si existe
+    if (accessToken && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    try {
+        const response = await fetch(url, config);
+
+        // Si el token expiró, intentar refresh
+        if (response.status === 401 && refreshToken) {
+            const newTokens = await refreshAccessToken();
+            if (newTokens) {
+                config.headers.Authorization = `Bearer ${newTokens.access}`;
+                return fetch(url, config);
+            }
+        }
+
+        return response;
+    } catch (error) {
+        console.error('API Request Error:', error);
+        throw error;
+    }
+}
+
+async function refreshAccessToken() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/refresh/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ refresh: refreshToken })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            accessToken = data.access;
+            localStorage.setItem('torker_access_token', accessToken);
+            return data;
+        } else {
+            // Refresh token expiró, logout
+            logout();
+            return null;
+        }
+    } catch (error) {
+        console.error('Token refresh error:', error);
+        logout();
+        return null;
+    }
+}
 
 // Elementos del DOM
 const loginModal = document.getElementById('loginModal');
@@ -39,18 +106,44 @@ function showDashboard() {
     dashboard.classList.remove('hidden');
     document.querySelector('.hero').classList.add('hidden');
     document.querySelector('.header').classList.add('hidden');
-    
+
+    // Actualizar datos del dashboard si tenemos información del usuario
+    if (currentUser && currentUser.stats) {
+        updateDashboardStats(currentUser.stats);
+    }
+
     // Animación de entrada del dashboard
     const dashboardElements = dashboard.querySelectorAll('.stat-card, .module-card');
     dashboardElements.forEach((element, index) => {
         element.style.opacity = '0';
         element.style.transform = 'translateY(20px)';
-        
+
         setTimeout(() => {
             element.style.transition = 'all 0.6s ease';
             element.style.opacity = '1';
             element.style.transform = 'translateY(0)';
         }, index * 100);
+    });
+}
+
+// Función para actualizar estadísticas del dashboard
+function updateDashboardStats(stats) {
+    // Actualizar estadísticas en las tarjetas
+    const statCards = dashboard.querySelectorAll('.stat-card');
+
+    statCards.forEach(card => {
+        const statNumber = card.querySelector('.stat-number');
+        const statTitle = card.querySelector('h3').textContent.toLowerCase();
+
+        if (statTitle.includes('citas') && statNumber) {
+            statNumber.textContent = stats.appointments || 0;
+        } else if (statTitle.includes('órdenes') && statNumber) {
+            statNumber.textContent = stats.work_orders || 0;
+        } else if (statTitle.includes('clientes') && statNumber) {
+            statNumber.textContent = stats.customers || 0;
+        } else if (statTitle.includes('inventario') && statNumber) {
+            statNumber.textContent = stats.parts || 0;
+        }
     });
 }
 
@@ -62,51 +155,64 @@ function hideDashboard() {
 }
 
 // Función para manejar login
-function handleLogin(event) {
+async function handleLogin(event) {
     event.preventDefault();
-    
+
     const formData = new FormData(event.target);
     const email = formData.get('email');
     const password = formData.get('password');
-    
-    // Simulación de login (aquí iría la llamada real a la API)
-    if (email && password) {
-        // Simular autenticación exitosa
-        currentUser = {
-            email: email,
-            workshopName: 'Taller Demo',
-            role: 'owner'
-        };
-        
-        isAuthenticated = true;
-        
-        // Mostrar dashboard
-        showDashboard();
-        
-        // Actualizar nombre del taller en el dashboard
-        workshopNameDisplay.textContent = currentUser.workshopName;
-        
-        // Ocultar modal de login
-        hideLogin();
-        
-        // Guardar en localStorage
-        localStorage.setItem('torker_user', JSON.stringify(currentUser));
-        localStorage.setItem('torker_authenticated', 'true');
-        
-        // Mostrar mensaje de éxito
-        showNotification('¡Bienvenido! Has iniciado sesión correctamente.', 'success');
-        
-        // Limpiar formulario
-        event.target.reset();
-    } else {
+
+    if (!email || !password) {
         showNotification('Por favor completa todos los campos.', 'error');
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/auth/login/', {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            // Guardar tokens
+            accessToken = data.access;
+            refreshToken = data.refresh;
+
+            // Guardar en localStorage
+            localStorage.setItem('torker_access_token', accessToken);
+            localStorage.setItem('torker_refresh_token', refreshToken);
+
+            // Cargar datos del usuario y taller
+            await loadUserData();
+
+            // Mostrar dashboard
+            showDashboard();
+
+            // Ocultar modal de login
+            hideLogin();
+
+            // Mostrar mensaje de éxito
+            showNotification('¡Bienvenido! Has iniciado sesión correctamente.', 'success');
+
+            // Limpiar formulario
+            event.target.reset();
+
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.detail || 'Error al iniciar sesión.', 'error');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showNotification('Error de conexión. Inténtalo de nuevo.', 'error');
     }
 }
 
 // Función para manejar registro
-function handleRegister(event) {
+async function handleRegister(event) {
     event.preventDefault();
-    
+
     const formData = new FormData(event.target);
     const workshopName = formData.get('workshopName');
     const ownerName = formData.get('ownerName');
@@ -114,66 +220,92 @@ function handleRegister(event) {
     const phone = formData.get('phone');
     const password = formData.get('password');
     const confirmPassword = formData.get('confirmPassword');
-    
+
     // Validaciones básicas
     if (!workshopName || !ownerName || !email || !phone || !password || !confirmPassword) {
         showNotification('Por favor completa todos los campos.', 'error');
         return;
     }
-    
+
     if (password !== confirmPassword) {
         showNotification('Las contraseñas no coinciden.', 'error');
         return;
     }
-    
+
     if (password.length < 6) {
         showNotification('La contraseña debe tener al menos 6 caracteres.', 'error');
         return;
     }
-    
-    // Simulación de registro exitoso
-    currentUser = {
-        email: email,
-        workshopName: workshopName,
-        ownerName: ownerName,
-        phone: phone,
-        role: 'owner'
-    };
-    
-    isAuthenticated = true;
-    
-    // Mostrar dashboard
-    showDashboard();
-    
-    // Actualizar nombre del taller en el dashboard
-    workshopNameDisplay.textContent = currentUser.workshopName;
-    
-    // Ocultar modal de registro
-    hideRegister();
-    
-    // Guardar en localStorage
-    localStorage.setItem('torker_user', JSON.stringify(currentUser));
-    localStorage.setItem('torker_authenticated', 'true');
-    
-    // Mostrar mensaje de éxito
-    showNotification('¡Registro exitoso! Tu taller ha sido creado.', 'success');
-    
-    // Limpiar formulario
-    event.target.reset();
+
+    // Separar nombre y apellido
+    const nameParts = ownerName.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    try {
+        const response = await apiRequest('/auth/register/', {
+            method: 'POST',
+            body: JSON.stringify({
+                email,
+                first_name: firstName,
+                last_name: lastName,
+                phone,
+                password
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            // Guardar tokens (el registro podría devolver tokens automáticamente)
+            if (data.access && data.refresh) {
+                accessToken = data.access;
+                refreshToken = data.refresh;
+                localStorage.setItem('torker_access_token', accessToken);
+                localStorage.setItem('torker_refresh_token', refreshToken);
+            }
+
+            // Cargar datos del usuario
+            await loadUserData();
+
+            // Mostrar dashboard
+            showDashboard();
+
+            // Ocultar modal de registro
+            hideRegister();
+
+            // Mostrar mensaje de éxito
+            showNotification('¡Registro exitoso! Tu taller ha sido creado.', 'success');
+
+            // Limpiar formulario
+            event.target.reset();
+
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.message || 'Error al registrar el taller.', 'error');
+        }
+    } catch (error) {
+        console.error('Register error:', error);
+        showNotification('Error de conexión. Inténtalo de nuevo.', 'error');
+    }
 }
 
 // Función para logout
 function logout() {
     currentUser = null;
     isAuthenticated = false;
-    
+    accessToken = null;
+    refreshToken = null;
+
     // Limpiar localStorage
     localStorage.removeItem('torker_user');
     localStorage.removeItem('torker_authenticated');
-    
+    localStorage.removeItem('torker_access_token');
+    localStorage.removeItem('torker_refresh_token');
+
     // Ocultar dashboard y mostrar página principal
     hideDashboard();
-    
+
     // Mostrar mensaje
     showNotification('Has cerrado sesión correctamente.', 'info');
 }
@@ -253,16 +385,50 @@ function getNotificationIcon(type) {
     }
 }
 
+// Función para cargar datos del usuario y taller
+async function loadUserData() {
+    try {
+        const response = await apiRequest('/dashboard/');
+
+        if (response.ok) {
+            const data = await response.json();
+            currentUser = {
+                id: data.workshop.owner,
+                email: data.workshop.owner_email || '',
+                workshopName: data.workshop.name,
+                workshop: data.workshop,
+                stats: data.stats
+            };
+            isAuthenticated = true;
+            return true;
+        } else {
+            console.error('Error loading user data');
+            return false;
+        }
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        return false;
+    }
+}
+
 // Función para verificar autenticación al cargar la página
-function checkAuthStatus() {
-    const savedUser = localStorage.getItem('torker_user');
-    const savedAuth = localStorage.getItem('torker_authenticated');
-    
-    if (savedUser && savedAuth === 'true') {
-        currentUser = JSON.parse(savedUser);
-        isAuthenticated = true;
-        showDashboard();
-        workshopNameDisplay.textContent = currentUser.workshopName;
+async function checkAuthStatus() {
+    const savedAccessToken = localStorage.getItem('torker_access_token');
+    const savedRefreshToken = localStorage.getItem('torker_refresh_token');
+
+    if (savedAccessToken && savedRefreshToken) {
+        accessToken = savedAccessToken;
+        refreshToken = savedRefreshToken;
+
+        // Intentar cargar datos del usuario
+        const success = await loadUserData();
+        if (success) {
+            showDashboard();
+            workshopNameDisplay.textContent = currentUser.workshopName;
+        } else {
+            // Tokens inválidos, limpiar
+            logout();
+        }
     }
 }
 
@@ -290,14 +456,14 @@ function addCardEffects() {
 }
 
 // Event listeners
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // Verificar estado de autenticación
-    checkAuthStatus();
-    
+    await checkAuthStatus();
+
     // Event listeners para cerrar modales
     loginModal.addEventListener('click', closeModalsOnOutsideClick);
     registerModal.addEventListener('click', closeModalsOnOutsideClick);
-    
+
     // Cerrar modales con Escape
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
@@ -305,10 +471,10 @@ document.addEventListener('DOMContentLoaded', function() {
             hideRegister();
         }
     });
-    
+
     // Agregar efectos a las tarjetas
     addCardEffects();
-    
+
     // Agregar efecto de typing al título
     typeWriterEffect();
 });
