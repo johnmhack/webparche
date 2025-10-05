@@ -7,8 +7,9 @@ let isAuthenticated = false;
 let accessToken = null;
 let refreshToken = null;
 
-// Configuración de la API - SIEMPRE USA RAILWAY
+// Configuración de la API - SIEMPRE USA RAILWAY (v2)
 const API_BASE_URL = 'https://webparche-production.up.railway.app/api';
+// Cache buster: 2025-10-05-v2
 
 // Funciones helper para API
 async function apiRequest(endpoint, options = {}) {
