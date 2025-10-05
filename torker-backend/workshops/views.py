@@ -141,9 +141,11 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
 
 # TEMPORAL: Endpoint para crear usuario de prueba
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def create_test_user(request):
     """Endpoint temporal para crear usuario de prueba"""
     try:
