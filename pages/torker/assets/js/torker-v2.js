@@ -276,7 +276,8 @@ async function handleRegister(event) {
                 first_name: firstName,
                 last_name: lastName,
                 phone,
-                password
+                password,
+                workshopName
             })
         });
 
