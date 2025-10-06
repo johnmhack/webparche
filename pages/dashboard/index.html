@@ -240,65 +240,90 @@
             <form class="customer-form" onsubmit="handleCustomerSubmit(event)">
                 <input type="hidden" id="customerId" name="customerId">
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="firstName">Nombre *</label>
-                        <input type="text" id="firstName" name="first_name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="lastName">Apellido *</label>
-                        <input type="text" id="lastName" name="last_name" required>
+                <!-- Información Personal -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-green); margin-bottom: 1rem; font-size: 1.1rem;">📋 Información Personal</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">Nombre *</label>
+                            <input type="text" id="firstName" name="first_name" required placeholder="Ej: Juan Carlos">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Apellido *</label>
+                            <input type="text" id="lastName" name="last_name" required placeholder="Ej: Rodríguez">
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="documentType">Tipo Documento</label>
-                        <select id="documentType" name="document_type">
-                            <option value="cc">Cédula de Ciudadanía</option>
-                            <option value="ce">Cédula de Extranjería</option>
-                            <option value="nit">NIT</option>
-                            <option value="ti">Tarjeta de Identidad</option>
-                            <option value="pasaporte">Pasaporte</option>
-                            <option value="other">Otro</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="documentNumber">Número Documento</label>
-                        <input type="text" id="documentNumber" name="document_number">
+                <!-- Documento de Identidad -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 1rem; font-size: 1.1rem;">🆔 Documento de Identidad</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="documentType">Tipo de Documento</label>
+                            <select id="documentType" name="document_type">
+                                <option value="cc">Cédula de Ciudadanía</option>
+                                <option value="ce">Cédula de Extranjería</option>
+                                <option value="nit">NIT</option>
+                                <option value="ti">Tarjeta de Identidad</option>
+                                <option value="pasaporte">Pasaporte</option>
+                                <option value="other">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="documentNumber">Número de Documento</label>
+                            <input type="text" id="documentNumber" name="document_number" placeholder="Ej: 1234567890">
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="phone">Teléfono</label>
-                        <input type="tel" id="phone" name="phone">
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email">
+                <!-- Información de Contacto -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-pink); margin-bottom: 1rem; font-size: 1.1rem;">📞 Información de Contacto</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">Teléfono</label>
+                            <input type="tel" id="phone" name="phone" placeholder="Ej: +57 300 123 4567">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Correo Electrónico</label>
+                            <input type="email" id="email" name="email" placeholder="Ej: cliente@email.com">
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="address">Dirección</label>
-                    <textarea id="address" name="address" rows="2"></textarea>
+                <!-- Dirección -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-orange); margin-bottom: 1rem; font-size: 1.1rem;">🏠 Dirección</h4>
+
+                    <div class="form-group">
+                        <label for="address">Dirección Completa</label>
+                        <textarea id="address" name="address" rows="2" placeholder="Ej: Calle 123 #45-67, Barrio Centro"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">Ciudad</label>
+                            <input type="text" id="city" name="city" placeholder="Ej: Bogotá">
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Departamento</label>
+                            <input type="text" id="department" name="department" placeholder="Ej: Cundinamarca">
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="city">Ciudad</label>
-                        <input type="text" id="city" name="city">
-                    </div>
-                    <div class="form-group">
-                        <label for="department">Departamento</label>
-                        <input type="text" id="department" name="department">
-                    </div>
-                </div>
+                <!-- Notas Adicionales -->
+                <div class="form-section">
+                    <h4 style="color: var(--logo-green); margin-bottom: 1rem; font-size: 1.1rem;">📝 Información Adicional</h4>
 
-                <div class="form-group">
-                    <label for="customerNotes">Notas</label>
-                    <textarea id="customerNotes" name="notes" rows="3" placeholder="Información adicional sobre el cliente..."></textarea>
+                    <div class="form-group">
+                        <label for="customerNotes">Notas sobre el Cliente</label>
+                        <textarea id="customerNotes" name="notes" rows="3" placeholder="Información adicional como preferencias, referencias, historial, etc."></textarea>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-full">
