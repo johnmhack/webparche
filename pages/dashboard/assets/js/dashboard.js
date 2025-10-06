@@ -206,7 +206,7 @@ async function loadUserData() {
             isAuthenticated = true;
 
             // Actualizar UI
-            workshopNameDisplay.textContent = currentUser.workshopName;
+            workshopNameDisplay.textContent = 'Taller ' + currentUser.workshopName;
             updateDashboardStats(currentUser.stats);
 
             return true;
