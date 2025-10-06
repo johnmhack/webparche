@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Torker | Parche</title>
+    <link rel="icon" href="../../../assets/images/fotos/logo.svg" type="image/svg+xml">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="../../../assets/css/main.css">
+    <link rel="stylesheet" href="../../../assets/css/components.css">
+    <link rel="stylesheet" href="../torker/assets/css/torker.css">
+    <meta name="description" content="Dashboard de Torker - Gestión integral para talleres de motos. Controla tu taller desde Parche.">
+</head>
+<body>
+    <!-- Header con navegación a Parche -->
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-brand">
+                <a href="../../../index.html" class="logo">
+                    <span class="logo-text">Torker</span>
+                </a>
+            </div>
+            <div class="nav-menu">
+                <a href="#" onclick="logout()" class="nav-link">Cerrar Sesión</a>
+            </div>
+            <button class="menu-icon" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-list">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Línea decorativa debajo del header -->
+    <div class="header__divider"></div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-wrench'></i> Dashboard - <span id="workshopNameDisplay"></span></h2>
+            <button class="btn btn-outline" onclick="logout()">
+                <i class='bx bx-log-out'></i>
+                Cerrar Sesión
+            </button>
+        </div>
+        <div class="dashboard-content">
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3><i class='bx bx-calendar-check'></i> Citas Hoy</h3>
+                    <p class="stat-number">12</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-wrench'></i> Órdenes Activas</h3>
+                    <p class="stat-number">8</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-user'></i> Clientes</h3>
+                    <p class="stat-number">45</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-box'></i> Inventario</h3>
+                    <p class="stat-number">156</p>
+                </div>
+            </div>
+            <div class="dashboard-modules">
+                <div class="module-card">
+                    <h3><i class='bx bx-calendar'></i> Agenda</h3>
+                    <p>Gestiona citas y horarios de trabajo</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-clipboard'></i> Órdenes de Trabajo</h3>
+                    <p>Controla reparaciones y servicios</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-group'></i> Clientes</h3>
+                    <p>Administra base de datos de clientes</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-package'></i> Inventario</h3>
+                    <p>Gestiona repuestos y stock</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-receipt'></i> Facturación</h3>
+                    <p>Genera facturas y controla ingresos</p>
+                    <button class="btn btn-primary" onclick="showInvoices()">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Facturación (oculta por defecto) -->
+    <div id="invoicesSection" class="dashboard hidden">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-receipt'></i> Facturación</h2>
+            <div>
+                <button class="btn btn-secondary" onclick="showDashboard()">
+                    <i class='bx bx-arrow-back'></i>
+                    Volver
+                </button>
+                <button class="btn btn-primary" onclick="showCreateInvoiceModal()">
+                    <i class='bx bx-plus'></i>
+                    Nueva Factura
+                </button>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <div class="invoices-filters">
+                <div class="filter-group">
+                    <label for="invoiceStatusFilter">Estado:</label>
+                    <select id="invoiceStatusFilter" onchange="filterInvoices()">
+                        <option value="">Todos</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="paid">Pagada</option>
+                        <option value="overdue">Vencida</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="invoiceSearch">Buscar:</label>
+                    <input type="text" id="invoiceSearch" placeholder="Número o cliente..." onkeyup="filterInvoices()">
+                </div>
+            </div>
+            <div id="invoicesList" class="invoices-list">
+                <!-- Las facturas se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear factura -->
+    <div id="createInvoiceModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class='bx bx-plus'></i> Crear Nueva Factura</h3>
+                <button class="close-btn" onclick="hideCreateInvoiceModal()">&times;</button>
+            </div>
+            <form class="invoice-form" onsubmit="handleCreateInvoice(event)">
+                <div class="form-group">
+                    <label for="invoiceCustomer">Cliente</label>
+                    <select id="invoiceCustomer" name="customer" required>
+                        <option value="">Seleccionar cliente...</option>
+                        <!-- Los clientes se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoiceWorkOrder">Orden de Trabajo (opcional)</label>
+                    <select id="invoiceWorkOrder" name="work_order">
+                        <option value="">Sin orden de trabajo</option>
+                        <!-- Las OT completadas se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoiceDueDate">Fecha de Vencimiento</label>
+                    <input type="date" id="invoiceDueDate" name="due_date">
+                </div>
+                <div class="form-group">
+                    <label for="invoiceNotes">Notas</label>
+                    <textarea id="invoiceNotes" name="notes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class='bx bx-save'></i>
+                    Crear Factura
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" role="region" aria-labelledby="footer-titulo">
+        <div class="footer__container">
+            <!-- Sección de Logo y Descripción -->
+            <div class="footer__section">
+                <h2 class="footer__logo" id="footer-titulo">Torker</h2>
+                <p class="footer__description">
+                    Potenciamos tu taller con tecnología en la nube.<br>
+                    Gestión integral de citas, inventario y clientes<br>
+                    con control total en tiempo real.
+                </p>
+            </div>
+
+            <!-- Sección de Enlaces Rápidos -->
+            <div class="footer__section">
+                <h3>Enlaces Rápidos</h3>
+                <ul class="footer__links">
+                    <li><a href="../torker/">Volver a Torker</a></li>
+                    <li><a href="../../../index.html">Ir a Parche</a></li>
+                    <li><a href="#">Soporte</a></li>
+                    <li><a href="#">Ayuda</a></li>
+                </ul>
+            </div>
+
+            <!-- Sección de Contacto -->
+            <div class="footer__section">
+                <h3>Contacto</h3>
+                <ul class="footer__contact">
+                    <li><i class='bx bxs-phone' aria-hidden="true"></i> <a href="tel:+573194274416"
+                            aria-label="Llamar al número de contacto">+57 319 427 4416</a></li>
+                    <li><i class='bx bxs-envelope' aria-hidden="true"></i> <a href="mailto:torker@appparche.com"
+                            aria-label="Enviar un correo a torker@appparche.com">torker@appparche.com</a></li>
+                    <li><i class='bx bxs-map' aria-hidden="true"></i> Carrera 5 # 7 -17 Villeta Cundinamarca</li>
+                </ul>
+            </div>
+
+            <!-- Sección de Redes Sociales -->
+            <div class="footer__section">
+                <h3>Síguenos</h3>
+                <div class="footer__socials">
+                    <a href="https://web.facebook.com/profile.php?id=61576711569346" target="_blank" aria-label="Facebook de Torker"><i class='bx bxl-facebook-circle'></i></a>
+                    <a href="https://www.instagram.com/parcheapp33/" target="_blank" aria-label="Instagram de Torker"><i class='bx bxl-instagram-alt'></i></a>
+                    <a href="https://www.tiktok.com/@parche_app" target="_blank" aria-label="TikTok de Torker"><i class='bx bxl-tiktok'></i></a>
+                    <a href="https://whatsapp.com/channel/0029VbB9YBECxoAs3gUAtA2r" target="_blank" aria-label="WhatsApp de Torker"><i class='bx bxl-whatsapp'></i></a>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p><small>by <strong>Parche</strong> - &copy; 2024 Torker. Todos los derechos reservados.</small></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../../../assets/js/main.js"></script>
+    <script src="../../../assets/js/components.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

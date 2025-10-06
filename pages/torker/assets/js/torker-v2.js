@@ -213,8 +213,8 @@ async function handleLogin(event) {
             // Cargar datos del usuario y taller
             await loadUserData();
 
-            // Mostrar dashboard
-            showDashboard();
+            // Redirigir al dashboard
+            window.location.href = '../dashboard/';
 
             // Ocultar modal de login
             hideLogin();
@@ -294,8 +294,8 @@ async function handleRegister(event) {
             // Cargar datos del usuario
             await loadUserData();
 
-            // Mostrar dashboard
-            showDashboard();
+            // Redirigir al dashboard
+            window.location.href = '../dashboard/';
 
             // Ocultar modal de registro
             hideRegister();
@@ -450,8 +450,8 @@ async function checkAuthStatus() {
         // Intentar cargar datos del usuario
         const success = await loadUserData();
         if (success) {
-            showDashboard();
-            workshopNameDisplay.textContent = currentUser.workshopName;
+            // Usuario ya autenticado, redirigir al dashboard
+            window.location.href = '../dashboard/';
         } else {
             // Tokens inválidos, limpiar
             logout();
