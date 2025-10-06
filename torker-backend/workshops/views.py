@@ -34,7 +34,7 @@ class RegisterView(APIView):
             # Crear taller automáticamente
             Workshop.objects.create(
                 owner=user,
-                name=f"Taller de {user.first_name}",
+                name=f"Mi Taller de Motos",
                 subscription_plan='trial'
             )
             return Response({
@@ -170,7 +170,7 @@ def create_test_user(request):
         )
 
         workshop = Workshop.objects.create(
-            name='Taller Demo',
+            name='Mi Taller de Motos',
             owner=user,
             email='test@example.com',
             phone='+573001234567'
