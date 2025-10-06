@@ -28,13 +28,20 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        # Extraer datos del taller
+        workshop_name = request.data.get('workshopName', 'Mi Taller de Motos')
+
+        # Crear datos del usuario sin workshopName
+        user_data = request.data.copy()
+        user_data.pop('workshopName', None)  # Remover workshopName para UserSerializer
+
+        serializer = UserSerializer(data=user_data)
         if serializer.is_valid():
             user = serializer.save()
-            # Crear taller automáticamente
+            # Crear taller con el nombre proporcionado
             Workshop.objects.create(
                 owner=user,
-                name=f"Mi Taller de Motos",
+                name=workshop_name,
                 subscription_plan='trial'
             )
             return Response({
