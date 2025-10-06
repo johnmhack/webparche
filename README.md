@@ -1,4 +1,5 @@
 # Parche - Plataforma para Motociclistas
+# Test persistencia PostgreSQL - cambio pequeño
 
 ## 📁 Estructura del Proyecto
 
