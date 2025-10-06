@@ -12,15 +12,13 @@
     <meta name="description" content="Dashboard de Torker - Gestión integral para talleres de motos. Controla tu taller desde Parche.">
     <style>
         /* Header fijo para dashboard */
-        .dashboard-header-sticky {
+        .header-sticky {
             position: sticky;
             top: 0;
             z-index: 100;
             background: rgba(27, 33, 64, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(0, 194, 255, 0.2);
-            padding: 1rem 0;
-            margin: -1rem -1rem 1rem -1rem;
             box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
         }
 
@@ -32,7 +30,7 @@
 </head>
 <body>
     <!-- Header con navegación a Parche -->
-    <header class="header">
+    <header class="header header-sticky">
         <nav class="nav">
             <div class="nav-brand">
                 <a href="../../../index.html" class="logo">
@@ -50,7 +48,7 @@
 
     <!-- Dashboard -->
     <div id="dashboard" class="dashboard">
-        <div class="dashboard-header dashboard-header-sticky">
+        <div class="dashboard-header">
             <h2><i class='bx bx-wrench'></i> <span id="workshopNameDisplay"></span></h2>
             <button class="btn btn-outline" onclick="logout()">
                 <i class='bx bx-log-out'></i>
