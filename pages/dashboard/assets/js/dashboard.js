@@ -317,6 +317,272 @@ async function loadInvoices() {
     }
 }
 
+// ====================
+// FUNCIONES DE CLIENTES
+// ====================
+
+// Variables para clientes
+let currentCustomers = [];
+let editingCustomer = null;
+
+// Mostrar sección de clientes
+function showCustomers() {
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('customersSection').classList.remove('hidden');
+    loadCustomers();
+}
+
+// Cargar lista de clientes
+async function loadCustomers() {
+    try {
+        const response = await apiRequest('/customers/');
+        if (response.ok) {
+            currentCustomers = await response.json();
+            renderCustomers(currentCustomers);
+        } else {
+            showNotification('Error al cargar clientes', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading customers:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Renderizar clientes en la interfaz
+function renderCustomers(customers) {
+    const container = document.getElementById('customersList');
+
+    if (customers.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: var(--surface-variant);">
+                <i class='bx bx-group' style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p>No hay clientes registrados</p>
+                <p>Crea tu primer cliente haciendo clic en "Nuevo Cliente"</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = customers.map(customer => `
+        <div class="customer-card">
+            <div class="customer-header">
+                <div class="customer-name">${customer.first_name} ${customer.last_name}</div>
+                <div class="customer-status ${customer.is_active ? 'active' : 'inactive'}">
+                    ${customer.is_active ? 'Activo' : 'Inactivo'}
+                </div>
+            </div>
+            <div class="customer-info">
+                <div class="customer-info-item">
+                    <div class="customer-info-label">Documento</div>
+                    <div class="customer-info-value">${customer.get_document_type_display} ${customer.document_number || 'N/A'}</div>
+                </div>
+                <div class="customer-info-item">
+                    <div class="customer-info-label">Teléfono</div>
+                    <div class="customer-info-value">${customer.phone || 'N/A'}</div>
+                </div>
+                <div class="customer-info-item">
+                    <div class="customer-info-label">Email</div>
+                    <div class="customer-info-value">${customer.email || 'N/A'}</div>
+                </div>
+                <div class="customer-info-item">
+                    <div class="customer-info-label">Visitas</div>
+                    <div class="customer-info-value">${customer.total_visits}</div>
+                </div>
+            </div>
+            <div class="customer-address">
+                <div class="customer-info-label">Dirección</div>
+                <div class="customer-info-value">${customer.full_address || 'N/A'}</div>
+            </div>
+            <div class="customer-actions">
+                <button class="btn btn-outline" onclick="viewCustomerDetails(${customer.id})">
+                    <i class='bx bx-show'></i>
+                    Ver
+                </button>
+                <button class="btn btn-secondary" onclick="editCustomer(${customer.id})">
+                    <i class='bx bx-edit'></i>
+                    Editar
+                </button>
+                <button class="btn ${customer.is_active ? 'btn-warning' : 'btn-success'}" onclick="toggleCustomerStatus(${customer.id})">
+                    <i class='bx ${customer.is_active ? 'bx-pause' : 'bx-play'}'></i>
+                    ${customer.is_active ? 'Desactivar' : 'Activar'}
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Filtrar clientes
+function filterCustomers() {
+    const searchTerm = document.getElementById('customerSearch').value.toLowerCase();
+    const statusFilter = document.getElementById('customerStatusFilter').value;
+
+    let filtered = currentCustomers;
+
+    if (statusFilter !== '') {
+        const isActive = statusFilter === 'true';
+        filtered = filtered.filter(customer => customer.is_active === isActive);
+    }
+
+    if (searchTerm) {
+        filtered = filtered.filter(customer =>
+            customer.first_name.toLowerCase().includes(searchTerm) ||
+            customer.last_name.toLowerCase().includes(searchTerm) ||
+            customer.document_number?.toLowerCase().includes(searchTerm) ||
+            customer.email?.toLowerCase().includes(searchTerm) ||
+            customer.phone?.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    renderCustomers(filtered);
+}
+
+// Mostrar modal para crear cliente
+function showCreateCustomerModal() {
+    editingCustomer = null;
+    document.getElementById('customerModalTitle').innerHTML = "<i class='bx bx-plus'></i> Nuevo Cliente";
+    document.getElementById('customerSubmitText').textContent = 'Crear Cliente';
+    document.getElementById('customerModal').classList.remove('hidden');
+
+    // Limpiar formulario
+    document.querySelector('.customer-form').reset();
+    document.getElementById('customerId').value = '';
+}
+
+// Mostrar modal para editar cliente
+function editCustomer(customerId) {
+    const customer = currentCustomers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    editingCustomer = customer;
+    document.getElementById('customerModalTitle').innerHTML = "<i class='bx bx-edit'></i> Editar Cliente";
+    document.getElementById('customerSubmitText').textContent = 'Actualizar Cliente';
+    document.getElementById('customerModal').classList.remove('hidden');
+
+    // Llenar formulario
+    document.getElementById('customerId').value = customer.id;
+    document.getElementById('firstName').value = customer.first_name;
+    document.getElementById('lastName').value = customer.last_name;
+    document.getElementById('documentType').value = customer.document_type;
+    document.getElementById('documentNumber').value = customer.document_number || '';
+    document.getElementById('phone').value = customer.phone || '';
+    document.getElementById('email').value = customer.email || '';
+    document.getElementById('address').value = customer.address || '';
+    document.getElementById('city').value = customer.city || '';
+    document.getElementById('department').value = customer.department || '';
+    document.getElementById('customerNotes').value = customer.notes || '';
+}
+
+// Ocultar modal de cliente
+function hideCustomerModal() {
+    document.getElementById('customerModal').classList.add('hidden');
+    editingCustomer = null;
+}
+
+// Manejar envío del formulario de cliente
+async function handleCustomerSubmit(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const customerData = {
+        first_name: formData.get('first_name'),
+        last_name: formData.get('last_name'),
+        document_type: formData.get('document_type'),
+        document_number: formData.get('document_number') || null,
+        phone: formData.get('phone') || null,
+        email: formData.get('email') || null,
+        address: formData.get('address') || null,
+        city: formData.get('city') || null,
+        department: formData.get('department') || null,
+        notes: formData.get('notes') || null
+    };
+
+    // Validar datos básicos
+    if (!customerData.first_name || !customerData.last_name) {
+        showNotification('Nombre y apellido son obligatorios', 'error');
+        return;
+    }
+
+    try {
+        let response;
+        if (editingCustomer) {
+            // Actualizar cliente existente
+            response = await apiRequest(`/customers/${editingCustomer.id}/`, {
+                method: 'PUT',
+                body: JSON.stringify(customerData)
+            });
+        } else {
+            // Crear nuevo cliente
+            response = await apiRequest('/customers/', {
+                method: 'POST',
+                body: JSON.stringify(customerData)
+            });
+        }
+
+        if (response.ok) {
+            const customer = await response.json();
+            const message = editingCustomer ?
+                `Cliente ${customer.first_name} ${customer.last_name} actualizado` :
+                `Cliente ${customer.first_name} ${customer.last_name} creado`;
+            showNotification(message, 'success');
+
+            hideCustomerModal();
+            event.target.reset();
+            loadCustomers(); // Recargar lista
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al guardar cliente', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving customer:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Ver detalles del cliente
+function viewCustomerDetails(customerId) {
+    const customer = currentCustomers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    // Por ahora mostrar información básica, después se puede implementar modal detallado
+    const details = `
+        ${customer.first_name} ${customer.last_name}
+        Documento: ${customer.get_document_type_display} ${customer.document_number || 'N/A'}
+        Teléfono: ${customer.phone || 'N/A'}
+        Email: ${customer.email || 'N/A'}
+        Dirección: ${customer.full_address || 'N/A'}
+        Visitas: ${customer.total_visits}
+        Gasto total: $${customer.total_spent.toLocaleString('es-CO')}
+    `;
+    showNotification(details, 'info');
+}
+
+// Cambiar estado del cliente (activar/desactivar)
+async function toggleCustomerStatus(customerId) {
+    const customer = currentCustomers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    const newStatus = !customer.is_active;
+    const action = newStatus ? 'activar' : 'desactivar';
+
+    try {
+        const response = await apiRequest(`/customers/${customerId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_active: newStatus })
+        });
+
+        if (response.ok) {
+            customer.is_active = newStatus;
+            showNotification(`Cliente ${action}do exitosamente`, 'success');
+            renderCustomers(currentCustomers); // Re-renderizar con el estado actualizado
+        } else {
+            showNotification(`Error al ${action} cliente`, 'error');
+        }
+    } catch (error) {
+        console.error('Error toggling customer status:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
 // Renderizar facturas en la interfaz
 function renderInvoices(invoices) {
     const container = document.getElementById('invoicesList');
