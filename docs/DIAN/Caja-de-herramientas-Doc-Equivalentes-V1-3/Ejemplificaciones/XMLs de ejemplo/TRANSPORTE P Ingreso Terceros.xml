@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?><Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:sts="dian:gov:co:facturaelectronica:Structures-2-1" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" xmlns:xades141="http://uri.etsi.org/01903/v1.4.1#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2     http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd">
+	<ext:UBLExtensions>
+		<ext:UBLExtension>
+			<ext:ExtensionContent>
+				<sts:DianExtensions>
+					<sts:InvoiceSource>
+						<cbc:IdentificationCode listAgencyID="6" listAgencyName="United Nations Economic Commission for Europe" listSchemeURI="urn:oasis:names:specification:ubl:codelist:gc:CountryIdentificationCode-2.1">CO</cbc:IdentificationCode>
+					</sts:InvoiceSource>
+					<sts:SoftwareProvider>
+						<sts:ProviderID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="6" schemeName="31">2022516218</sts:ProviderID> <!--nit del fabricante del software-->
+						<sts:SoftwareID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">7c18cccc-501f-475c-b5b2-b8719536f05e</sts:SoftwareID>
+					</sts:SoftwareProvider>
+					<sts:SoftwareSecurityCode schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">d5c8ee5552a4db2bf4c7c3c5f4412d60633d2b45f49ac5f654c8e6bda7a5dec150ea0decfb7a1ec191ed1e2ceefbd1c9</sts:SoftwareSecurityCode>
+					<sts:AuthorizationProvider>
+						<sts:AuthorizationProviderID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="4" schemeName="31">800197268</sts:AuthorizationProviderID>
+					</sts:AuthorizationProvider>
+					<sts:QRCode>https://catalogo-vpfe-hab.dian.gov.co/document/searchqr?documentkey=54fb0390d7fe907d113a13260a47608e56de656221da165d0a1a04b28a871c10268058d46397b28f28063287f2a29fac</sts:QRCode>
+				</sts:DianExtensions>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+		<ext:UBLExtension>
+			<ext:ExtensionContent>
+				<FabricanteSoftware>
+					<InformacionDelFabricanteDelSoftware>
+						<Name>NombreApellido</Name>
+						<!--nombre y apellidos del Representante legal del fabricante del software-->
+						<Value>CARLOS CHRepresentante legal</Value>
+						<Name>RazonSocial</Name>
+						<!--Razon social del fabricante del software-->
+						<Value>INDRA s.a.s</Value>
+						<Name>NombreSoftware</Name>
+						<!--nombre del software-->
+						<Value>Nombre Sotware Habilitado</Value>
+					</InformacionDelFabricanteDelSoftware>
+				</FabricanteSoftware>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+		<ext:UBLExtension>
+		    <ext:ExtensionContent>
+			  <InformacionAdicional>
+			   <InformacionTicket>
+			        <Name>ModoTransporte</Name> <!--modo de transporte o tipo de operación -->
+					<Value>Terrestre</Value>
+					<Name>IDMediodeTransporte</Name> <!--Placa del Vehiculo-->
+					<Value>ADZ784</Value>
+					<Name>Mediodetransporte</Name> <!--Medio  en el que se presta el servicio-->
+					<Value>Flota</Value>
+					<Name>LugardeOrigen</Name> <!--Origen de la operación-->
+					<Value>Bogota</Value>
+					<Name>LugardeDestino</Name> <!--Destino de la operación-->
+					<Value>Medellin</Value>
+				</InformacionTicket>
+			  </InformacionAdicional>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+	</ext:UBLExtensions>
+	<cbc:UBLVersionID>UBL 2.1</cbc:UBLVersionID>
+	<cbc:CustomizationID>10</cbc:CustomizationID>
+	<cbc:ProfileID>DIAN 2.1: Documento Equivalente Tiquete de Transporte  Terrestre de Pasajeros</cbc:ProfileID>
+	<cbc:ProfileExecutionID>2</cbc:ProfileExecutionID>
+	<cbc:ID>DETP001</cbc:ID>
+	<cbc:UUID schemeID="2" schemeName="CUDE-SHA384">54fb0390d7fe907d113a13260a47608e56de656221da165d0a1a04b28a871c10268058d46397b28f28063287f2a29fac</cbc:UUID>
+	<cbc:IssueDate>2022-09-16</cbc:IssueDate>
+	<cbc:IssueTime>16:31:02-05:00</cbc:IssueTime>
+	<cbc:DueDate>2022-09-30</cbc:DueDate>
+	<cbc:InvoiceTypeCode>35</cbc:InvoiceTypeCode>
+	<cbc:Note>SETG9800000292022-05-0516:31:02-05:002000000.0001380000.00040.00030.002380000.00900374636900374635123452</cbc:Note>
+	<cbc:Note>9496426a-be37-4d8b-b1de-3198c855face12345SETG980000029</cbc:Note>
+	<cbc:Note>PRUEBA2</cbc:Note>
+	<cbc:Note>PRUEBA3</cbc:Note>
+	<cbc:DocumentCurrencyCode listAgencyID="6" listAgencyName="United Nations Economic Commission for Europe" listID="ISO 4217 Alpha">COP</cbc:DocumentCurrencyCode>
+	<cbc:LineCountNumeric>1</cbc:LineCountNumeric>
+	<cac:OrderReference>
+		<cbc:ID>123456789</cbc:ID>
+		<cbc:IssueDate>2022-05-15</cbc:IssueDate>
+	</cac:OrderReference>
+	<cac:BillingReference>
+		<cac:CreditNoteDocumentReference>
+			<cbc:ID>FE125489</cbc:ID>
+			<cbc:UUID schemeName="CUDE">15468987987987987987987987</cbc:UUID>
+			<cbc:IssueDate>2022-05-11</cbc:IssueDate>
+		</cac:CreditNoteDocumentReference>
+	</cac:BillingReference>
+	<cac:AccountingSupplierParty>
+		<cbc:AdditionalAccountID>1</cbc:AdditionalAccountID>
+		<cac:Party>
+			<!--<cbc:IndustryClassificationCode>0121</cbc:IndustryClassificationCode>-->
+			<cac:PartyName>
+				<cbc:Name>PRUEBAS PILOTO III-2021</cbc:Name>
+			</cac:PartyName>
+			<cac:PhysicalLocation>
+				<cac:Address>
+					<cbc:ID>11001</cbc:ID>
+					<cbc:CityName>Bogotá, D.C.</cbc:CityName>
+					<cbc:PostalZone>110531</cbc:PostalZone>
+					<cbc:CountrySubentity>Bogotá</cbc:CountrySubentity>
+					<cbc:CountrySubentityCode>11</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>ED SENDAS</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:Address>
+			</cac:PhysicalLocation>
+			<cac:PartyTaxScheme>
+				<cbc:RegistrationName>PRUEBAS PILOTO III-2021</cbc:RegistrationName>
+				<cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="6" schemeName="31">2022516218</cbc:CompanyID>
+				<cbc:TaxLevelCode>R-99-PN</cbc:TaxLevelCode>
+				<cac:RegistrationAddress>
+					<cbc:ID>08433</cbc:ID>
+					<cbc:CityName>Malambo</cbc:CityName>
+					<cbc:PostalZone>080001</cbc:PostalZone>
+					<cbc:CountrySubentity>Bogotá</cbc:CountrySubentity>
+					<cbc:CountrySubentityCode>11</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>ED SENDAS</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:RegistrationAddress>
+				<cac:TaxScheme>
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:PartyTaxScheme>
+			<cac:PartyLegalEntity>
+				<cbc:RegistrationName>PRUEBAS PILOTO III-2021</cbc:RegistrationName>
+				<cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="6" schemeName="31">2022516218</cbc:CompanyID>
+				<cac:CorporateRegistrationScheme>
+					<cbc:ID>DETP</cbc:ID>
+				</cac:CorporateRegistrationScheme>
+			</cac:PartyLegalEntity>
+			<cac:Contact>
+				<cbc:Telephone>7450999</cbc:Telephone>
+				<cbc:ElectronicMail>lcanono@dian.gov.co</cbc:ElectronicMail>
+			</cac:Contact>
+		</cac:Party>
+	</cac:AccountingSupplierParty>
+	<cac:AccountingCustomerParty>
+		<cbc:AdditionalAccountID>1</cbc:AdditionalAccountID>
+		<cac:Party>
+            <cac:PartyIdentification>
+				<cbc:ID>12252454654</cbc:ID>
+			</cac:PartyIdentification>
+			<cac:PartyName>
+				<cbc:Name>Pruebas BUGS</cbc:Name>
+			</cac:PartyName>
+			<cac:PhysicalLocation>
+				<cac:Address>
+					<cbc:ID>08433</cbc:ID>
+					<cbc:CityName>Malambo</cbc:CityName>
+					<cbc:PostalZone>080001</cbc:PostalZone>
+					<cbc:CountrySubentity>Atlántico</cbc:CountrySubentity>
+					<cbc:CountrySubentityCode>08</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>BUGS</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:Address>
+			</cac:PhysicalLocation>
+			<cac:PartyTaxScheme>
+				<cbc:RegistrationName>Pruebas BUGS</cbc:RegistrationName>
+				<cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="6" schemeName="31">900374635</cbc:CompanyID>
+				<cbc:TaxLevelCode>R-99-PN</cbc:TaxLevelCode>
+				<cac:RegistrationAddress>
+					<cbc:ID>08433</cbc:ID>
+					<cbc:CityName>Malambo</cbc:CityName>
+					<cbc:PostalZone>080001</cbc:PostalZone>
+					<cbc:CountrySubentity>Atlántico</cbc:CountrySubentity>
+					<cbc:CountrySubentityCode>08</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>CCA 25 - 96</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:RegistrationAddress>
+				<cac:TaxScheme>
+						<cbc:ID>ZZ</cbc:ID>
+					<cbc:Name>No aplica</cbc:Name>
+				</cac:TaxScheme>
+			</cac:PartyTaxScheme>
+			<cac:PartyLegalEntity>
+				<cbc:RegistrationName>Pruebas BUGS</cbc:RegistrationName>
+				<cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="6" schemeName="31">900374635</cbc:CompanyID>
+			</cac:PartyLegalEntity>
+            <cac:Contact>
+				<cbc:Telephone>111111111</cbc:Telephone>
+				<cbc:ElectronicMail>PRUEBAS@HOTMAIL.COM</cbc:ElectronicMail>
+			</cac:Contact>
+		</cac:Party>
+	</cac:AccountingCustomerParty>
+	<cac:PaymentMeans>
+		<cbc:ID>2</cbc:ID>
+		<cbc:PaymentMeansCode>10</cbc:PaymentMeansCode>
+		<cbc:PaymentDueDate>2022-05-31</cbc:PaymentDueDate>
+	</cac:PaymentMeans>
+    <cac:PrepaidPayment>
+		<cbc:ID />
+		<cbc:PaidAmount currencyID="COP">0</cbc:PaidAmount>
+	</cac:PrepaidPayment>
+	<cac:AllowanceCharge>
+		<cbc:ID>1</cbc:ID>
+		<cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+		<cbc:AllowanceChargeReasonCode>00</cbc:AllowanceChargeReasonCode>
+		<cbc:AllowanceChargeReason>Silla con TV</cbc:AllowanceChargeReason>
+		<cbc:MultiplierFactorNumeric>10.00</cbc:MultiplierFactorNumeric>
+		<cbc:Amount currencyID="COP">2000.00</cbc:Amount>
+		<cbc:BaseAmount currencyID="COP">20000.00</cbc:BaseAmount>
+	</cac:AllowanceCharge>
+	<cac:AllowanceCharge>
+		<cbc:ID>2</cbc:ID>
+		<cbc:ChargeIndicator>false</cbc:ChargeIndicator>
+		<cbc:AllowanceChargeReasonCode>00</cbc:AllowanceChargeReasonCode>
+		<cbc:AllowanceChargeReason>descuento por pronto pago</cbc:AllowanceChargeReason>
+		<cbc:MultiplierFactorNumeric>10.00</cbc:MultiplierFactorNumeric>
+		<cbc:Amount currencyID="COP">2000.00</cbc:Amount>
+		<cbc:BaseAmount currencyID="COP">20000.00</cbc:BaseAmount>
+	</cac:AllowanceCharge>
+	<cac:TaxTotal>
+		<cbc:TaxAmount currencyID="COP">380000.00</cbc:TaxAmount>
+		<cac:TaxSubtotal>
+			<cbc:TaxableAmount currencyID="COP">2000000.00</cbc:TaxableAmount>
+			<cbc:TaxAmount currencyID="COP">380000.00</cbc:TaxAmount>
+			<cac:TaxCategory>
+				<cbc:Percent>19.00</cbc:Percent>
+				<cac:TaxScheme>
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:TaxCategory>
+		</cac:TaxSubtotal>
+	</cac:TaxTotal>
+ 	<cac:LegalMonetaryTotal>
+		<cbc:LineExtensionAmount currencyID="COP">2000000.00</cbc:LineExtensionAmount>
+		<cbc:TaxExclusiveAmount currencyID="COP">2000000.00</cbc:TaxExclusiveAmount>
+		<cbc:TaxInclusiveAmount currencyID="COP">2380000.00</cbc:TaxInclusiveAmount>
+ 		<cbc:AllowanceTotalAmount currencyID="COP">2000</cbc:AllowanceTotalAmount>
+ 		<cbc:ChargeTotalAmount currencyID="COP">2000.00</cbc:ChargeTotalAmount>
+ 		<cbc:PrepaidAmount currencyID="COP">0.00</cbc:PrepaidAmount>
+		<cbc:PayableAmount currencyID="COP">2380000.00</cbc:PayableAmount>
+	</cac:LegalMonetaryTotal> 
+	<cac:InvoiceLine>
+		<cbc:ID schemeID="2">1</cbc:ID>
+		<cbc:Note>B/S Ingresos Facturados para terceros</cbc:Note>
+		<cbc:InvoicedQuantity unitCode="NIU">10</cbc:InvoicedQuantity>
+		<cbc:LineExtensionAmount currencyID="COP">2000000.00</cbc:LineExtensionAmount>
+		<cac:TaxTotal>
+			<cbc:TaxAmount currencyID="COP">380000.00</cbc:TaxAmount>
+			<cac:TaxSubtotal>
+				<cbc:TaxableAmount currencyID="COP">2000000.00</cbc:TaxableAmount>
+				<cbc:TaxAmount currencyID="COP">380000.00</cbc:TaxAmount>
+				<cac:TaxCategory>
+					<cbc:Percent>19.00</cbc:Percent>
+					<cac:TaxScheme>
+						<cbc:ID>01</cbc:ID>
+						<cbc:Name>IVA</cbc:Name>
+					</cac:TaxScheme>
+				</cac:TaxCategory>
+			</cac:TaxSubtotal>
+		</cac:TaxTotal>
+		<cac:Item>
+			<cbc:Description>Cabina de peaje</cbc:Description>
+			<cac:StandardItemIdentification>
+				<cbc:ID schemeID="001">95141711</cbc:ID>
+			</cac:StandardItemIdentification>
+			<cac:InformationContentProviderParty>
+				<cac:PowerOfAttorney>
+					<!-- Grupo para informar datos del tercero que recibe el ingreso -->
+					<cac:AgentParty>
+						<cac:PartyIdentification>
+							<cbc:ID schemeID="1"
+							        schemeName="31"
+							        schemeAgencyID="195">860034594</cbc:ID>
+						</cac:PartyIdentification>
+						<cac:PartyName>
+						<cbc:Name>CONCECION MALAGA S-A</cbc:Name>
+						</cac:PartyName>
+					</cac:AgentParty>
+				</cac:PowerOfAttorney>
+			</cac:InformationContentProviderParty>
+		</cac:Item>
+		<cac:Price>
+			<cbc:PriceAmount currencyID="COP">200000.00</cbc:PriceAmount>
+			<cbc:BaseQuantity unitCode="NIU">10</cbc:BaseQuantity>
+		</cac:Price>
+	</cac:InvoiceLine>
+</Invoice>

@@ -280,19 +280,20 @@ function openModule(moduleName) {
 }
 
 // ====================
-// FUNCIONES DE FACTURACIÓN
+// FUNCIONES DE FACTURACIÓN DIAN
 // ====================
 
 // Variables para facturación
 let currentInvoices = [];
 
-// Mostrar sección de facturas
+// Mostrar sección de facturas DIAN
 function showInvoices() {
     document.getElementById('dashboard').classList.add('hidden');
     document.getElementById('invoicesSection').classList.remove('hidden');
     loadInvoices();
     loadCustomersForInvoice();
     loadCompletedWorkOrders();
+    showNotification('Módulo de Facturación Electrónica DIAN activado', 'info');
 }
 
 // Ocultar sección de facturas y volver al dashboard
@@ -301,18 +302,18 @@ function showDashboard() {
     document.getElementById('dashboard').classList.remove('hidden');
 }
 
-// Cargar lista de facturas
+// Cargar lista de facturas DIAN
 async function loadInvoices() {
     try {
-        const response = await apiRequest('/invoices/');
+        const response = await apiRequest('/electronic-invoices/');
         if (response.ok) {
             currentInvoices = await response.json();
             renderInvoices(currentInvoices);
         } else {
-            showNotification('Error al cargar facturas', 'error');
+            showNotification('Error al cargar facturas electrónicas', 'error');
         }
     } catch (error) {
-        console.error('Error loading invoices:', error);
+        console.error('Error loading electronic invoices:', error);
         showNotification('Error de conexión', 'error');
     }
 }
@@ -583,7 +584,7 @@ async function toggleCustomerStatus(customerId) {
     }
 }
 
-// Renderizar facturas en la interfaz
+// Renderizar facturas DIAN en la interfaz
 function renderInvoices(invoices) {
     const container = document.getElementById('invoicesList');
 
@@ -591,8 +592,8 @@ function renderInvoices(invoices) {
         container.innerHTML = `
             <div style="text-align: center; padding: 3rem; color: var(--surface-variant);">
                 <i class='bx bx-receipt' style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                <p>No hay facturas aún</p>
-                <p>Crea tu primera factura haciendo clic en "Nueva Factura"</p>
+                <p>No hay facturas electrónicas aún</p>
+                <p>Crea tu primera factura DIAN haciendo clic en "Nueva Factura Electrónica"</p>
             </div>
         `;
         return;
@@ -602,7 +603,7 @@ function renderInvoices(invoices) {
         <div class="invoice-card">
             <div class="invoice-header">
                 <div class="invoice-number">${invoice.invoice_number}</div>
-                <div class="invoice-status ${invoice.payment_status}">${invoice.payment_status_display}</div>
+                <div class="invoice-status ${invoice.dian_status || 'draft'}">${getDianStatusDisplay(invoice.dian_status)}</div>
             </div>
             <div class="invoice-info">
                 <div class="invoice-info-item">
@@ -614,8 +615,10 @@ function renderInvoices(invoices) {
                     <div class="invoice-info-value">${new Date(invoice.issue_date).toLocaleDateString('es-CO')}</div>
                 </div>
                 <div class="invoice-info-item">
-                    <div class="invoice-info-label">Vencimiento</div>
-                    <div class="invoice-info-value">${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('es-CO') : 'N/A'}</div>
+                    <div class="invoice-info-label">CUDE</div>
+                    <div class="invoice-info-value" style="font-family: monospace; font-size: 0.8rem;">
+                        ${invoice.cude ? invoice.cude.substring(0, 20) + '...' : 'Pendiente'}
+                    </div>
                 </div>
                 <div class="invoice-info-item">
                     <div class="invoice-info-label">Total</div>
@@ -623,6 +626,10 @@ function renderInvoices(invoices) {
                 </div>
             </div>
             <div class="invoice-actions">
+                <button class="btn btn-outline" onclick="downloadInvoiceXML(${invoice.id})">
+                    <i class='bx bx-file'></i>
+                    XML
+                </button>
                 <button class="btn btn-outline" onclick="downloadInvoicePDF(${invoice.id})">
                     <i class='bx bx-download'></i>
                     PDF
@@ -631,9 +638,28 @@ function renderInvoices(invoices) {
                     <i class='bx bx-show'></i>
                     Ver
                 </button>
+                ${invoice.dian_status === 'draft' ? `
+                    <button class="btn btn-success" onclick="sendToDian(${invoice.id})">
+                        <i class='bx bx-send'></i>
+                        Enviar DIAN
+                    </button>
+                ` : ''}
             </div>
         </div>
     `).join('');
+}
+
+// Función para obtener el display del estado DIAN
+function getDianStatusDisplay(status) {
+    const statusMap = {
+        'draft': 'Borrador',
+        'sent': 'Enviado',
+        'processing': 'Procesando',
+        'processed': 'Aprobado',
+        'send_failed': 'Error Envío',
+        'rejected': 'Rechazado'
+    };
+    return statusMap[status] || 'Desconocido';
 }
 
 // Filtrar facturas
@@ -686,12 +712,76 @@ async function downloadInvoicePDF(invoiceId) {
     }
 }
 
-// Ver detalles de factura
+// Ver detalles de factura DIAN
 function viewInvoiceDetails(invoiceId) {
     const invoice = currentInvoices.find(inv => inv.id === invoiceId);
     if (invoice) {
-        // Por ahora solo mostrar notificación, después se puede implementar modal
-        showNotification(`Factura ${invoice.invoice_number} - Total: $${invoice.total.toLocaleString('es-CO')}`, 'info');
+        const details = `
+            📄 Factura Electrónica DIAN
+            Número: ${invoice.invoice_number}
+            Cliente: ${invoice.customer_name}
+            Fecha: ${new Date(invoice.issue_date).toLocaleDateString('es-CO')}
+            Total: $${invoice.total.toLocaleString('es-CO')}
+            Estado DIAN: ${getDianStatusDisplay(invoice.dian_status)}
+            ${invoice.cude ? `CUDE: ${invoice.cude}` : 'CUDE: Pendiente de generación'}
+        `;
+        showNotification(details, 'info');
+    }
+}
+
+// Descargar XML de factura DIAN
+async function downloadInvoiceXML(invoiceId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/electronic-invoices/${invoiceId}/download_xml/`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `factura_dian_${invoiceId}.xml`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showNotification('XML DIAN descargado exitosamente', 'success');
+        } else {
+            showNotification('Error al descargar XML DIAN', 'error');
+        }
+    } catch (error) {
+        console.error('Error downloading XML:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Enviar factura a DIAN
+async function sendToDian(invoiceId) {
+    try {
+        showNotification('Enviando factura a DIAN...', 'info');
+
+        const response = await apiRequest(`/electronic-invoices/${invoiceId}/send_to_dian/`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                showNotification(`Factura enviada exitosamente. CUFE: ${result.cufe}`, 'success');
+                loadInvoices(); // Recargar lista
+            } else {
+                showNotification(`Error al enviar: ${result.error}`, 'error');
+            }
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al enviar factura a DIAN', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending to DIAN:', error);
+        showNotification('Error de conexión con DIAN', 'error');
     }
 }
 
@@ -740,7 +830,7 @@ async function loadCompletedWorkOrders() {
     }
 }
 
-// Manejar creación de factura
+// Manejar creación de factura DIAN
 async function handleCreateInvoice(event) {
     event.preventDefault();
 
@@ -749,7 +839,7 @@ async function handleCreateInvoice(event) {
         customer: formData.get('customer'),
         work_order: formData.get('work_order') || null,
         due_date: formData.get('due_date') || null,
-        payment_method: 'cash', // Por defecto
+        payment_method: formData.get('payment_method') || 'cash',
         notes: formData.get('notes') || ''
     };
 
@@ -760,34 +850,56 @@ async function handleCreateInvoice(event) {
     }
 
     try {
+        // Cambiar texto del botón mientras procesa
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Creando Factura DIAN...';
+        submitBtn.disabled = true;
+
         let response;
         if (invoiceData.work_order) {
-            // Crear factura desde orden de trabajo
-            response = await apiRequest('/invoices/create_from_work_order/', {
+            // Crear factura electrónica desde orden de trabajo
+            response = await apiRequest('/electronic-invoices/create_from_work_order/', {
                 method: 'POST',
                 body: JSON.stringify({
                     work_order_id: invoiceData.work_order,
-                    payment_method: invoiceData.payment_method
+                    payment_method: invoiceData.payment_method,
+                    notes: invoiceData.notes
                 })
             });
         } else {
             // Crear factura manual (por ahora no implementado)
-            showNotification('Creación manual de facturas próximamente', 'warning');
+            showNotification('Creación manual de facturas electrónicas próximamente', 'warning');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
             return;
         }
 
         if (response.ok) {
             const invoice = await response.json();
-            showNotification(`Factura ${invoice.invoice_number} creada exitosamente`, 'success');
+            showNotification(`Factura Electrónica DIAN ${invoice.invoice_number} creada exitosamente`, 'success');
+
+            // Mostrar información adicional sobre el proceso DIAN
+            setTimeout(() => {
+                showNotification(
+                    `XML generado y validado. ${invoice.cude ? 'CUDE generado: ' + invoice.cude.substring(0, 20) + '...' : 'Listo para envío a DIAN'}`, 'info'
+                );
+            }, 1000);
+
             hideCreateInvoiceModal();
             event.target.reset();
             loadInvoices(); // Recargar lista
         } else {
             const error = await response.json();
-            showNotification(error.detail || 'Error al crear factura', 'error');
+            showNotification(error.detail || 'Error al crear factura electrónica', 'error');
         }
     } catch (error) {
-        console.error('Error creating invoice:', error);
+        console.error('Error creating electronic invoice:', error);
         showNotification('Error de conexión', 'error');
+    } finally {
+        // Restaurar botón
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="bx bx-save"></i> Crear Factura Electrónica';
+        submitBtn.disabled = false;
     }
 }

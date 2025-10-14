@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Invoice xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+       	xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+       	xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+       	xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+       	xmlns:sts="dian:gov:co:facturaelectronica:Structures-2-1"
+       	xmlns:xades141="http://uri.etsi.org/01903/v1.4.1#"
+       	xmlns:xades="http://uri.etsi.org/01903/v1.3.2#"
+       	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       	xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+       	xsi:schemaLocation="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd">
+	<ext:UBLExtensions>
+		<ext:UBLExtension>
+			<ext:ExtensionContent>
+				<sts:DianExtensions>
+					<sts:InvoiceSource>
+						<cbc:IdentificationCode listAgencyID="6"
+                      							listAgencyName="United Nations Economic Commission for Europe"
+                      							listSchemeURI="urn:oasis:names:specification:ubl:codelist:gc:CountryIdentificationCode-2.1">CO</cbc:IdentificationCode>
+					</sts:InvoiceSource>
+					<sts:SoftwareProvider>
+						<sts:ProviderID schemeAgencyID="195"
+              							schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)"
+              							schemeID="7"
+              							schemeName="31">2023302139</sts:ProviderID>
+						<!--nit del fabricante del software-->
+						<sts:SoftwareID schemeAgencyID="195"
+              							schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">29d8c916-33ad-4ac9-890c-2f0152223096</sts:SoftwareID>
+					</sts:SoftwareProvider>
+					<sts:SoftwareSecurityCode schemeAgencyID="195"
+                        						schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">600bc39b24cdcc46bd46c8d77674e33574eb3de11ddc2e7e4b7fa1fe181b0e4bcdd0093f098e8d79af3717fe10a6b266</sts:SoftwareSecurityCode>
+					<sts:AuthorizationProvider>
+						<sts:AuthorizationProviderID schemeAgencyID="195"
+                           							schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)"
+                           							schemeID="4"
+                           							schemeName="31">800197268</sts:AuthorizationProviderID>
+					</sts:AuthorizationProvider>
+					<sts:QRCode>https://catalogo-vpfe-hab.dian.gov.co/document/searchqr?documentkey=48a28acc8560ff4b135ed357c946f61b295066712115ccf2f51b231e623e5db49a362611e431ff75d7737b910bdab5a0</sts:QRCode>
+				</sts:DianExtensions>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+		<ext:UBLExtension>
+			<ext:ExtensionContent>
+				<CustomTagGeneral>
+					<Group schemeName="Comprobante de liquidación de operaciones expedido por Bolsa de Valores">
+						<CollectionSoftware schemeName="InformacionDelFabricanteDelSoftware">
+							<!--Campo obligatorio según Resolución 42/2020 art 13 numeral 9 literal h-->
+							<Name>NombreApellido</Name>
+							<Value>Bolsadevalores</Value>
+							<!--nombre y apellidos del fabricante del software-->
+							<Name>RazonSocial</Name>
+							<Value>Comisionistadebolsaasobolsa</Value>
+							<!--Razon social del fabricante del software-->
+							<Name>Número de Identificación Tributaria -NIT</Name>
+							<Value>809745896</Value>
+							<!--Número NIT-->
+							<Name>NombredelSoftware</Name>
+							<Value>ComprobantebolsaValores</Value>
+							<!--Nombre del software-->
+						</CollectionSoftware>
+						<AdditionalCollection schemeName="Información adicional del documento">
+							<Name>Consecutivo</Name>
+							<Value>20210219-120000006</Value>
+							<!--Colocar el número de consecutivo-->
+							<Name>Fecha de cumplimiento</Name>
+							<Value>2021-02-24</Value>
+							<!--Fecha de cumplimiento registrada en la papeleta-->
+						</AdditionalCollection>
+						<CollectionTotal schemeName="Monto de liquidación de la operación">
+							<Name>Cantidad nominal</Name>
+							<Value>1000000000.00</Value>
+							<!--Informar la cantidad nominal-->
+							<Name>precio de registro</Name>
+							<Value>103.769</Value>
+							<!--Se debe colocar el precio cesión total o precio de registro-->
+							<Name>montoderendimientos</Name>
+							<Value>37690000.00</Value>
+							<!--Colocar los rendimientos si los tiene-->
+							<Name>Valor</Name>
+							<Value>1037690000.00</Value>
+							<!--Precio valor total del producto y/o servicio prestado-->
+							<Name>Porcentaje de la comisión</Name>
+							<Value>0.0020</Value>
+							<!--Porcentaje de la comisión-->
+						</CollectionTotal>
+					</Group>
+				</CustomTagGeneral>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+	</ext:UBLExtensions>
+	<cbc:UBLVersionID>UBL 2.1</cbc:UBLVersionID>
+	<cbc:CustomizationID>55</cbc:CustomizationID>
+	<cbc:ProfileID>DIAN 2.1: Comprobante de liquidación de operaciones expedido por Bolsa de Valores y operaciones de la bolsa agropecuaria y de otros commodities</cbc:ProfileID>
+	<cbc:ProfileExecutionID>2</cbc:ProfileExecutionID>
+	<cbc:ID>DEBVC1</cbc:ID>
+	<!--consecutivo-->
+	<cbc:UUID schemeID="2"
+        		schemeName="CUDE-SHA384">48a28acc8560ff4b135ed357c946f61b295066712115ccf2f51b231e623e5db49a362611e431ff75d7737b910bdab5a0</cbc:UUID>
+	<cbc:IssueDate>2023-04-03</cbc:IssueDate>
+	<!--fecha de expedicion-->
+	<cbc:IssueTime>15:05:40-05:00</cbc:IssueTime>
+	<!--hora de expedicion-->
+	<cbc:InvoiceTypeCode>55</cbc:InvoiceTypeCode>
+	<!--identificador del documento-->
+	<cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+	<cbc:LineCountNumeric>1</cbc:LineCountNumeric>
+	<cac:BillingReference>
+		<cac:CreditNoteDocumentReference>
+			<cbc:ID>TOSL108</cbc:ID>
+			<cbc:UUID schemeName="CUDE-SHA384">normalizedString</cbc:UUID>
+			<cbc:IssueDate>2022-04-20</cbc:IssueDate>
+		</cac:CreditNoteDocumentReference>
+	</cac:BillingReference>
+	<cac:AccountingSupplierParty>
+		<cbc:AdditionalAccountID>1</cbc:AdditionalAccountID>
+		<!--1= Persona Juridica, 2= Persona Natural-->
+		<cac:Party>
+			<cac:PartyName>
+				<cbc:Name>Afiliado de prueba T05100</cbc:Name>
+				<!--nombre y apellidos del emisor-->
+			</cac:PartyName>
+			<cac:PartyTaxScheme>
+				<cbc:RegistrationName>Afiliado de prueba T05100</cbc:RegistrationName>
+				<!--razon social del emisor-->
+				<cbc:CompanyID schemeAgencyID="195"
+             					schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)"
+             					schemeID="7"
+             					schemeName="31">2023302139</cbc:CompanyID>
+				<!--nit del emisor-->
+				<cbc:TaxLevelCode>O-23</cbc:TaxLevelCode>
+				<!--calidad del retenedor-->
+				<cac:RegistrationAddress>
+					<cbc:ID>25473</cbc:ID>
+					<cbc:CityName>Mosquera</cbc:CityName>
+					<cbc:PostalZone>250040</cbc:PostalZone>
+					<cbc:CountrySubentity>Cundinamarca</cbc:CountrySubentity>
+					<cbc:CountrySubentityCode>25</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>fdgsgs</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:RegistrationAddress>
+				<cac:TaxScheme>
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:PartyTaxScheme>
+			<cac:PartyLegalEntity>
+				<cbc:RegistrationName>Afiliado de prueba T05100</cbc:RegistrationName>
+				<cbc:CompanyID schemeAgencyID="195"
+             					schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)"
+             					schemeID="7"
+             					schemeName="31">2023302139</cbc:CompanyID>
+			</cac:PartyLegalEntity>
+			<cac:Contact>
+				<cbc:Telephone>3112336735</cbc:Telephone>
+				<cbc:ElectronicMail>afiliadoprueba@hotmail.com</cbc:ElectronicMail>
+			</cac:Contact>
+		</cac:Party>
+	</cac:AccountingSupplierParty>
+	<cac:AccountingCustomerParty>
+		<cbc:AdditionalAccountID>2</cbc:AdditionalAccountID>
+		<cac:Party>
+			<cac:PartyIdentification>
+				<cbc:ID schemeName="13"
+      					schemeID="4">222222222222</cbc:ID>
+			</cac:PartyIdentification>
+			<cac:PartyName>
+				<cbc:Name>inversionista de prueba</cbc:Name>
+			</cac:PartyName>
+			<cac:PhysicalLocation>
+				<!--Datos de localización de la aerolinea.-->
+				<cac:Address>
+					<cbc:ID>11001</cbc:ID>
+					<cbc:CityName>Bogotá, D.C.</cbc:CityName>
+					<cbc:CountrySubentity/>
+					<cbc:CountrySubentityCode>11</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>Avdaser</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:Address>
+			</cac:PhysicalLocation>
+			<cac:PartyTaxScheme>
+				<cbc:RegistrationName>JKADSFJKLAE</cbc:RegistrationName>
+				<cbc:CompanyID schemeAgencyID="195"
+             					schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)"
+             					schemeID="1"
+             					schemeName="31">1073234714</cbc:CompanyID>
+				<cbc:TaxLevelCode>O-15</cbc:TaxLevelCode>
+				<cac:TaxScheme>
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:PartyTaxScheme>
+			<cac:PartyLegalEntity>
+				<cbc:RegistrationName>Inversionista de prueba</cbc:RegistrationName>
+				<cbc:CompanyID schemeAgencyID="195"
+             					schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)"
+             					schemeID="1"
+             					schemeName="31">1073234714</cbc:CompanyID>
+			</cac:PartyLegalEntity>
+			<cac:Contact>
+				<cbc:Telephone>3112336734</cbc:Telephone>
+				<cbc:ElectronicMail>inversionista.prueba@hotmail.com</cbc:ElectronicMail>
+			</cac:Contact>
+		</cac:Party>
+	</cac:AccountingCustomerParty>
+	<cac:PaymentMeans>
+		<cbc:ID>2</cbc:ID>
+		<cbc:PaymentMeansCode>10</cbc:PaymentMeansCode>
+		<!--medio de pago-->
+		<cbc:PaymentDueDate>2021-05-24</cbc:PaymentDueDate>
+	</cac:PaymentMeans>
+	<cac:TaxTotal>
+		<cbc:TaxAmount currencyID="COP">3943.22</cbc:TaxAmount>
+		<cac:TaxSubtotal>
+			<cbc:TaxableAmount currencyID="COP">20753.80</cbc:TaxableAmount>
+			<cbc:TaxAmount currencyID="COP">3943.22</cbc:TaxAmount>
+			<cac:TaxCategory>
+				<cbc:Percent>19.00</cbc:Percent>
+				<cac:TaxScheme>
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:TaxCategory>
+		</cac:TaxSubtotal>
+	</cac:TaxTotal>
+	<cac:LegalMonetaryTotal>
+		<cbc:LineExtensionAmount currencyID="COP">14454.43</cbc:LineExtensionAmount>
+		<cbc:TaxExclusiveAmount currencyID="COP">20753.80</cbc:TaxExclusiveAmount>
+		<cbc:TaxInclusiveAmount currencyID="COP">18397.65</cbc:TaxInclusiveAmount>
+		<cbc:PayableAmount currencyID="COP">18397.65</cbc:PayableAmount>
+		<!--valor total-->
+	</cac:LegalMonetaryTotal>
+	<cac:InvoiceLine>
+		<cbc:ID schemeID="2">1</cbc:ID>
+		<cbc:Note>B/S Ingresos Facturados para terceros</cbc:Note>
+		<cbc:InvoicedQuantity unitCode="94">1.00</cbc:InvoicedQuantity>
+		<!--cantidad-->
+		<!--las bolsas se informarian como un producto-->
+		<cbc:LineExtensionAmount currencyID="COP">14454.43</cbc:LineExtensionAmount>
+		<!-- Informar el valor de la comisión-->
+		<cac:AllowanceCharge>
+			<cbc:ID>1</cbc:ID>
+			<cbc:ChargeIndicator>false</cbc:ChargeIndicator>
+			<cbc:AllowanceChargeReason>Descuento por cliente frecuente</cbc:AllowanceChargeReason>
+			<cbc:MultiplierFactorNumeric>33.33</cbc:MultiplierFactorNumeric>
+			<cbc:Amount currencyID="COP">6299.37</cbc:Amount>
+			<cbc:BaseAmount currencyID="COP">18900.00</cbc:BaseAmount>
+		</cac:AllowanceCharge>
+		<cac:TaxTotal>
+			<cbc:TaxAmount currencyID="COP">3943.22</cbc:TaxAmount>
+			<cac:TaxSubtotal>
+				<cbc:TaxableAmount currencyID="COP">20753.80</cbc:TaxableAmount>
+				<cbc:TaxAmount currencyID="COP">3943.22</cbc:TaxAmount>
+				<cac:TaxCategory>
+					<cbc:Percent>19.00</cbc:Percent>
+					<cac:TaxScheme>
+						<cbc:ID>01</cbc:ID>
+						<cbc:Name>IVA</cbc:Name>
+						<!--impuestos IVA, INC-->
+					</cac:TaxScheme>
+				</cac:TaxCategory>
+			</cac:TaxSubtotal>
+		</cac:TaxTotal>
+		<cac:TaxTotal>
+			<cbc:TaxAmount currencyID="COP">3943.22</cbc:TaxAmount>
+			<cac:TaxSubtotal>
+				<cbc:TaxableAmount currencyID="COP">20753.80</cbc:TaxableAmount>
+				<cbc:TaxAmount currencyID="COP">3943.22</cbc:TaxAmount>
+				<cac:TaxCategory>
+					<cbc:Percent>19.00</cbc:Percent>
+					<cac:TaxScheme>
+						<cbc:ID>05</cbc:ID>
+						<cbc:Name>ReteIVA</cbc:Name>
+						<!--impuestos IVA, INC-->
+					</cac:TaxScheme>
+				</cac:TaxCategory>
+			</cac:TaxSubtotal>
+		</cac:TaxTotal>
+		<cac:Item>
+			<cbc:Description>Compra</cbc:Description>
+			<!--descripcion del bien o el servicio-->
+			<cbc:Description>Bonos subordinad Bco Bogota</cbc:Description>
+			<!--descripcion del bien o el servicio-->
+			<cbc:Description>Completo</cbc:Description>
+			<!--descripcion del bien o el servicio-->
+			<cac:SellersItemIdentification>
+				<cbc:ID>BBB01041BV</cbc:ID>
+				<!-- Información del Nemotecnico -->
+			</cac:SellersItemIdentification>
+			<cac:StandardItemIdentification>
+				<cbc:ID schemeID="999">1</cbc:ID>
+			</cac:StandardItemIdentification>
+			<cac:InformationContentProviderParty>
+				<cac:PowerOfAttorney>
+					<!-- Grupo para informar datos del tercero que recibe el ingreso -->
+					<cac:AgentParty>
+						<cac:PartyIdentification>
+							<cbc:ID schemeID="1"
+							        schemeName="31"
+							        schemeAgencyID="195">860034594</cbc:ID>
+						</cac:PartyIdentification>
+						<cac:PartyName>
+						<cbc:Name>CONCECION MALAGA S-A</cbc:Name>
+						</cac:PartyName>
+					</cac:AgentParty>
+				</cac:PowerOfAttorney>
+			</cac:InformationContentProviderParty>
+		</cac:Item>
+		<cac:Price>
+			<cbc:PriceAmount currencyID="COP">20753.80</cbc:PriceAmount>
+			<!--valor unitario-->
+			<cbc:BaseQuantity unitCode="94">1.00</cbc:BaseQuantity>
+			<!--unidad-->
+		</cac:Price>
+	</cac:InvoiceLine>
+</Invoice>

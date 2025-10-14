@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:sts="dian:gov:co:facturaelectronica:Structures-2-1" xmlns:xades141="http://uri.etsi.org/01903/v1.4.1#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd">
+	<ext:UBLExtensions>
+		<ext:UBLExtension>
+			<ext:ExtensionContent>
+				<sts:DianExtensions>
+					<sts:InvoiceSource>
+						<cbc:IdentificationCode listAgencyID="6" listAgencyName="United Nations Economic Commission for Europe" listSchemeURI="urn:oasis:names:specification:ubl:codelist:gc:CountryIdentificationCode-2.1">CO</cbc:IdentificationCode>
+					</sts:InvoiceSource>
+					<sts:SoftwareProvider>
+						<sts:ProviderID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="1" schemeName="31">2023081910</sts:ProviderID>
+						<sts:SoftwareID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">d12db5cb-9519-4572-a827-795c54a982e1</sts:SoftwareID>
+					</sts:SoftwareProvider>
+					<sts:SoftwareSecurityCode schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">50095f03c64f7fdaf7abbe30a01f35f8967e3f5908796779e10be90912f3913a135b6900c3c7a09352ab4f03231109a1</sts:SoftwareSecurityCode>
+					<sts:AuthorizationProvider>
+						<sts:AuthorizationProviderID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="4" schemeName="31">800197268</sts:AuthorizationProviderID>
+					</sts:AuthorizationProvider>
+					<sts:QRCode>https://catalogo-vpfe-hab.dian.gov.co/document/searchqr?documentkey=3e18e2030cb3b1199478854e968431077f87b905a05d5cf33d978fb84d2d5b933b7b920707929ccb69a634fe1bb60654</sts:QRCode>
+				</sts:DianExtensions>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+		<ext:UBLExtension>
+			<ext:ExtensionContent>
+				<FabricanteSoftware>
+					<InformacionDelFabricanteDelSoftware>
+						<Name>NombreApellido</Name>
+						<!--nombre y apellidos del Representante legal del fabricante del software-->
+						<Value>CARLOS CHRepresentante legal</Value>
+						<Name>RazonSocial</Name>
+						<!--Razon social del fabricante del software-->
+						<Value>INDRA s.a.s</Value>
+						<Name>NombreSoftware</Name>
+						<!--nombre del software-->
+						<Value>Nombre Sotware Habilitado</Value>
+					</InformacionDelFabricanteDelSoftware>
+				</FabricanteSoftware>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+		<ext:UBLExtension>
+			<ext:ExtensionContent>
+				<!-- 1..1 -->
+				<InfoEstablishment>
+					<!-- 1..1 -->
+					<InfoPoint>
+						<!-- 1..1 -->
+						<EstablishmentAddress>Dirección de establecimiento o dirección de internet e IP cuando es virtual</EstablishmentAddress>
+						<MoneyDeposit>Valor de la base o depósito de dinero</MoneyDeposit>
+					</InfoPoint>
+					<GameInformation>
+						<!-- 1..3 -->
+						<TypeOfGame>Mesa</TypeOfGame>
+						<GameTypeTotal>Número de instrumentos de juegos</GameTypeTotal>
+					</GameInformation>
+					<CreditValueOfTheMachine>
+						<!-- 0..N -->
+						<GameMachineSerial>MV000158</GameMachineSerial>
+						<!-- 1..1 -->
+						<CreditValue currencyID="COP">1000.00</CreditValue>
+						<!-- 1..1 -->
+					</CreditValueOfTheMachine>
+				</InfoEstablishment>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+	</ext:UBLExtensions>
+	<cbc:UBLVersionID>UBL 2.1</cbc:UBLVersionID>
+	<cbc:CustomizationID>321</cbc:CustomizationID>
+	<cbc:ProfileID>DIAN 2.1: Documento en juegos localizados - relación diaria de control de ventas</cbc:ProfileID>
+	<cbc:ProfileExecutionID>2</cbc:ProfileExecutionID>
+	<cbc:ID>DEJL2</cbc:ID>
+	<cbc:UUID schemeID="2" schemeName="CUDE-SHA384">3e18e2030cb3b1199478854e968431077f87b905a05d5cf33d978fb84d2d5b933b7b920707929ccb69a634fe1bb60654</cbc:UUID>
+	<cbc:IssueDate>2023-10-11</cbc:IssueDate>
+	<cbc:IssueTime>15:05:40-05:00</cbc:IssueTime>
+	<cbc:InvoiceTypeCode>32</cbc:InvoiceTypeCode>
+	<cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+	<cbc:LineCountNumeric>2</cbc:LineCountNumeric>
+	<cac:AccountingSupplierParty>
+		<cbc:AdditionalAccountID>1</cbc:AdditionalAccountID>
+		<cac:Party>
+			<cac:PartyName>
+				<cbc:Name>Prodcutor eventos Máximo</cbc:Name>
+			</cac:PartyName>
+			<cac:PhysicalLocation>
+				<cac:Address>
+					<cbc:ID>25053</cbc:ID>
+					<cbc:CityName>Arbeláez</cbc:CityName>
+					<cbc:PostalZone>252007</cbc:PostalZone>
+					<cbc:CountrySubentity>Cundinamarca</cbc:CountrySubentity>
+					<cbc:CountrySubentityCode>25</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>Calle 123</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:Address>
+			</cac:PhysicalLocation>
+			<cac:PartyTaxScheme>
+				<cbc:RegistrationName>Prodcutor eventos Máximo</cbc:RegistrationName>
+				<!--razon social del emisor-->
+				<cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="1" schemeName="31">2023081910</cbc:CompanyID>
+				<!--nit del emisor-->
+				<cbc:TaxLevelCode>O-23</cbc:TaxLevelCode>
+				<cac:RegistrationAddress>
+					<cbc:ID>25473</cbc:ID>
+					<cbc:CityName>Mosquera</cbc:CityName>
+					<cbc:PostalZone>250040</cbc:PostalZone>
+					<cbc:CountrySubentity>Cundinamarca</cbc:CountrySubentity>
+					<cbc:CountrySubentityCode>25</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>Frente a Pastas Doria Al lado de Bodegas San Carlos III</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:RegistrationAddress>
+				<cac:TaxScheme>
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:PartyTaxScheme>
+			<cac:Contact>
+				<cbc:Name>Administrador encargado</cbc:Name>
+				<cbc:Telephone>3112336735</cbc:Telephone>
+				<cbc:ElectronicMail>gerencia@productor.com.co</cbc:ElectronicMail>
+			</cac:Contact>
+		</cac:Party>
+	</cac:AccountingSupplierParty>
+	<cac:AccountingCustomerParty>
+		<cbc:AdditionalAccountID>1</cbc:AdditionalAccountID>
+		<cac:Party>
+			<cac:PartyTaxScheme>
+				<cbc:RegistrationName>Unidad Administrativa Especial Dirección de Impuestos y Aduanas Nacionales</cbc:RegistrationName>
+				<cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="4" schemeName="31">800197268</cbc:CompanyID>
+				<cac:TaxScheme>
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:PartyTaxScheme>
+		</cac:Party>
+	</cac:AccountingCustomerParty>
+	<cac:PaymentMeans>
+		<cbc:ID>1</cbc:ID>
+		<cbc:PaymentMeansCode>10</cbc:PaymentMeansCode>
+		<!--medio de pago-->
+		<cbc:PaymentDueDate>2021-05-24</cbc:PaymentDueDate>
+	</cac:PaymentMeans>
+	<cac:AllowanceCharge>
+		<cbc:ID>1</cbc:ID>
+		<cbc:ChargeIndicator>false</cbc:ChargeIndicator>
+		<cbc:AllowanceChargeReasonCode>02</cbc:AllowanceChargeReasonCode>
+		<!-- CODIGO PARA AJUSTE DE MAQUINAS CON SALDO CREDITO -->
+		<cbc:AllowanceChargeReason>Valor crédito total</cbc:AllowanceChargeReason>
+		<cbc:Amount currencyID="COP">1000.00</cbc:Amount>
+		<!-- Sumatoria de todos los  CreditValue de  /Invoice/UBLExtensions/UBLExtension/ExtensionContent/InfoEstablishment/CreditValueOfTheMachine -->
+	</cac:AllowanceCharge>
+	<cac:LegalMonetaryTotal>
+		<cbc:LineExtensionAmount currencyID="COP">2845980.00</cbc:LineExtensionAmount>
+		<cbc:TaxExclusiveAmount currencyID="COP">0.00</cbc:TaxExclusiveAmount>
+		<cbc:TaxInclusiveAmount currencyID="COP">2845980.00</cbc:TaxInclusiveAmount>
+		<cbc:AllowanceTotalAmount currencyID="COP">1000.00</cbc:AllowanceTotalAmount>
+		<cbc:PayableAmount currencyID="COP">2844980.00</cbc:PayableAmount>
+		<!--valor total-->
+	</cac:LegalMonetaryTotal>
+	<cac:InvoiceLine>
+		<cbc:ID>1</cbc:ID>
+		<cbc:InvoicedQuantity unitCode="94">1.00</cbc:InvoicedQuantity>
+		<!--cantidad-->
+		<!--las bolsas se informarian como un producto-->
+		<cbc:LineExtensionAmount currencyID="COP">2845980.000</cbc:LineExtensionAmount>
+		<cac:Item>
+			<cbc:Description>MET</cbc:Description>
+			<!--descripcion del bien o el servicio-->
+			<cac:StandardItemIdentification>
+				<cbc:ID schemeID="999">W1099619</cbc:ID>
+			</cac:StandardItemIdentification>
+		</cac:Item>
+		<cac:Price>
+			<cbc:PriceAmount currencyID="COP">2845980.00</cbc:PriceAmount>
+			<!--valor unitario-->
+			<cbc:BaseQuantity unitCode="94">1.00</cbc:BaseQuantity>
+			<!--unidad-->
+		</cac:Price>
+	</cac:InvoiceLine>
+	<cac:InvoiceLine>
+		<cbc:ID>2</cbc:ID>
+		<cbc:InvoicedQuantity unitCode="NT">1.00</cbc:InvoicedQuantity>
+		<cbc:LineExtensionAmount currencyID="COP">0.00</cbc:LineExtensionAmount>
+		<cac:Item>
+			<cbc:Description>Mesa</cbc:Description>
+			<!--descripcion del bien o el servicio-->
+			<cac:StandardItemIdentification>
+				<cbc:ID schemeID="999">MV000158</cbc:ID>
+			</cac:StandardItemIdentification>
+		</cac:Item>
+		<cac:Price>
+			<cbc:PriceAmount currencyID="COP">0.00</cbc:PriceAmount>
+			<!--valor unitario-->
+			<cbc:BaseQuantity unitCode="94">1.00</cbc:BaseQuantity>
+			<!--unidad-->
+		</cac:Price>
+	</cac:InvoiceLine>
+</Invoice>

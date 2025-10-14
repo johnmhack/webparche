@@ -108,8 +108,8 @@
                     </button>
                 </div>
                 <div class="module-card">
-                    <h3><i class='bx bx-receipt'></i> Facturación</h3>
-                    <p>Genera facturas y controla ingresos</p>
+                    <h3><i class='bx bx-receipt'></i> Facturación DIAN</h3>
+                    <p>Genera facturas electrónicas DIAN válidas</p>
                     <button class="btn btn-primary" onclick="showInvoices()">
                         <i class='bx bx-right-arrow-alt'></i>
                         Acceder
@@ -119,10 +119,10 @@
         </div>
     </div>
 
-    <!-- Sección de Facturación (oculta por defecto) -->
+    <!-- Sección de Facturación DIAN (oculta por defecto) -->
     <div id="invoicesSection" class="dashboard hidden">
         <div class="dashboard-header">
-            <h2><i class='bx bx-receipt'></i> Facturación</h2>
+            <h2><i class='bx bx-receipt'></i> Facturación DIAN</h2>
             <div>
                 <button class="btn btn-secondary" onclick="showDashboard()">
                     <i class='bx bx-arrow-back'></i>
@@ -130,7 +130,7 @@
                 </button>
                 <button class="btn btn-primary" onclick="showCreateInvoiceModal()">
                     <i class='bx bx-plus'></i>
-                    Nueva Factura
+                    Nueva Factura Electrónica
                 </button>
             </div>
         </div>
@@ -153,42 +153,133 @@
             <div id="invoicesList" class="invoices-list">
                 <!-- Las facturas se cargarán aquí dinámicamente -->
             </div>
+
+            <!-- Información de Estado DIAN -->
+            <div class="dian-status-info" style="margin-top: 2rem; padding: 1.5rem; background: rgba(0, 194, 255, 0.1); border: 1px solid rgba(0, 194, 255, 0.3); border-radius: 12px;">
+                <h4 style="color: var(--neon-blue); margin-bottom: 1rem; font-size: 1.1rem;">
+                    <i class='bx bx-info-circle'></i> Estado de Facturación DIAN
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #22c55e;"></div>
+                            <span style="font-weight: 600; color: var(--text-primary);">Facturas Válidas</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                            Documentos electrónicos válidos ante la DIAN
+                        </p>
+                    </div>
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #f59e0b;"></div>
+                            <span style="font-weight: 600; color: var(--text-primary);">Pendientes de Envío</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                            Esperando configuración de Camerfirma
+                        </p>
+                    </div>
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444;"></div>
+                            <span style="font-weight: 600; color: var(--text-primary);">Rechazadas</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                            Requieren corrección y reenvío
+                        </p>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem; padding: 1rem; background: rgba(0, 194, 255, 0.05); border-radius: 8px;">
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                        <strong>Nota:</strong> Actualmente en modo simulación. Una vez configurado Camerfirma, las facturas se enviarán automáticamente a la DIAN y recibirán CUFE oficial.
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Modal para crear factura -->
+    <!-- Modal para crear factura DIAN -->
     <div id="createInvoiceModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class='bx bx-plus'></i> Crear Nueva Factura</h3>
+                <h3><i class='bx bx-plus'></i> Crear Nueva Factura Electrónica DIAN</h3>
                 <button class="close-btn" onclick="hideCreateInvoiceModal()">&times;</button>
             </div>
             <form class="invoice-form" onsubmit="handleCreateInvoice(event)">
-                <div class="form-group">
-                    <label for="invoiceCustomer">Cliente</label>
-                    <select id="invoiceCustomer" name="customer" required>
-                        <option value="">Seleccionar cliente...</option>
-                        <!-- Los clientes se cargarán dinámicamente -->
-                    </select>
+                <!-- Información del Cliente -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 1rem; font-size: 1.1rem;">👤 Información del Cliente</h4>
+                    <div class="form-group">
+                        <label for="invoiceCustomer">Cliente *</label>
+                        <select id="invoiceCustomer" name="customer" required>
+                            <option value="">Seleccionar cliente...</option>
+                            <!-- Los clientes se cargarán dinámicamente -->
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="invoiceWorkOrder">Orden de Trabajo (opcional)</label>
-                    <select id="invoiceWorkOrder" name="work_order">
-                        <option value="">Sin orden de trabajo</option>
-                        <!-- Las OT completadas se cargarán dinámicamente -->
-                    </select>
+
+                <!-- Origen de la Factura -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-green); margin-bottom: 1rem; font-size: 1.1rem;">🔧 Origen de la Factura</h4>
+                    <div class="form-group">
+                        <label for="invoiceWorkOrder">Orden de Trabajo (opcional)</label>
+                        <select id="invoiceWorkOrder" name="work_order">
+                            <option value="">Sin orden de trabajo</option>
+                            <!-- Las OT completadas se cargarán dinámicamente -->
+                        </select>
+                        <small style="color: var(--surface-variant); font-size: 0.9rem;">
+                            Si no hay OT, se creará una factura manual con productos
+                        </small>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="invoiceDueDate">Fecha de Vencimiento</label>
-                    <input type="date" id="invoiceDueDate" name="due_date">
+
+                <!-- Configuración de Pago -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-orange); margin-bottom: 1rem; font-size: 1.1rem;">💰 Configuración de Pago</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="invoiceDueDate">Fecha de Vencimiento</label>
+                            <input type="date" id="invoiceDueDate" name="due_date">
+                        </div>
+                        <div class="form-group">
+                            <label for="invoicePaymentMethod">Método de Pago</label>
+                            <select id="invoicePaymentMethod" name="payment_method">
+                                <option value="cash">Efectivo</option>
+                                <option value="card">Tarjeta</option>
+                                <option value="transfer">Transferencia</option>
+                                <option value="check">Cheque</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="invoiceNotes">Notas</label>
-                    <textarea id="invoiceNotes" name="notes" rows="3"></textarea>
+
+                <!-- Información Adicional -->
+                <div class="form-section">
+                    <h4 style="color: var(--logo-green); margin-bottom: 1rem; font-size: 1.1rem;">📝 Información Adicional</h4>
+                    <div class="form-group">
+                        <label for="invoiceNotes">Notas de la Factura</label>
+                        <textarea id="invoiceNotes" name="notes" rows="3" placeholder="Información adicional sobre la factura..."></textarea>
+                    </div>
                 </div>
+
+                <!-- Información DIAN -->
+                <div class="form-section" style="background: rgba(0, 194, 255, 0.1); border: 1px solid rgba(0, 194, 255, 0.3); border-radius: 8px; padding: 1rem;">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 1rem; font-size: 1.1rem;">📋 Información DIAN</h4>
+                    <div style="background: rgba(0, 194, 255, 0.1); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-primary);">
+                            <strong>Esta factura será generada según las especificaciones de la DIAN:</strong>
+                        </p>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+                            <li>XML válido según UBL 2.1</li>
+                            <li>Cálculo automático de CUDE (SHA384)</li>
+                            <li>Validación Schematron DIAN</li>
+                            <li>Envío automático a DIAN (cuando esté configurado Camerfirma)</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-full">
                     <i class='bx bx-save'></i>
-                    Crear Factura
+                    <span id="invoiceSubmitText">Crear Factura Electrónica</span>
                 </button>
             </form>
         </div>

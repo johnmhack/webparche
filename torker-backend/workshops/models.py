@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
 import uuid
+import hashlib
 
 
 class UserManager(BaseUserManager):
@@ -381,6 +382,341 @@ class WorkOrder(models.Model):
             workshop_prefix = str(self.workshop.id)[:4].upper()
             self.order_number = f"{workshop_prefix}-{today.strftime('%Y%m%d')}-{WorkOrder.objects.filter(workshop=self.workshop, created_at__date=today).count() + 1:03d}"
         super().save(*args, **kwargs)
+
+
+# ===== MODELOS PARA FACTURACIÓN ELECTRÓNICA DIAN =====
+
+class DianResolution(models.Model):
+    """Control local de resoluciones de facturación DIAN"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='dian_resolutions')
+
+    # Información de la resolución
+    resolution_number = models.CharField(max_length=50, unique=True)  # Número de resolución
+    resolution_date = models.DateField()  # Fecha de expedición
+    expires_date = models.DateField()  # Fecha de vencimiento
+
+    # Rango de numeración
+    prefix = models.CharField(max_length=10, default='F')  # Prefijo (F, NC, ND, etc.)
+    from_number = models.IntegerField()  # Número inicial
+    to_number = models.IntegerField()  # Número final
+    current_number = models.IntegerField(default=0)  # Número actual utilizado
+
+    # Tipo de documento
+    DOCUMENT_TYPE_CHOICES = [
+        ('invoice', 'Factura Electrónica'),
+        ('credit_note', 'Nota Crédito'),
+        ('debit_note', 'Nota Débito'),
+        ('equivalent', 'Documento Equivalente'),
+    ]
+    document_type = models.CharField(max_length=20, choices=DOCUMENT_TYPE_CHOICES, default='invoice')
+
+    # Estado
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'dian_resolutions'
+        unique_together = ['workshop', 'resolution_number']
+
+    def __str__(self):
+        return f"Resolución {self.resolution_number} - {self.workshop.name}"
+
+    @property
+    def is_valid(self):
+        """Verificar si la resolución está vigente"""
+        today = timezone.now().date()
+        return self.is_active and self.expires_date >= today
+
+    @property
+    def available_numbers(self):
+        """Números disponibles en la resolución"""
+        return self.to_number - self.current_number
+
+    def get_next_number(self):
+        """Obtener siguiente número disponible"""
+        if not self.is_valid:
+            raise ValueError("La resolución no está vigente")
+        if self.current_number >= self.to_number:
+            raise ValueError("No hay números disponibles en esta resolución")
+
+        self.current_number += 1
+        self.save()
+        return f"{self.prefix}{self.current_number:04d}"
+
+
+class DianConfiguration(models.Model):
+    """Configuración DIAN por taller"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workshop = models.OneToOneField(Workshop, on_delete=models.CASCADE, related_name='dian_config')
+
+    # Ambiente DIAN
+    ENVIRONMENT_CHOICES = [
+        ('test', 'Ambiente de Pruebas'),
+        ('production', 'Ambiente de Producción'),
+    ]
+    environment = models.CharField(max_length=20, choices=ENVIRONMENT_CHOICES, default='test')
+
+    # URLs de APIs DIAN
+    test_webservice_url = models.URLField(default='https://vpfe-hab.dian.gov.co/WcfDianCustomerServices.svc')
+    production_webservice_url = models.URLField(default='https://vpfe.dian.gov.co/WcfDianCustomerServices.svc')
+
+    # Credenciales de acceso
+    test_username = models.CharField(max_length=100, blank=True)
+    test_password = models.CharField(max_length=100, blank=True)
+    production_username = models.CharField(max_length=100, blank=True)
+    production_password = models.CharField(max_length=100, blank=True)
+
+    # Configuración técnica
+    software_id = models.CharField(max_length=100, default='710d99d0-6d49-4e18-bb70-196d1b17785f')  # ID del software
+    software_pin = models.CharField(max_length=100, default='12345')  # PIN del software
+    software_security_code = models.TextField(default='cfb3e564f5660585cd0ba4f23090242a73d3f4f298110d2eaa3976ce03cba4c6f980f6fa9a41b68a072d8e7decbd53a8')  # Código de seguridad
+
+    # Configuración de firma digital
+    signature_provider = models.CharField(max_length=50, default='camerfirma')  # camerfirma, etc.
+    signature_username = models.CharField(max_length=100, blank=True)
+    signature_password = models.CharField(max_length=100, blank=True)
+    signature_certificate_id = models.CharField(max_length=100, blank=True)
+
+    # Configuración adicional
+    default_currency = models.CharField(max_length=3, default='COP')
+    default_country = models.CharField(max_length=2, default='CO')
+    default_language = models.CharField(max_length=2, default='es')
+
+    # Configuración de validaciones
+    enable_schematron_validation = models.BooleanField(default=True)
+    enable_xml_validation = models.BooleanField(default=True)
+    enable_dian_validation = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'dian_configurations'
+
+    def __str__(self):
+        return f"Configuración DIAN - {self.workshop.name} ({self.environment})"
+
+    @property
+    def webservice_url(self):
+        """URL del webservice según ambiente"""
+        return self.test_webservice_url if self.environment == 'test' else self.production_webservice_url
+
+    @property
+    def username(self):
+        """Username según ambiente"""
+        return self.test_username if self.environment == 'test' else self.production_username
+
+    @property
+    def password(self):
+        """Password según ambiente"""
+        return self.test_password if self.environment == 'test' else self.production_password
+
+
+class ElectronicInvoice(models.Model):
+    """Factura electrónica DIAN"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='electronic_invoices')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='electronic_invoices')
+    work_order = models.OneToOneField(WorkOrder, on_delete=models.SET_NULL, null=True, blank=True, related_name='electronic_invoice')
+
+    # Numeración DIAN
+    dian_resolution = models.ForeignKey(DianResolution, on_delete=models.PROTECT, related_name='invoices')
+    invoice_number = models.CharField(max_length=20, unique=True)  # Número completo con prefijo
+    consecutive_number = models.IntegerField()  # Número correlativo
+
+    # CUDE (Código Único de Documento Electrónico)
+    cude = models.CharField(max_length=96, unique=True, blank=True)  # SHA384
+
+    # Fechas
+    issue_date = models.DateTimeField(default=timezone.now)
+    issue_time = models.TimeField(default=timezone.now)
+    due_date = models.DateField(null=True, blank=True)
+
+    # Información fiscal del taller
+    workshop_nit = models.CharField(max_length=20)
+    workshop_name = models.CharField(max_length=255)
+    workshop_address = models.TextField()
+    workshop_city = models.CharField(max_length=100)
+    workshop_department = models.CharField(max_length=100)
+    workshop_phone = models.CharField(max_length=20, blank=True)
+    workshop_email = models.EmailField(blank=True)
+
+    # Información del cliente
+    customer_name = models.CharField(max_length=255)
+    customer_document_type = models.CharField(max_length=20, choices=Customer.DOCUMENT_TYPE_CHOICES)
+    customer_document = models.CharField(max_length=20)
+    customer_address = models.TextField(blank=True)
+    customer_city = models.CharField(max_length=100, blank=True)
+    customer_department = models.CharField(max_length=100, blank=True)
+    customer_phone = models.CharField(max_length=20, blank=True)
+    customer_email = models.EmailField(blank=True)
+
+    # Totales
+    subtotal = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=19.00)  # IVA Colombia
+    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+
+    # Estado DIAN
+    DIAN_STATUS_CHOICES = [
+        ('draft', 'Borrador'),
+        ('generated', 'XML Generado'),
+        ('signed', 'Firmado'),
+        ('sent', 'Enviado a DIAN'),
+        ('accepted', 'Aceptado por DIAN'),
+        ('rejected', 'Rechazado por DIAN'),
+        ('cancelled', 'Cancelado'),
+    ]
+    dian_status = models.CharField(max_length=20, choices=DIAN_STATUS_CHOICES, default='draft')
+
+    # Archivos XML
+    xml_content = models.TextField(blank=True)  # XML sin firma
+    signed_xml_content = models.TextField(blank=True)  # XML firmado
+    qr_code_url = models.URLField(blank=True)  # URL del código QR
+
+    # Respuestas DIAN
+    dian_response_code = models.CharField(max_length=10, blank=True)
+    dian_response_message = models.TextField(blank=True)
+    dian_response_date = models.DateTimeField(null=True, blank=True)
+
+    # Estado y pagos
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pendiente'),
+        ('partial', 'Pago Parcial'),
+        ('paid', 'Pagada'),
+        ('overdue', 'Vencida'),
+        ('cancelled', 'Cancelada'),
+    ]
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Efectivo'),
+        ('card', 'Tarjeta'),
+        ('transfer', 'Transferencia'),
+        ('check', 'Cheque'),
+        ('other', 'Otro'),
+    ]
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True)
+
+    # Notas y observaciones
+    notes = models.TextField(blank=True)
+
+    # Control de versiones para anulaciones
+    is_active = models.BooleanField(default=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'electronic_invoices'
+        ordering = ['-issue_date']
+
+    def __str__(self):
+        return f"FE {self.invoice_number} - {self.customer_name}"
+
+    def generate_cude(self):
+        """Generar CUDE según algoritmo DIAN"""
+        # Algoritmo simplificado - en producción usar algoritmo oficial DIAN
+        data = f"{self.invoice_number}{self.issue_date.strftime('%Y-%m-%d %H:%M:%S')}{self.total}{self.workshop_nit}"
+        return hashlib.sha384(data.encode()).hexdigest()
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            # Generar número usando resolución DIAN
+            self.invoice_number = self.dian_resolution.get_next_number()
+            self.consecutive_number = self.dian_resolution.current_number
+
+        if not self.cude:
+            self.cude = self.generate_cude()
+
+        super().save(*args, **kwargs)
+
+
+class ElectronicInvoiceDetail(models.Model):
+    """Detalles de facturas electrónicas"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    electronic_invoice = models.ForeignKey(ElectronicInvoice, on_delete=models.CASCADE, related_name='details')
+    part = models.ForeignKey(Part, on_delete=models.SET_NULL, null=True, blank=True, related_name='electronic_invoice_details')
+
+    # Información del producto/servicio
+    description = models.TextField()
+    part_number = models.CharField(max_length=100, blank=True)
+
+    # Clasificación DIAN (UNSPSC)
+    unspsc_code = models.CharField(max_length=20, blank=True)  # Código UNSPSC
+    brand_name = models.CharField(max_length=100, blank=True)
+    model_name = models.CharField(max_length=100, blank=True)
+
+    # Cantidades y precios
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    unit_code = models.CharField(max_length=10, default='NIU')  # Unidad de medida DIAN
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2)
+    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    # Cálculos automáticos
+    subtotal = models.DecimalField(max_digits=15, decimal_places=2)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=19.00)
+    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=15, decimal_places=2)
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'electronic_invoice_details'
+
+    def __str__(self):
+        return f"{self.description} - {self.quantity} x {self.unit_price}"
+
+    def save(self, *args, **kwargs):
+        # Calcular subtotal automáticamente
+        self.subtotal = (self.quantity * self.unit_price) - self.discount
+
+        # Calcular IVA si aplica
+        if self.tax_rate > 0:
+            self.tax_amount = self.subtotal * (self.tax_rate / 100)
+        else:
+            self.tax_amount = 0
+
+        self.total = self.subtotal + self.tax_amount
+        super().save(*args, **kwargs)
+
+
+class DianValidationLog(models.Model):
+    """Log de validaciones DIAN"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='dian_validation_logs')
+    electronic_invoice = models.ForeignKey(ElectronicInvoice, on_delete=models.CASCADE, related_name='validation_logs')
+
+    # Tipo de validación
+    VALIDATION_TYPE_CHOICES = [
+        ('xml_schema', 'Validación XML Schema'),
+        ('schematron', 'Validación Schematron'),
+        ('dian_webservice', 'Validación DIAN WebService'),
+        ('signature', 'Validación Firma Digital'),
+    ]
+    validation_type = models.CharField(max_length=20, choices=VALIDATION_TYPE_CHOICES)
+
+    # Resultado
+    is_valid = models.BooleanField()
+    error_code = models.CharField(max_length=20, blank=True)
+    error_message = models.TextField(blank=True)
+    validation_details = models.JSONField(blank=True)  # Detalles adicionales en JSON
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'dian_validation_logs'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.validation_type} - {self.electronic_invoice.invoice_number} - {'Válido' if self.is_valid else 'Inválido'}"
 
 
 class WorkOrderDetail(models.Model):

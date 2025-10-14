@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:sts="dian:gov:co:facturaelectronica:Structures-2-1" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" xmlns:xades141="http://uri.etsi.org/01903/v1.4.1#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2     http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd" xmlns:doceq="DEExtensions:gov:co:facturaelectronica:Structures-2-1">
+	<ext:UBLExtensions>
+		<ext:UBLExtension>
+			<ext:ExtensionContent>
+				<sts:DianExtensions>
+					<sts:InvoiceSource>
+						<cbc:IdentificationCode listAgencyID="6" listAgencyName="United Nations Economic Commission for Europe" listSchemeURI="urn:oasis:names:specification:ubl:codelist:gc:CountryIdentificationCode-2.1">CO</cbc:IdentificationCode>
+					</sts:InvoiceSource>
+					<sts:SoftwareProvider>
+						<sts:ProviderID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="6" schemeName="31">2022516218</sts:ProviderID> <!--nit del fabricante del software-->
+						<sts:SoftwareID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">7c18cccc-501f-475c-b5b2-b8719536f05e</sts:SoftwareID>
+					</sts:SoftwareProvider>
+					<sts:SoftwareSecurityCode schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">dad0fe1fbe232791cb36a50b7c9d3c086d3ae6aa945b8e44321068bdd429ed6a2260d9ac6dd30301b3195741b3b27a57</sts:SoftwareSecurityCode>
+					<sts:AuthorizationProvider>
+						<sts:AuthorizationProviderID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="4" schemeName="31">800197268</sts:AuthorizationProviderID>
+					</sts:AuthorizationProvider>
+					<sts:QRCode>	https://catalogo-vpfe-hab.dian.gov.co/document/searchqr?documentkey=073bbf405eba159f576b7c2245672395dd452d8f3dd18a63f3bb484a9a819f3fc0b44bd4c8b50b54c93afb906de7d2b8</sts:QRCode>
+				</sts:DianExtensions>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+		<ext:UBLExtension>
+			<ext:ExtensionContent>
+				<Interoperabilidad>
+					<Group schemeName="Tiquete o billete de transporte aéreo de pasajeros">
+						<Collection schemeName="Número de reserva">
+							<AdditionalInformation>
+								<Name>NumeroReserva</Name>
+								<!-- Número de reserva-->
+								<Value>46454846</Value>
+							</AdditionalInformation>
+						</Collection>
+						<Collectiontraveler schemeName="Datos delpasajero">
+							<AdditionalInformation>
+								<Name>No.Documento</Name>
+								<!--Numero de documento-->
+								<Value>80101010</Value>
+								<Name>NombreApellido</Name>
+								<!-- Nombre del pasajero -->
+								<Value>John Smith</Value>
+								<Name>ElectronicMail</Name>
+								<!-- correo electrónico -->
+								<Value>jsmith@example.com</Value>
+							</AdditionalInformation>
+						</Collectiontraveler>
+					</Group>
+				</Interoperabilidad>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+	</ext:UBLExtensions>
+	<!--Información de la versión del UBL para el doc equivalente de tiquete áereo-->
+	<cbc:UBLVersionID>UBL 2.1</cbc:UBLVersionID>
+	<cbc:CustomizationID>10</cbc:CustomizationID>
+	<!--Se informa el código que corresponda para el doc equivalente de tiquete áereo, entre estos códigos se encuentra  Billete electrónico (ETKT), Bono de crédito (MCO), Documento de uso múltiple o multipropósito (MPD, EMD), Documento de cobro de la tasa administrativa por parte de las agencias 
+de viajes TASF, Documentos que se expidan de conformidad con IATA-->
+	<cbc:ProfileID>DIAN 2.1: Documento equivalente – Tiquete o boleto aéreo de pasajeros</cbc:ProfileID>
+	<cbc:ProfileExecutionID>2</cbc:ProfileExecutionID>
+	<!--Codigo para determinar si es prueba o es de producción-->
+	<cbc:ID>TA001</cbc:ID>
+	<cbc:UUID schemeID="2" schemeName="CUDE-SHA384">073bbf405eba159f576b7c2245672395dd452d8f3dd18a63f3bb484a9a819f3fc0b44bd4c8b50b54c93afb906de7d2b8</cbc:UUID>
+	<cbc:IssueDate>2022-09-15</cbc:IssueDate>
+	<!--Fecha de expedición del documento, según informa la Resolución 42, art 13 numeral 5 literal c)-->
+	<cbc:IssueTime>16:31:02-05:00</cbc:IssueTime>
+	<cbc:InvoiceTypeCode>50</cbc:InvoiceTypeCode>
+	<!--Código destinado para todos los documentos equivalentes, tiquete corresponde el 50-->
+	<cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+	<!--Moneda del documento-->
+	<cbc:LineCountNumeric>2</cbc:LineCountNumeric>
+	<cac:AccountingSupplierParty>
+		<!--Información de la aereolinea, emisor del documento-->
+		<cbc:AdditionalAccountID>1</cbc:AdditionalAccountID>
+		<!--Si corresponde a persona natural o jurídica-->
+		<cac:Party>
+			<cac:PartyName>
+				<cbc:Name>PRUEBAS FACTURA</cbc:Name>
+				<!--Razón social de la aerolinea-->
+			</cac:PartyName>
+			<cac:PhysicalLocation>
+				<!--Datos de localización de la aerolinea.-->
+				<cac:Address>
+					<cbc:ID>11001</cbc:ID>
+					<cbc:CityName>Bogotá, D.C.</cbc:CityName>
+					<cbc:CountrySubentity>Bogotá</cbc:CountrySubentity>
+					<cbc:CountrySubentityCode>11</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>Av. #97 - 13</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:Address>
+			</cac:PhysicalLocation>
+			<cac:PartyTaxScheme>
+				<!--Datos obligatorios según Resolución 42, art 13 numeral 5, literal a)Razón social y NIT del emisor-->
+				<cbc:RegistrationName>PRUEBAS FACTURA</cbc:RegistrationName>
+				<cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="6" schemeName="31">2022516218</cbc:CompanyID>
+				<cbc:TaxLevelCode>O-13</cbc:TaxLevelCode>
+				<!--Responsabilidad del emisor, tabla en Anexo Tecnico-->
+				<cac:RegistrationAddress>
+					<!--Dirección del emisor para impuestos-->
+					<cbc:ID>11001</cbc:ID>
+					<cbc:CityName>Bogotá, D.C.</cbc:CityName>
+					<cbc:CountrySubentity>Bogotá</cbc:CountrySubentity>
+					<cbc:CountrySubentityCode>11</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>Av. Jiménez #7 - 13</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:RegistrationAddress>
+				<cac:TaxScheme>
+					<!--Código de impuesto a calcular-->
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:PartyTaxScheme>
+			<cac:Contact>
+				<!--Datos de contacto de la areolinea-->
+				<cbc:Name>PRUEBAS FACTURA</cbc:Name>
+				<cbc:Telephone>3192490896</cbc:Telephone>
+				<cbc:ElectronicMail>servicioalcliente@norwegian.co</cbc:ElectronicMail>
+			</cac:Contact>
+		</cac:Party>
+	</cac:AccountingSupplierParty>
+	<cac:AccountingCustomerParty>
+		<!--Datos de la persona que paga el pasaje del servicio aéreo, puede ser 222222 como anonimo-->
+		<cbc:AdditionalAccountID>2</cbc:AdditionalAccountID>
+		<!--1= Persona Juridica, 2= Persona Natural-->
+		<cac:Party>
+			<cac:PartyIdentification>
+				<cbc:ID schemeName="13" schemeID="1">1073234714</cbc:ID>
+			</cac:PartyIdentification>
+			<cac:PartyName>
+				<cbc:Name>nombrecomercial</cbc:Name>
+			</cac:PartyName>
+			<cac:PhysicalLocation>
+				<!--Datos de localización de la aerolinea.-->
+				<cac:Address>
+					<cbc:ID>11001</cbc:ID>
+					<cbc:CityName>Bogotá, D.C.</cbc:CityName>
+					<cbc:CountrySubentity>Bogotá</cbc:CountrySubentity>
+					<cbc:CountrySubentityCode>11</cbc:CountrySubentityCode>
+					<cac:AddressLine>
+						<cbc:Line>Av. #97 - 13</cbc:Line>
+					</cac:AddressLine>
+					<cac:Country>
+						<cbc:IdentificationCode>CO</cbc:IdentificationCode>
+						<cbc:Name languageID="es">Colombia</cbc:Name>
+					</cac:Country>
+				</cac:Address>
+			</cac:PhysicalLocation>
+			<cac:PartyTaxScheme>
+				<cbc:RegistrationName>Andres Felipe Martinez</cbc:RegistrationName>
+				<cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="4" schemeName="13">1073234714</cbc:CompanyID>
+				<cac:TaxScheme>
+					<!-- Datos del responsable de impuesto-->
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:PartyTaxScheme>
+			<cac:Contact>
+				<cbc:Name>Andres Felipe Martinez</cbc:Name>
+				<cbc:Telephone>31031031089</cbc:Telephone>
+				<cbc:ElectronicMail>dafsf@jnioksag.com</cbc:ElectronicMail>
+			</cac:Contact>
+		</cac:Party>
+	</cac:AccountingCustomerParty>
+	<cac:PaymentMeans>
+		<!--Datos del metodo de pago-->
+		<cbc:ID>2</cbc:ID>
+		<cbc:PaymentMeansCode>10</cbc:PaymentMeansCode>
+		<cbc:PaymentDueDate>2021-01-24</cbc:PaymentDueDate>
+		<!--Fecha de pago-->
+	</cac:PaymentMeans>
+	<cac:TaxTotal>
+		<!--Información relacionada con el impuesto-->
+		<cbc:TaxAmount currencyID="COP">38500.00</cbc:TaxAmount>
+		<cac:TaxSubtotal>
+		<cbc:TaxableAmount currencyID="COP">1.00</cbc:TaxableAmount>
+			<cbc:TaxAmount currencyID="COP">38500.00</cbc:TaxAmount>
+			<cbc:BaseUnitMeasure unitCode="A9">1.00</cbc:BaseUnitMeasure>
+			<cbc:PerUnitAmount currencyID="COP">38500.00</cbc:PerUnitAmount>
+						<cac:TaxCategory>
+				<cac:TaxScheme>
+					<cbc:ID>ZZ</cbc:ID>
+					<cbc:Name>Otros</cbc:Name>
+				</cac:TaxScheme>
+			</cac:TaxCategory>
+		</cac:TaxSubtotal>
+		</cac:TaxTotal>
+	<cac:TaxTotal>
+		<cbc:TaxAmount currencyID="COP">17645.00</cbc:TaxAmount>
+		<cac:TaxSubtotal>
+			<cbc:TaxableAmount currencyID="COP">322900.00</cbc:TaxableAmount>
+			<cbc:TaxAmount currencyID="COP">16145.00</cbc:TaxAmount>
+			<cac:TaxCategory>
+				<cbc:Percent>5.00</cbc:Percent>
+				<cac:TaxScheme>
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:TaxCategory>
+		</cac:TaxSubtotal>
+		<cac:TaxSubtotal>
+			<cbc:TaxableAmount currencyID="COP">30000.00</cbc:TaxableAmount>
+			<cbc:TaxAmount currencyID="COP">1500.00</cbc:TaxAmount>
+			<cac:TaxCategory>
+				<cbc:Percent>5.00</cbc:Percent>
+				<cac:TaxScheme>
+					<cbc:ID>01</cbc:ID>
+					<cbc:Name>IVA</cbc:Name>
+				</cac:TaxScheme>
+			</cac:TaxCategory>
+		</cac:TaxSubtotal>
+	</cac:TaxTotal>
+	<cac:LegalMonetaryTotal>
+		<!--Valor total del Boleto aéreo, campo obligatorio por Resolución 42, art 13, numeral 5 literal e)-->
+		<cbc:LineExtensionAmount currencyID="COP">324397.75</cbc:LineExtensionAmount>
+		<cbc:TaxExclusiveAmount currencyID="COP">352900.00</cbc:TaxExclusiveAmount>
+		<cbc:TaxInclusiveAmount currencyID="COP">380542.75</cbc:TaxInclusiveAmount>
+		<cbc:PayableAmount currencyID="COP">380542.75</cbc:PayableAmount>
+	</cac:LegalMonetaryTotal>
+	<cac:InvoiceLine>
+		<cbc:ID schemeID="2">1</cbc:ID>
+		<cbc:Note>B/S Ingresos Facturados para terceros</cbc:Note>
+		<cbc:InvoicedQuantity unitCode="A9">1.00</cbc:InvoicedQuantity>
+		<cbc:LineExtensionAmount currencyID="COP">200500.00</cbc:LineExtensionAmount>
+		<cac:AllowanceCharge>
+			<cbc:ID schemeName="1">1</cbc:ID>
+			<cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+			<cbc:AllowanceChargeReason>descuento administrativo</cbc:AllowanceChargeReason>
+			<cbc:Amount currencyID="COP">1500</cbc:Amount>
+		</cac:AllowanceCharge>
+		<cac:TaxTotal>
+			<cbc:TaxAmount currencyID="COP">16700.00</cbc:TaxAmount>
+			<cac:TaxSubtotal>
+				<!--impuesto nominal-->
+				<cbc:TaxAmount currencyID="COP">16700.00</cbc:TaxAmount>
+				<cbc:BaseUnitMeasure unitCode="A9">1.00</cbc:BaseUnitMeasure>
+				<cbc:PerUnitAmount currencyID="COP">16700.00</cbc:PerUnitAmount>
+				<cac:TaxCategory>
+					<cac:TaxScheme>
+						<cbc:ID>ZZ</cbc:ID>
+						<cbc:Name>Otros</cbc:Name>
+					</cac:TaxScheme>
+				</cac:TaxCategory>
+			</cac:TaxSubtotal>
+		</cac:TaxTotal>
+		<cac:TaxTotal>
+			<cbc:TaxAmount currencyID="COP">10700.00</cbc:TaxAmount>
+			<cac:TaxSubtotal>
+				<!--Existen dos TaxSubtotal uno para el valor total y otro para los costos administrativos a nivel de linea-->
+				<cbc:TaxableAmount currencyID="COP">199000.00</cbc:TaxableAmount>
+				<cbc:TaxAmount currencyID="COP">9950.00</cbc:TaxAmount>
+				<cac:TaxCategory>
+					<cbc:Percent>5.00</cbc:Percent>
+					<cac:TaxScheme>
+						<cbc:ID>01</cbc:ID>
+						<cbc:Name>IVA</cbc:Name>
+					</cac:TaxScheme>
+				</cac:TaxCategory>
+			</cac:TaxSubtotal>
+			<cac:TaxSubtotal>
+				<cbc:TaxableAmount currencyID="COP">15000.00</cbc:TaxableAmount>
+				<cbc:TaxAmount currencyID="COP">750.00</cbc:TaxAmount>
+				<cac:TaxCategory>
+					<cbc:Percent>5.00</cbc:Percent>
+					<cac:TaxScheme>
+						<cbc:ID>01</cbc:ID>
+						<cbc:Name>IVA</cbc:Name>
+					</cac:TaxScheme>
+				</cac:TaxCategory>
+			</cac:TaxSubtotal>
+		</cac:TaxTotal>
+		<cac:Item>
+			<cbc:Description>servicio de transporte</cbc:Description>
+			<!-- Descripción del servicio -->
+			<cac:SellersItemIdentification>
+				<cbc:ID>MVDHAM</cbc:ID>
+				<!-- Bookingreference -->
+			</cac:SellersItemIdentification>
+			<cac:StandardItemIdentification>
+				<cbc:ID schemeID="999" schemeName="Estándar de adopción del contribuyente">00145</cbc:ID>
+			</cac:StandardItemIdentification>
+			<cac:InformationContentProviderParty>
+				<cac:PowerOfAttorney>
+					<!-- Grupo para informar datos del tercero que recibe el ingreso -->
+					<cac:AgentParty>
+						<cac:PartyIdentification>
+							<cbc:ID schemeID="1"
+							        schemeName="31"
+							        schemeAgencyID="195">860034594</cbc:ID>
+						</cac:PartyIdentification>
+						<cac:PartyName>
+						<cbc:Name>CONCECION MALAGA S-A</cbc:Name>
+						</cac:PartyName>
+					</cac:AgentParty>
+				</cac:PowerOfAttorney>
+			</cac:InformationContentProviderParty>
+		</cac:Item>
+		<cac:Price>
+		<cbc:PriceAmount currencyID="COP">199000.00</cbc:PriceAmount>
+			<cbc:BaseQuantity unitCode="A9">1.00</cbc:BaseQuantity>
+			</cac:Price>
+	</cac:InvoiceLine>
+	<cac:InvoiceLine>
+		<cbc:ID>2</cbc:ID>
+		<cbc:InvoicedQuantity unitCode="A9">1.00</cbc:InvoicedQuantity>
+		<cbc:LineExtensionAmount currencyID="COP">123897.75</cbc:LineExtensionAmount>
+		<cac:AllowanceCharge>
+			<cbc:ID schemeName="2">1</cbc:ID>
+			<cbc:ChargeIndicator>false</cbc:ChargeIndicator>
+			<cbc:AllowanceChargeReason>descuento administrativo</cbc:AllowanceChargeReason>
+			<cbc:MultiplierFactorNumeric>0.15</cbc:MultiplierFactorNumeric>
+			<cbc:Amount currencyID="COP">2.25</cbc:Amount>
+			<cbc:BaseAmount currencyID="COP">1500</cbc:BaseAmount>
+		</cac:AllowanceCharge>
+		<cac:TaxTotal>
+			<cbc:TaxAmount currencyID="COP">21800.00</cbc:TaxAmount>
+			<cac:TaxSubtotal>
+				<cbc:TaxAmount currencyID="COP">21800.00</cbc:TaxAmount>
+				<cbc:BaseUnitMeasure unitCode="A9"> 1.0 </cbc:BaseUnitMeasure>
+				<cbc:PerUnitAmount currencyID="COP">21800.00</cbc:PerUnitAmount>
+				<cac:TaxCategory>
+					<cac:TaxScheme>
+						<cbc:ID>ZZ</cbc:ID>
+						<cbc:Name>Otros</cbc:Name>
+					</cac:TaxScheme>
+				</cac:TaxCategory>
+			</cac:TaxSubtotal>
+		</cac:TaxTotal>
+		<cac:TaxTotal>
+			<cbc:TaxAmount currencyID="COP">6945.00</cbc:TaxAmount>
+			<cac:TaxSubtotal>
+				<cbc:TaxableAmount currencyID="COP">123900.00</cbc:TaxableAmount>
+				<cbc:TaxAmount currencyID="COP">6195.00</cbc:TaxAmount>
+				<cac:TaxCategory>
+					<cbc:Percent>5.00</cbc:Percent>
+					<cac:TaxScheme>
+						<cbc:ID>01</cbc:ID>
+						<cbc:Name>IVA</cbc:Name>
+					</cac:TaxScheme>
+				</cac:TaxCategory>
+			</cac:TaxSubtotal>
+			<cac:TaxSubtotal>
+				<cbc:TaxableAmount currencyID="COP">15000.00</cbc:TaxableAmount>
+				<cbc:TaxAmount currencyID="COP">750.00</cbc:TaxAmount>
+				<cac:TaxCategory>
+					<cbc:Percent>5.00</cbc:Percent>
+					<cac:TaxScheme>
+						<cbc:ID>01</cbc:ID>
+						<cbc:Name>IVA</cbc:Name>
+					</cac:TaxScheme>
+				</cac:TaxCategory>
+			</cac:TaxSubtotal>
+		</cac:TaxTotal>
+		<cac:Item>
+			<cbc:Description>Servicio de transporte</cbc:Description>
+			<!-- Descripción del servicio -->
+			<cac:SellersItemIdentification>
+				<cbc:ID>MVDHAM</cbc:ID>
+				<!-- código de reserva -->
+			</cac:SellersItemIdentification>
+			<cac:StandardItemIdentification>
+				<cbc:ID schemeID="999" schemeName="Estándar de adopción del contribuyente">00145</cbc:ID>
+			</cac:StandardItemIdentification>
+		</cac:Item>
+		<cac:Price>
+			<cbc:PriceAmount currencyID="COP">123900.00</cbc:PriceAmount>
+			<cbc:BaseQuantity unitCode="A9">1.00</cbc:BaseQuantity>
+		</cac:Price>
+	</cac:InvoiceLine>
+</Invoice>
