@@ -298,8 +298,15 @@ function showInvoices() {
 
 // Ocultar sección de facturas y volver al dashboard
 function showDashboard() {
+    // Ocultar todas las secciones
     document.getElementById('invoicesSection').classList.add('hidden');
+    document.getElementById('customersSection').classList.add('hidden');
+
+    // Mostrar dashboard
     document.getElementById('dashboard').classList.remove('hidden');
+
+    // Scroll al inicio de la página
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Cargar lista de facturas DIAN
