@@ -441,22 +441,34 @@ async function loadUserData() {
 
 // Función para verificar autenticación al cargar la página
 async function checkAuthStatus() {
+    console.log('🔍 Verificando autenticación en página Torker...');
+
     const savedAccessToken = localStorage.getItem('torker_access_token');
     const savedRefreshToken = localStorage.getItem('torker_refresh_token');
+
+    console.log('📦 Tokens encontrados:', {
+        access: !!savedAccessToken,
+        refresh: !!savedRefreshToken
+    });
 
     if (savedAccessToken && savedRefreshToken) {
         accessToken = savedAccessToken;
         refreshToken = savedRefreshToken;
 
+        console.log('🔄 Intentando cargar datos del usuario...');
         // Intentar cargar datos del usuario
         const success = await loadUserData();
         if (success) {
-            // Usuario ya autenticado, mostrar dashboard directamente
-            showDashboard();
+            console.log('✅ Usuario ya autenticado, redirigiendo a dashboard...');
+            // Usuario ya autenticado, redirigir a dashboard
+            window.location.href = '../dashboard/';
         } else {
+            console.log('❌ Tokens inválidos, limpiando sesión...');
             // Tokens inválidos, limpiar
             logout();
         }
+    } else {
+        console.log('❌ No hay tokens, usuario debe hacer login');
     }
 }
 
