@@ -222,24 +222,42 @@ async function loadUserData() {
 
 // Función para verificar autenticación al cargar la página
 async function checkAuthStatus() {
+    console.log('🔍 Verificando autenticación en dashboard...');
+
     const savedAccessToken = localStorage.getItem('torker_access_token');
     const savedRefreshToken = localStorage.getItem('torker_refresh_token');
+
+    console.log('📦 Tokens encontrados:', {
+        access: !!savedAccessToken,
+        refresh: !!savedRefreshToken
+    });
 
     if (savedAccessToken && savedRefreshToken) {
         accessToken = savedAccessToken;
         refreshToken = savedRefreshToken;
 
+        console.log('🔄 Intentando cargar datos del usuario...');
         // Intentar cargar datos del usuario
         const success = await loadUserData();
         if (!success) {
+            console.log('❌ Tokens inválidos, redirigiendo a login...');
             // Tokens inválidos, redirigir a login
             logout();
+        } else {
+            console.log('✅ Usuario autenticado correctamente');
         }
     } else {
+        console.log('❌ No hay tokens, redirigiendo a login...');
         // No hay tokens, redirigir a login
         logout();
     }
 }
+
+// Función para inicializar dashboard al cargar
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Dashboard DOM cargado, iniciando verificación de autenticación...');
+    await checkAuthStatus();
+});
 
 // Función para agregar efectos hover a las tarjetas
 function addCardEffects() {
