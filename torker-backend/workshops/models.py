@@ -761,7 +761,8 @@ class WorkOrder(models.Model):
     # Archivos y documentación
     photos_before = models.JSONField(blank=True, help_text="URLs de fotos antes del trabajo")
     photos_after = models.JSONField(blank=True, help_text="URLs de fotos después del trabajo")
-    documents = models.JSONField(blank=True, help_text="URLs de documentos adjuntos")
+    documents = models.JSONField(blank=True, default=dict, help_text="URLs de documentos adjuntos")
+    description = models.TextField(blank=True, help_text="Descripción detallada del problema")
 
     # Notas y observaciones
     internal_notes = models.TextField(blank=True, help_text="Notas internas del taller")
