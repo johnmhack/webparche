@@ -691,6 +691,7 @@ class DianResolutionViewSet(viewsets.ModelViewSet):
     """API para gestión de resoluciones DIAN"""
     serializer_class = DianResolutionSerializer
     permission_classes = [IsAuthenticated]
+    queryset = DianResolution.objects.all()
 
     def get_queryset(self):
         return DianResolution.objects.filter(workshop=self.request.user.workshop)
@@ -703,6 +704,7 @@ class ElectronicInvoiceViewSet(viewsets.ModelViewSet):
     """API para facturas electrónicas DIAN"""
     serializer_class = ElectronicInvoiceSerializer
     permission_classes = [IsAuthenticated]
+    queryset = ElectronicInvoice.objects.all()
 
     def get_queryset(self):
         return ElectronicInvoice.objects.filter(workshop=self.request.user.workshop)
