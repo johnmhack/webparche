@@ -213,8 +213,8 @@ async function handleLogin(event) {
             // Cargar datos del usuario y taller
             await loadUserData();
 
-            // Redirigir al dashboard
-            window.location.href = '../dashboard/';
+            // Mostrar dashboard directamente
+            showDashboard();
 
             // Ocultar modal de login
             hideLogin();
@@ -295,8 +295,8 @@ async function handleRegister(event) {
             // Cargar datos del usuario
             await loadUserData();
 
-            // Redirigir al dashboard
-            window.location.href = '../dashboard/';
+            // Mostrar dashboard directamente
+            showDashboard();
 
             // Ocultar modal de registro
             hideRegister();
