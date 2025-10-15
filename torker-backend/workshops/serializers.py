@@ -3,7 +3,8 @@ from .models import (
     User, Workshop, Customer, Vehicle, Mechanic,
     Service, SparePart, WorkOrder, WorkOrderItem, WorkOrderStatusLog,
     Quotation, QuotationItem, Appointment,
-    Invoice, InvoiceDetail, CreditNote, DebitNote
+    Invoice, InvoiceDetail, CreditNote, DebitNote,
+    ElectronicInvoice, ElectronicInvoiceDetail, DianResolution
 )
 
 
@@ -245,3 +246,96 @@ class DebitNoteSerializer(serializers.ModelSerializer):
         model = DebitNote
         fields = '__all__'
         read_only_fields = ['workshop', 'debit_note_number', 'consecutive_number']
+
+
+# ===== SERIALIZERS PARA FACTURACIÓN ELECTRÓNICA DIAN =====
+
+class DianResolutionSerializer(serializers.ModelSerializer):
+    """Serializer para resoluciones DIAN"""
+    days_until_expiry = serializers.SerializerMethodField()
+    is_expired = serializers.SerializerMethodField()
+    status_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DianResolution
+        fields = '__all__'
+        read_only_fields = ['workshop']
+
+    def get_days_until_expiry(self, obj):
+        return obj.days_until_expiry
+
+    def get_is_expired(self, obj):
+        return obj.is_expired
+
+    def get_status_display(self, obj):
+        return "Activa" if obj.is_active else "Inactiva"
+
+
+class ElectronicInvoiceDetailSerializer(serializers.ModelSerializer):
+    """Serializer para detalles de facturas electrónicas DIAN"""
+    part_name = serializers.CharField(source='electronic_invoice.part.name', read_only=True)
+    subtotal_display = serializers.SerializerMethodField()
+    tax_amount_display = serializers.SerializerMethodField()
+    total_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ElectronicInvoiceDetail
+        fields = '__all__'
+        read_only_fields = ['electronic_invoice', 'subtotal', 'tax_amount', 'total']
+
+    def get_subtotal_display(self, obj):
+        return f"${obj.subtotal:,.2f}"
+
+    def get_tax_amount_display(self, obj):
+        return f"${obj.tax_amount:,.2f}"
+
+    def get_total_display(self, obj):
+        return f"${obj.total:,.2f}"
+
+
+class ElectronicInvoiceSerializer(serializers.ModelSerializer):
+    """Serializer para facturas electrónicas DIAN"""
+    customer_name = serializers.CharField(source='customer.full_name', read_only=True)
+    workshop_name = serializers.CharField(source='workshop.name', read_only=True)
+    dian_resolution_number = serializers.CharField(source='dian_resolution.resolution_number', read_only=True)
+    details = ElectronicInvoiceDetailSerializer(many=True, read_only=True)
+    dian_status_display = serializers.SerializerMethodField()
+    qr_code_url = serializers.SerializerMethodField()
+    xml_download_url = serializers.SerializerMethodField()
+    pdf_download_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ElectronicInvoice
+        fields = '__all__'
+        read_only_fields = [
+            'workshop', 'invoice_number', 'consecutive_number', 'cude',
+            'xml_content', 'qr_code', 'dian_status', 'dian_response_code',
+            'dian_response_message', 'dian_response_date', 'subtotal',
+            'tax_amount', 'total', 'issue_date'
+        ]
+
+    def get_dian_status_display(self, obj):
+        status_map = {
+            'draft': 'Borrador',
+            'generated': 'XML Generado',
+            'signed': 'Firmada',
+            'sent': 'Enviada a DIAN',
+            'processing': 'Procesando',
+            'processed': 'Aprobada',
+            'send_failed': 'Error de Envío',
+            'rejected': 'Rechazada'
+        }
+        return status_map.get(obj.dian_status, 'Desconocido')
+
+    def get_qr_code_url(self, obj):
+        if obj.qr_code:
+            return obj.qr_code
+        return None
+
+    def get_xml_download_url(self, obj):
+        if obj.xml_content:
+            return f"/api/electronic-invoices/{obj.id}/download_xml/"
+        return None
+
+    def get_pdf_download_url(self, obj):
+        return f"/api/electronic-invoices/{obj.id}/download_pdf/"
