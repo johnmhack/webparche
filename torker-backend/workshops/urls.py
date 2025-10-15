@@ -33,11 +33,11 @@ router.register(r'employees', views.MechanicViewSet, basename='employee')     # 
 router.register(r'parts', views.SparePartViewSet, basename='part')            # Alias con basename único
 
 urlpatterns = [
-    path('api/', include(router.urls)),
-    path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/auth/register/', views.RegisterView.as_view(), name='register'),
-    path('api/dashboard/', views.DashboardView.as_view(), name='dashboard'),
+    path('', include(router.urls)),
+    path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/register/', views.RegisterView.as_view(), name='register'),
+    path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     # TEMPORAL: Endpoint para crear usuario de prueba
-    path('api/create-test-user/', views.create_test_user, name='create_test_user'),
+    path('create-test-user/', views.create_test_user, name='create_test_user'),
 ]
