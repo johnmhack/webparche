@@ -21,6 +21,8 @@ router.register(r'quotations', views.QuotationViewSet)
 
 # Facturación DIAN
 router.register(r'invoices', views.InvoiceViewSet)
+router.register(r'electronic-invoices', views.ElectronicInvoiceViewSet)
+router.register(r'dian-resolutions', views.DianResolutionViewSet)
 router.register(r'credit-notes', views.CreditNoteViewSet)
 router.register(r'debit-notes', views.DebitNoteViewSet)
 
@@ -28,9 +30,9 @@ router.register(r'debit-notes', views.DebitNoteViewSet)
 router.register(r'appointments', views.AppointmentViewSet)
 
 # Mantener compatibilidad
-router.register(r'motorcycles', views.VehicleViewSet)  # Alias
-router.register(r'employees', views.MechanicViewSet)   # Alias
-router.register(r'parts', views.SparePartViewSet)      # Alias
+router.register(r'motorcycles', views.VehicleViewSet, basename='motorcycle')  # Alias con basename único
+router.register(r'employees', views.MechanicViewSet, basename='employee')     # Alias con basename único
+router.register(r'parts', views.SparePartViewSet, basename='part')            # Alias con basename único
 
 urlpatterns = [
     path('api/', include(router.urls)),
