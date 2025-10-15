@@ -21,8 +21,6 @@ router.register(r'quotations', views.QuotationViewSet)
 
 # Facturación DIAN
 router.register(r'invoices', views.InvoiceViewSet)
-router.register(r'electronic-invoices', views.ElectronicInvoiceViewSet, basename='electronic-invoice')
-router.register(r'dian-resolutions', views.DianResolutionViewSet, basename='dian-resolution')
 router.register(r'credit-notes', views.CreditNoteViewSet)
 router.register(r'debit-notes', views.DebitNoteViewSet)
 
