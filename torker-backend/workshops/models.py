@@ -137,6 +137,134 @@ class Workshop(models.Model):
         return self.subscription_expires > timezone.now().date() and self.is_active
 
 
+class Mechanic(models.Model):
+    """Mecánicos especializados del taller"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='mechanics')
+
+    # Información personal
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+
+    # Identificación
+    DOCUMENT_TYPE_CHOICES = [
+        ('cc', 'Cédula de Ciudadanía'),
+        ('ce', 'Cédula de Extranjería'),
+        ('nit', 'NIT'),
+        ('ti', 'Tarjeta de Identidad'),
+        ('pasaporte', 'Pasaporte'),
+        ('other', 'Otro'),
+    ]
+    document_type = models.CharField(max_length=20, choices=DOCUMENT_TYPE_CHOICES, default='cc')
+    document_number = models.CharField(max_length=20, blank=True)
+
+    # Especialización y experiencia
+    SPECIALIZATION_CHOICES = [
+        ('general', 'Mecánico General'),
+        ('motorcycle', 'Especialista en Motocicletas'),
+        ('engine', 'Motor y Transmisión'),
+        ('electrical', 'Sistema Eléctrico'),
+        ('brakes', 'Frenos y Suspensión'),
+        ('bodywork', 'Carrocería y Pintura'),
+        ('diagnostic', 'Diagnóstico Electrónico'),
+        ('maintenance', 'Mantenimiento Preventivo'),
+    ]
+    specialization = models.CharField(max_length=20, choices=SPECIALIZATION_CHOICES, default='general')
+
+    # Nivel de experiencia
+    EXPERIENCE_LEVEL_CHOICES = [
+        ('junior', 'Principiante (0-2 años)'),
+        ('intermediate', 'Intermedio (2-5 años)'),
+        ('senior', 'Senior (5-10 años)'),
+        ('expert', 'Experto (10+ años)'),
+    ]
+    experience_level = models.CharField(max_length=20, choices=EXPERIENCE_LEVEL_CHOICES, default='junior')
+
+    # Información laboral
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    monthly_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    # Disponibilidad y carga de trabajo
+    is_available = models.BooleanField(default=True)
+    max_daily_hours = models.IntegerField(default=8)
+    current_workload = models.IntegerField(default=0)  # Horas asignadas actualmente
+
+    # Certificaciones y capacitación
+    certifications = models.TextField(blank=True, help_text="Certificaciones obtenidas")
+    training_completed = models.TextField(blank=True, help_text="Capacitaciones realizadas")
+
+    # Estadísticas de rendimiento
+    total_work_orders = models.IntegerField(default=0)
+    completed_work_orders = models.IntegerField(default=0)
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+
+    # Estado
+    is_active = models.BooleanField(default=True)
+    hire_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'mechanics'
+        ordering = ['last_name', 'first_name']
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.get_specialization_display()}"
+
+    @property
+    def full_name(self):
+        """Nombre completo del mecánico"""
+        return f"{self.first_name} {self.last_name}"
+
+    @property
+    def completion_rate(self):
+        """Tasa de completación de órdenes de trabajo"""
+        if self.total_work_orders > 0:
+            return (self.completed_work_orders / self.total_work_orders) * 100
+        return 0
+
+    @property
+    def available_hours_today(self):
+        """Horas disponibles para trabajar hoy"""
+        return max(0, self.max_daily_hours - self.current_workload)
+
+    @property
+    def is_overloaded(self):
+        """Verificar si el mecánico está sobrecargado"""
+        return self.current_workload > self.max_daily_hours
+
+    @property
+    def performance_score(self):
+        """Puntuación de rendimiento basada en múltiples factores"""
+        score = 0
+
+        # Completación de trabajos (40%)
+        score += (self.completion_rate / 100) * 40
+
+        # Calificación promedio (30%)
+        score += (self.average_rating / 5) * 30
+
+        # Experiencia (20%)
+        experience_weights = {
+            'junior': 20,
+            'intermediate': 40,
+            'senior': 70,
+            'expert': 100
+        }
+        score += experience_weights.get(self.experience_level, 0) * 0.2
+
+        # Disponibilidad (10%)
+        availability_bonus = 10 if self.is_available and not self.is_overloaded else 0
+        score += availability_bonus
+
+        return min(100, score)  # Máximo 100 puntos
+
+
+# Mantener compatibilidad - Employee ahora hereda de Mechanic para mecánicos
 class Employee(models.Model):
     """Empleados del taller (mecánicos, administradores, etc.)"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -233,50 +361,228 @@ class Customer(models.Model):
         return ", ".join(parts)
 
 
-class Motorcycle(models.Model):
-    """Motos de los clientes"""
+class Vehicle(models.Model):
+    """Vehículos de los clientes (genérico para cualquier tipo de vehículo)"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='motorcycles')
-    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='motorcycles')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='vehicles')
+    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='vehicles')
+
+    # Información básica del vehículo
+    VEHICLE_TYPE_CHOICES = [
+        ('motorcycle', 'Motocicleta'),
+        ('car', 'Automóvil'),
+        ('truck', 'Camión'),
+        ('bicycle', 'Bicicleta'),
+        ('other', 'Otro'),
+    ]
+    vehicle_type = models.CharField(max_length=20, choices=VEHICLE_TYPE_CHOICES, default='motorcycle')
 
     brand = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
     year = models.IntegerField()
-    license_plate = models.CharField(max_length=10, blank=True)
-    mileage = models.IntegerField(default=0)
     color = models.CharField(max_length=50, blank=True)
+
+    # Identificación del vehículo
+    license_plate = models.CharField(max_length=15, blank=True, help_text="Placa o matrícula")
+    vin = models.CharField(max_length=17, blank=True, help_text="Número de chasis/VIN")
+    engine_number = models.CharField(max_length=50, blank=True)
+
+    # Especificaciones técnicas
+    mileage = models.IntegerField(default=0, help_text="Kilometraje actual")
 
     FUEL_CHOICES = [
         ('gasolina', 'Gasolina'),
+        ('diesel', 'Diésel'),
         ('electrico', 'Eléctrico'),
         ('hibrido', 'Híbrido'),
+        ('gas', 'Gas Natural'),
+        ('other', 'Otro'),
     ]
     fuel_type = models.CharField(max_length=20, choices=FUEL_CHOICES, default='gasolina')
 
     TRANSMISSION_CHOICES = [
         ('manual', 'Manual'),
         ('automatico', 'Automático'),
+        ('cvt', 'CVT'),
+        ('semi-automatico', 'Semi-automático'),
     ]
     transmission = models.CharField(max_length=20, choices=TRANSMISSION_CHOICES, default='manual')
 
+    # Información adicional
+    cylinder_capacity = models.IntegerField(null=True, blank=True, help_text="Cilindraje en CC")
+    doors = models.IntegerField(null=True, blank=True, help_text="Número de puertas")
+    passengers = models.IntegerField(null=True, blank=True, help_text="Número de pasajeros")
+
+    # Historial y mantenimiento
+    last_service_date = models.DateField(null=True, blank=True)
+    next_service_mileage = models.IntegerField(null=True, blank=True)
+    next_service_date = models.DateField(null=True, blank=True)
+
+    # Estado del vehículo
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True, help_text="Observaciones sobre el vehículo")
+
     created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'motorcycles'
+        db_table = 'vehicles'
+        unique_together = ['workshop', 'vin']  # VIN único por taller (si existe)
+        ordering = ['-updated_at']
 
     def __str__(self):
-        return f"{self.brand} {self.model} {self.year} - {self.license_plate}"
+        plate_info = f" - {self.license_plate}" if self.license_plate else ""
+        return f"{self.get_vehicle_type_display()}: {self.brand} {self.model} {self.year}{plate_info}"
+
+    @property
+    def full_name(self):
+        """Nombre completo del vehículo"""
+        return f"{self.brand} {self.model} {self.year}"
+
+    @property
+    def needs_service(self):
+        """Verificar si el vehículo necesita mantenimiento"""
+        today = timezone.now().date()
+        if self.next_service_date and today >= self.next_service_date:
+            return True
+        if self.next_service_mileage and self.mileage >= self.next_service_mileage:
+            return True
+        return False
+
+    @property
+    def service_status(self):
+        """Estado del servicio del vehículo"""
+        if not self.needs_service:
+            return "ok"
+        elif self.next_service_date and timezone.now().date() > self.next_service_date:
+            return "overdue"
+        else:
+            return "due_soon"
 
 
-class Part(models.Model):
-    """Repuestos del taller"""
+# Mantener compatibilidad hacia atrás - Motorcycle ahora hereda de Vehicle
+class Motorcycle(Vehicle):
+    """Motos de los clientes (hereda de Vehicle para compatibilidad)"""
+    class Meta:
+        proxy = True  # No crea tabla nueva, usa la de Vehicle
+
+    def save(self, *args, **kwargs):
+        self.vehicle_type = 'motorcycle'
+        super().save(*args, **kwargs)
+
+
+class Service(models.Model):
+    """Catálogo de servicios ofrecidos por el taller"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='parts')
+    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='services')
+
+    # Información básica del servicio
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    service_code = models.CharField(max_length=50, blank=True)  # Código interno del servicio
+
+    # Categorización
+    CATEGORY_CHOICES = [
+        ('maintenance', 'Mantenimiento'),
+        ('repair', 'Reparación'),
+        ('diagnostic', 'Diagnóstico'),
+        ('emergency', 'Emergencia'),
+        ('modification', 'Modificación'),
+        ('inspection', 'Inspección'),
+        ('cleaning', 'Limpieza'),
+        ('other', 'Otro'),
+    ]
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='repair')
+
+    # Tipo de vehículo aplicable
+    VEHICLE_TYPE_CHOICES = [
+        ('motorcycle', 'Motocicleta'),
+        ('car', 'Automóvil'),
+        ('truck', 'Camión'),
+        ('all', 'Todos los tipos'),
+    ]
+    applicable_vehicle_types = models.CharField(max_length=20, choices=VEHICLE_TYPE_CHOICES, default='motorcycle')
+
+    # Estimaciones de tiempo y costo
+    estimated_hours = models.DecimalField(max_digits=4, decimal_places=2, default=1)  # Horas estimadas
+    base_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Precio base
+    hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, default=0)  # Tarifa por hora adicional
+
+    # Requisitos y compatibilidad
+    required_skills = models.CharField(max_length=100, blank=True)  # Habilidades requeridas
+    compatible_brands = models.TextField(blank=True)  # JSON con marcas compatibles
+    required_tools = models.TextField(blank=True)  # Herramientas necesarias
+
+    # Información adicional
+    warranty_months = models.IntegerField(default=0)  # Garantía en meses
+    priority_level = models.IntegerField(default=3, choices=[(1, 'Baja'), (2, 'Media'), (3, 'Alta'), (4, 'Urgente')])
+
+    # Estado y configuración
+    is_active = models.BooleanField(default=True)
+    is_taxable = models.BooleanField(default=True)  # Si aplica IVA
+    requires_approval = models.BooleanField(default=False)  # Requiere aprobación especial
+
+    # Estadísticas de uso
+    times_used = models.IntegerField(default=0)  # Veces utilizado
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)  # Calificación promedio
+    total_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # Ingresos totales generados
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'services'
+        unique_together = ['workshop', 'service_code']  # Código único por taller
+        ordering = ['category', 'name']
+
+    def __str__(self):
+        return f"{self.name} - {self.get_category_display()}"
+
+    @property
+    def estimated_cost(self):
+        """Costo estimado total del servicio"""
+        return self.base_price + (self.estimated_hours * self.hourly_rate)
+
+    @property
+    def is_popular(self):
+        """Verificar si el servicio es popular"""
+        return self.times_used >= 10
+
+    @property
+    def profit_margin(self):
+        """Margen de ganancia promedio (si hay datos suficientes)"""
+        if self.times_used > 0 and self.total_revenue > 0:
+            avg_cost = self.estimated_cost
+            if avg_cost > 0:
+                return ((self.total_revenue - (avg_cost * self.times_used)) / (avg_cost * self.times_used)) * 100
+        return 0
+
+    def update_statistics(self, rating=None, revenue=None):
+        """Actualizar estadísticas del servicio"""
+        if rating is not None:
+            # Calcular nueva calificación promedio
+            total_ratings = self.times_used
+            current_total = self.average_rating * total_ratings
+            new_total = current_total + rating
+            self.average_rating = new_total / (total_ratings + 1)
+
+        if revenue is not None:
+            self.total_revenue += revenue
+
+        self.times_used += 1
+        self.save()
+
+
+class SparePart(models.Model):
+    """Inventario de repuestos del taller"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='spare_parts')
 
     # Información básica
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    part_number = models.CharField(max_length=100, blank=True, unique=True)
+    part_number = models.CharField(max_length=100, blank=True)
+    internal_code = models.CharField(max_length=50, blank=True)  # Código interno único
 
     # Categorización
     CATEGORY_CHOICES = [
@@ -297,10 +603,12 @@ class Part(models.Model):
     # Marca y compatibilidad
     brand = models.CharField(max_length=100, blank=True)
     compatible_models = models.TextField(blank=True)  # JSON con modelos compatibles
+    applicable_vehicle_types = models.CharField(max_length=20, choices=Service.VEHICLE_TYPE_CHOICES, default='motorcycle')
 
     # Inventario y precios
     stock_quantity = models.IntegerField(default=0)
     min_stock_level = models.IntegerField(default=5)  # Nivel mínimo de stock
+    max_stock_level = models.IntegerField(default=50)  # Nivel máximo recomendado
     unit_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     sale_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     wholesale_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -308,21 +616,33 @@ class Part(models.Model):
     # Información adicional
     location = models.CharField(max_length=100, blank=True)  # Ubicación en el taller
     supplier = models.CharField(max_length=100, blank=True)
+    supplier_code = models.CharField(max_length=50, blank=True)  # Código del proveedor
     warranty_months = models.IntegerField(default=0)
 
-    # Estado
+    # Dimensiones y peso (para logística)
+    weight_kg = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    dimensions = models.CharField(max_length=50, blank=True)  # Ej: "30x20x10 cm"
+
+    # Estado y configuración
     is_active = models.BooleanField(default=True)
     is_taxable = models.BooleanField(default=True)  # Si aplica IVA
+    requires_special_storage = models.BooleanField(default=False)  # Almacenamiento especial
+
+    # Estadísticas
+    times_used = models.IntegerField(default=0)  # Veces utilizado en OT
+    total_sold = models.IntegerField(default=0)  # Unidades vendidas
+    last_sale_date = models.DateField(null=True, blank=True)
 
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'parts'
-        unique_together = ['workshop', 'part_number']  # Un número de parte único por taller
+        db_table = 'spare_parts'
+        unique_together = ['workshop', 'internal_code']  # Código interno único por taller
+        ordering = ['category', 'name']
 
     def __str__(self):
-        return f"{self.name} - {self.part_number} - Stock: {self.stock_quantity}"
+        return f"{self.name} - {self.internal_code or self.part_number} - Stock: {self.stock_quantity}"
 
     @property
     def profit_margin(self):
@@ -337,51 +657,314 @@ class Part(models.Model):
         return self.stock_quantity <= self.min_stock_level
 
     @property
+    def is_overstock(self):
+        """Verificar si hay sobrestock"""
+        return self.stock_quantity > self.max_stock_level
+
+    @property
     def stock_value(self):
         """Valor total del stock"""
         return self.stock_quantity * self.unit_cost
 
+    @property
+    def turnover_rate(self):
+        """Tasa de rotación (veces vendido por período)"""
+        # Simplificado - en producción calcular por meses
+        return self.total_sold / max(1, self.stock_quantity + self.total_sold)
+
+    def update_stock(self, quantity_change, is_sale=False):
+        """Actualizar stock y estadísticas"""
+        self.stock_quantity += quantity_change
+
+        if is_sale and quantity_change < 0:  # Venta (cantidad negativa)
+            self.total_sold += abs(quantity_change)
+            self.last_sale_date = timezone.now().date()
+
+        self.save()
+
+
+# Mantener compatibilidad - crear modelo Part que herede de SparePart
+class Part(SparePart):
+    """Modelo Part para compatibilidad hacia atrás con facturación DIAN"""
+    class Meta:
+        proxy = True
+
+    def save(self, *args, **kwargs):
+        # Asegurar que se guarde como SparePart
+        super().save(*args, **kwargs)
+
 
 class WorkOrder(models.Model):
-    """Órdenes de trabajo"""
+    """Órdenes de trabajo principales"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='work_orders')
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='work_orders')
-    motorcycle = models.ForeignKey(Motorcycle, on_delete=models.CASCADE, related_name='work_orders')
-    employee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, related_name='work_orders')
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='work_orders')
+    assigned_mechanic = models.ForeignKey(Mechanic, on_delete=models.SET_NULL, null=True, blank=True, related_name='work_orders')
 
-    order_number = models.CharField(max_length=20, unique=True)
+    # Numeración automática
+    order_number = models.CharField(max_length=20, unique=True, editable=False)
 
+    # Estados del flujo de trabajo
     STATUS_CHOICES = [
+        ('draft', 'Borrador'),
         ('pending', 'Pendiente'),
+        ('approved', 'Aprobada'),
         ('in_progress', 'En Progreso'),
+        ('quality_check', 'Control de Calidad'),
         ('completed', 'Completada'),
+        ('invoiced', 'Facturada'),
         ('cancelled', 'Cancelada'),
     ]
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
 
-    description = models.TextField(blank=True)
-    estimated_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    final_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # Información del trabajo
+    title = models.CharField(max_length=200, help_text="Título breve del trabajo")
+    description = models.TextField(blank=True, help_text="Descripción detallada del problema")
+    symptoms = models.TextField(blank=True, help_text="Síntomas reportados por el cliente")
+    diagnosis = models.TextField(blank=True, help_text="Diagnóstico realizado")
 
-    start_date = models.DateField(null=True, blank=True)
-    completion_date = models.DateField(null=True, blank=True)
+    # Prioridades y urgencia
+    PRIORITY_CHOICES = [
+        ('low', 'Baja'),
+        ('normal', 'Normal'),
+        ('high', 'Alta'),
+        ('urgent', 'Urgente'),
+    ]
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='normal')
+
+    # Estimaciones y costos
+    estimated_hours = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    estimated_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    actual_hours = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    final_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    # Fechas importantes
+    created_date = models.DateTimeField(default=timezone.now)
+    approved_date = models.DateTimeField(null=True, blank=True)
+    start_date = models.DateTimeField(null=True, blank=True)
+    estimated_completion_date = models.DateTimeField(null=True, blank=True)
+    actual_completion_date = models.DateTimeField(null=True, blank=True)
+
+    # Información adicional
+    mileage_at_entry = models.IntegerField(null=True, blank=True, help_text="Kilometraje al ingreso")
+    mileage_at_exit = models.IntegerField(null=True, blank=True, help_text="Kilometraje al egreso")
+
+    # Control de calidad
+    quality_check_passed = models.BooleanField(default=False)
+    quality_notes = models.TextField(blank=True)
+
+    # Garantía
+    warranty_period_months = models.IntegerField(default=0)
+    warranty_start_date = models.DateField(null=True, blank=True)
+
+    # Archivos y documentación
+    photos_before = models.JSONField(blank=True, help_text="URLs de fotos antes del trabajo")
+    photos_after = models.JSONField(blank=True, help_text="URLs de fotos después del trabajo")
+    documents = models.JSONField(blank=True, help_text="URLs de documentos adjuntos")
+
+    # Notas y observaciones
+    internal_notes = models.TextField(blank=True, help_text="Notas internas del taller")
+    customer_notes = models.TextField(blank=True, help_text="Notas para el cliente")
+
+    # Estadísticas y seguimiento
+    total_services = models.IntegerField(default=0)
+    total_parts = models.IntegerField(default=0)
+    labor_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    parts_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'work_orders'
+        ordering = ['-created_date']
+        indexes = [
+            models.Index(fields=['workshop', 'status']),
+            models.Index(fields=['customer', 'created_date']),
+            models.Index(fields=['assigned_mechanic', 'status']),
+        ]
 
     def __str__(self):
-        return f"OT-{self.order_number} - {self.customer} - {self.motorcycle}"
+        return f"OT-{self.order_number} - {self.customer.first_name} {self.customer.last_name} - {self.vehicle}"
 
     def save(self, *args, **kwargs):
         if not self.order_number:
             # Generar número de orden automático
             today = timezone.now().date()
             workshop_prefix = str(self.workshop.id)[:4].upper()
-            self.order_number = f"{workshop_prefix}-{today.strftime('%Y%m%d')}-{WorkOrder.objects.filter(workshop=self.workshop, created_at__date=today).count() + 1:03d}"
+            # Contar órdenes del día para este taller
+            daily_count = WorkOrder.objects.filter(
+                workshop=self.workshop,
+                created_date__date=today
+            ).count() + 1
+            self.order_number = f"OT{workshop_prefix}-{today.strftime('%Y%m%d')}-{daily_count:03d}"
         super().save(*args, **kwargs)
+
+    @property
+    def is_overdue(self):
+        """Verificar si la OT está atrasada"""
+        if self.estimated_completion_date and self.status not in ['completed', 'cancelled', 'invoiced']:
+            return timezone.now() > self.estimated_completion_date
+        return False
+
+    @property
+    def days_overdue(self):
+        """Días de atraso"""
+        if self.is_overdue:
+            return (timezone.now() - self.estimated_completion_date).days
+        return 0
+
+    @property
+    def can_be_invoiced(self):
+        """Verificar si la OT puede ser facturada"""
+        return self.status == 'completed' and not hasattr(self, 'electronic_invoice')
+
+    @property
+    def status_color(self):
+        """Color CSS según estado"""
+        colors = {
+            'draft': '#6b7280',      # gray
+            'pending': '#f59e0b',    # amber
+            'approved': '#3b82f6',   # blue
+            'in_progress': '#f97316', # orange
+            'quality_check': '#8b5cf6', # violet
+            'completed': '#22c55e',  # green
+            'invoiced': '#16a34a',   # dark green
+            'cancelled': '#ef4444',  # red
+        }
+        return colors.get(self.status, '#6b7280')
+
+    @property
+    def progress_percentage(self):
+        """Calcular porcentaje de progreso basado en estado e ítems completados"""
+        # Progreso base por estado
+        status_progress = {
+            'draft': 0,
+            'pending': 10,
+            'approved': 20,
+            'in_progress': 40,
+            'quality_check': 80,
+            'completed': 100,
+            'invoiced': 100,
+            'cancelled': 0,
+        }
+
+        base_progress = status_progress.get(self.status, 0)
+
+        # Si está en progreso o control de calidad, calcular basado en ítems completados
+        if self.status in ['in_progress', 'quality_check']:
+            total_items = self.details.count()
+            if total_items > 0:
+                completed_items = self.details.filter(status='completed').count()
+                items_progress = (completed_items / total_items) * 40  # 40% del progreso total
+                base_progress = 40 + items_progress  # Estado base + progreso de ítems
+
+        return min(100, base_progress)
+
+    @property
+    def total_cost(self):
+        """Costo total actual (estimado o final)"""
+        return self.final_cost if self.final_cost > 0 else self.estimated_cost
+
+    @property
+    def duration_days(self):
+        """Duración total en días"""
+        if self.actual_completion_date and self.start_date:
+            return (self.actual_completion_date - self.start_date).days
+        elif self.estimated_completion_date and self.start_date:
+            return (self.estimated_completion_date - self.start_date).days
+        return 0
+
+    def update_costs(self):
+        """Actualizar costos totales desde los items"""
+        from django.db.models import Sum
+
+        # Calcular costos desde WorkOrderItem
+        totals = self.details.aggregate(
+            total_labor=Sum('labor_cost', default=0),
+            total_parts=Sum('parts_cost', default=0),
+            total_services=Sum('service_quantity', default=0),
+            total_parts_qty=Sum('part_quantity', default=0)
+        )
+
+        self.labor_cost = totals['total_labor'] or 0
+        self.parts_cost = totals['total_parts'] or 0
+        self.total_services = totals['total_services'] or 0
+        self.total_parts = totals['total_parts_qty'] or 0
+        self.final_cost = self.labor_cost + self.parts_cost
+        self.save()
+
+    def change_status(self, new_status, user=None, notes=None):
+        """Cambiar estado con validaciones y logging"""
+        from workshops.models import WorkOrderStatusLog
+
+        # Validaciones de transición de estado
+        valid_transitions = {
+            'draft': ['pending', 'cancelled'],
+            'pending': ['approved', 'in_progress', 'cancelled'],
+            'approved': ['in_progress', 'cancelled'],
+            'in_progress': ['quality_check', 'completed', 'cancelled'],
+            'quality_check': ['completed', 'in_progress', 'cancelled'],
+            'completed': ['invoiced'],
+            'invoiced': [],  # Estado final
+            'cancelled': [],  # Estado final
+        }
+
+        if new_status not in valid_transitions.get(self.status, []):
+            raise ValueError(f"No se puede cambiar de {self.status} a {new_status}")
+
+        old_status = self.status
+        self.status = new_status
+
+        # Actualizar fechas según el nuevo estado
+        if new_status == 'approved' and not self.approved_date:
+            self.approved_date = timezone.now()
+        elif new_status == 'in_progress' and not self.start_date:
+            self.start_date = timezone.now()
+        elif new_status == 'completed' and not self.actual_completion_date:
+            self.actual_completion_date = timezone.now()
+
+        # Si se completa la OT, marcar todos los ítems como completados
+        if new_status == 'completed':
+            for item in self.details.all():
+                if item.status != 'completed':
+                    item.complete_item()
+
+        # Actualizar horas reales si se completa
+        if new_status == 'completed' and self.start_date and self.actual_completion_date:
+            self.actual_hours = (self.actual_completion_date - self.start_date).total_seconds() / 3600
+
+        self.save()
+
+        # Crear log de cambio de estado
+        WorkOrderStatusLog.objects.create(
+            work_order=self,
+            old_status=old_status,
+            new_status=new_status,
+            changed_by=user,
+            notes=notes
+        )
+
+        return True
+
+
+class WorkOrderStatusLog(models.Model):
+    """Log de cambios de estado de órdenes de trabajo"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    work_order = models.ForeignKey(WorkOrder, on_delete=models.CASCADE, related_name='status_logs')
+    old_status = models.CharField(max_length=20, choices=WorkOrder.STATUS_CHOICES)
+    new_status = models.CharField(max_length=20, choices=WorkOrder.STATUS_CHOICES)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    notes = models.TextField(blank=True)
+    changed_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'work_order_status_logs'
+        ordering = ['-changed_at']
+
+    def __str__(self):
+        return f"{self.work_order.order_number}: {self.old_status} → {self.new_status}"
 
 
 # ===== MODELOS PARA FACTURACIÓN ELECTRÓNICA DIAN =====
@@ -719,24 +1302,403 @@ class DianValidationLog(models.Model):
         return f"{self.validation_type} - {self.electronic_invoice.invoice_number} - {'Válido' if self.is_valid else 'Inválido'}"
 
 
-class WorkOrderDetail(models.Model):
-    """Detalles de las órdenes de trabajo (servicios y repuestos)"""
+class WorkOrderItem(models.Model):
+    """Ítems individuales de las órdenes de trabajo (servicios y repuestos)"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     work_order = models.ForeignKey(WorkOrder, on_delete=models.CASCADE, related_name='details')
-    part = models.ForeignKey(Part, on_delete=models.SET_NULL, null=True, blank=True, related_name='work_order_details')
 
-    service_description = models.TextField(blank=True)
-    quantity = models.IntegerField(default=1)
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # Tipo de ítem
+    ITEM_TYPE_CHOICES = [
+        ('service', 'Servicio'),
+        ('part', 'Repuesto'),
+        ('labor', 'Mano de Obra'),
+        ('other', 'Otro'),
+    ]
+    item_type = models.CharField(max_length=10, choices=ITEM_TYPE_CHOICES, default='service')
+
+    # Relaciones opcionales
+    service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True, related_name='work_order_items')
+    part = models.ForeignKey(SparePart, on_delete=models.SET_NULL, null=True, blank=True, related_name='work_order_items')
+
+    # Información del ítem
+    description = models.TextField(help_text="Descripción detallada del ítem")
+    part_number = models.CharField(max_length=100, blank=True, help_text="Número de parte o código")
+
+    # Cantidades y precios
+    service_quantity = models.DecimalField(max_digits=6, decimal_places=2, default=1, help_text="Cantidad de servicios (horas)")
+    part_quantity = models.IntegerField(default=1, help_text="Cantidad de repuestos")
+
+    # Precios unitarios
+    service_unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Precio por hora de servicio")
+    part_unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Precio unitario del repuesto")
+
+    # Costos calculados
+    labor_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Costo total de mano de obra")
+    parts_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Costo total de repuestos")
+    total_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Costo total del ítem")
+
+    # Información adicional
+    estimated_time_hours = models.DecimalField(max_digits=4, decimal_places=2, default=0, help_text="Tiempo estimado en horas")
+    actual_time_hours = models.DecimalField(max_digits=4, decimal_places=2, default=0, help_text="Tiempo real en horas")
+
+    # Estado del ítem
+    STATUS_CHOICES = [
+        ('pending', 'Pendiente'),
+        ('in_progress', 'En Progreso'),
+        ('completed', 'Completado'),
+        ('cancelled', 'Cancelado'),
+    ]
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
+
+    # Notas y observaciones
+    notes = models.TextField(blank=True, help_text="Notas adicionales del ítem")
+
+    # Control de inventario
+    inventory_updated = models.BooleanField(default=False, help_text="Si el inventario ya fue actualizado")
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'work_order_items'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.get_item_type_display()}: {self.description[:50]}"
+
+    def save(self, *args, **kwargs):
+        # Calcular costos automáticamente
+        self.labor_cost = self.service_quantity * self.service_unit_price
+        self.parts_cost = self.part_quantity * self.part_unit_price
+        self.total_cost = self.labor_cost + self.parts_cost
+
+        # Si es un repuesto, verificar stock disponible
+        if self.part and self.part_quantity > 0:
+            if self.part.stock_quantity < self.part_quantity:
+                raise ValueError(f"Stock insuficiente para {self.part.name}. Disponible: {self.part.stock_quantity}")
+
+        super().save(*args, **kwargs)
+
+    def complete_item(self):
+        """Marcar ítem como completado y actualizar inventario"""
+        if self.status != 'completed':
+            self.status = 'completed'
+
+            # Actualizar inventario si es un repuesto
+            if self.part and not self.inventory_updated:
+                if self.part.stock_quantity >= self.part_quantity:
+                    self.part.stock_quantity -= self.part_quantity
+                    self.part.times_used += 1
+                    self.part.last_sale_date = timezone.now().date()
+                    self.part.save()
+                    self.inventory_updated = True
+                else:
+                    raise ValueError(f"Stock insuficiente para {self.part.name}. Disponible: {self.part.stock_quantity}")
+
+            # Actualizar estadísticas del servicio
+            if self.service:
+                self.service.update_statistics(
+                    rating=None,  # Se puede agregar rating después
+                    revenue=self.labor_cost
+                )
+
+            # Actualizar tiempo real si no está establecido
+            if self.actual_time_hours == 0 and self.estimated_time_hours > 0:
+                self.actual_time_hours = self.estimated_time_hours
+
+            self.save()
+
+            # Actualizar costos de la orden de trabajo
+            self.work_order.update_costs()
+
+    @property
+    def is_service(self):
+        """Verificar si es un ítem de servicio"""
+        return self.item_type in ['service', 'labor']
+
+    @property
+    def is_part(self):
+        """Verificar si es un ítem de repuesto"""
+        return self.item_type == 'part'
+
+    @property
+    def progress_percentage(self):
+        """Porcentaje de progreso del ítem"""
+        status_progress = {
+            'pending': 0,
+            'in_progress': 50,
+            'completed': 100,
+            'cancelled': 0,
+        }
+        return status_progress.get(self.status, 0)
+
+
+# Mantener compatibilidad - WorkOrderDetail ahora es WorkOrderItem
+class Quotation(models.Model):
+    """Cotizaciones para servicios de taller"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='quotations')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='quotations')
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='quotations')
+
+    # Numeración automática
+    quotation_number = models.CharField(max_length=20, unique=True, editable=False)
+
+    # Información básica
+    title = models.CharField(max_length=200, help_text="Título de la cotización")
+    description = models.TextField(blank=True, help_text="Descripción general de los trabajos")
+
+    # Estados de la cotización
+    STATUS_CHOICES = [
+        ('draft', 'Borrador'),
+        ('sent', 'Enviada'),
+        ('approved', 'Aprobada'),
+        ('rejected', 'Rechazada'),
+        ('expired', 'Expirada'),
+        ('converted', 'Convertida a OT'),
+    ]
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='draft')
+
+    # Fechas importantes
+    created_date = models.DateTimeField(default=timezone.now)
+    sent_date = models.DateTimeField(null=True, blank=True)
+    valid_until = models.DateField(null=True, blank=True, help_text="Fecha de expiración")
+    approved_date = models.DateTimeField(null=True, blank=True)
+
+    # Estimaciones globales
+    estimated_hours = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    estimated_labor_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    estimated_parts_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    estimated_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    # Descuentos y ajustes
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Descuento en porcentaje")
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Descuento en valor absoluto")
+    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Valor de IVA")
+    final_total = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Total final con descuentos e IVA")
+
+    # Información adicional
+    notes = models.TextField(blank=True, help_text="Notas adicionales")
+    terms_conditions = models.TextField(blank=True, help_text="Términos y condiciones")
+
+    # Conversión a orden de trabajo
+    converted_to_work_order = models.ForeignKey(
+        WorkOrder,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='source_quotation'
+    )
+
+    # Estadísticas
+    times_viewed = models.IntegerField(default=0)
+    last_viewed_date = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'quotations'
+        ordering = ['-created_date']
+        indexes = [
+            models.Index(fields=['workshop', 'status']),
+            models.Index(fields=['customer', 'created_date']),
+            models.Index(fields=['valid_until', 'status']),
+        ]
+
+    def __str__(self):
+        return f"COT-{self.quotation_number} - {self.customer.first_name} {self.customer.last_name}"
+
+    def save(self, *args, **kwargs):
+        if not self.quotation_number:
+            # Generar número de cotización automático
+            today = timezone.now().date()
+            workshop_prefix = str(self.workshop.id)[:4].upper()
+            # Contar cotizaciones del día para este taller
+            daily_count = Quotation.objects.filter(
+                workshop=self.workshop,
+                created_date__date=today
+            ).count() + 1
+            self.quotation_number = f"COT{workshop_prefix}-{today.strftime('%Y%m%d')}-{daily_count:03d}"
+
+        # Calcular totales automáticamente
+        self.calculate_totals()
+
+        super().save(*args, **kwargs)
+
+    def calculate_totals(self):
+        """Calcular totales desde los items de cotización"""
+        from django.db.models import Sum
+
+        # Calcular sumas desde QuotationItem
+        totals = self.items.aggregate(
+            total_labor=Sum('labor_cost', default=0),
+            total_parts=Sum('parts_cost', default=0),
+            total_hours=Sum('estimated_hours', default=0)
+        )
+
+        self.estimated_labor_cost = totals['total_labor'] or 0
+        self.estimated_parts_cost = totals['total_parts'] or 0
+        self.estimated_hours = totals['total_hours'] or 0
+        self.estimated_total = self.estimated_labor_cost + self.estimated_parts_cost
+
+        # Aplicar descuentos
+        discount_from_percentage = self.estimated_total * (self.discount_percentage / 100)
+        total_discount = discount_from_percentage + self.discount_amount
+        subtotal_after_discount = self.estimated_total - total_discount
+
+        # Calcular IVA (19% en Colombia)
+        self.tax_amount = subtotal_after_discount * 0.19
+        self.final_total = subtotal_after_discount + self.tax_amount
+
+    @property
+    def is_expired(self):
+        """Verificar si la cotización ha expirado"""
+        if self.valid_until:
+            return timezone.now().date() > self.valid_until
+        return False
+
+    @property
+    def days_until_expiry(self):
+        """Días restantes hasta expiración"""
+        if self.valid_until:
+            today = timezone.now().date()
+            if self.valid_until >= today:
+                return (self.valid_until - today).days
+            else:
+                return -((today - self.valid_until).days)
+        return None
+
+    @property
+    def acceptance_rate(self):
+        """Tasa de aceptación (simulada - en producción calcular estadísticas)"""
+        # En producción, calcular basado en historial del taller
+        return 0.75  # 75% tasa de aceptación promedio
+
+    def mark_as_sent(self):
+        """Marcar cotización como enviada"""
+        if self.status == 'draft':
+            self.status = 'sent'
+            self.sent_date = timezone.now()
+            self.save()
+
+    def approve(self):
+        """Aprobar la cotización"""
+        if self.status in ['draft', 'sent']:
+            self.status = 'approved'
+            self.approved_date = timezone.now()
+            self.save()
+
+    def reject(self):
+        """Rechazar la cotización"""
+        if self.status in ['draft', 'sent']:
+            self.status = 'rejected'
+            self.save()
+
+    def convert_to_work_order(self, assigned_mechanic=None):
+        """Convertir cotización aprobada en orden de trabajo"""
+        if self.status != 'approved':
+            raise ValueError("Solo se pueden convertir cotizaciones aprobadas")
+
+        if self.converted_to_work_order:
+            raise ValueError("Esta cotización ya fue convertida a orden de trabajo")
+
+        # Crear orden de trabajo
+        work_order = WorkOrder.objects.create(
+            workshop=self.workshop,
+            customer=self.customer,
+            vehicle=self.vehicle,
+            assigned_mechanic=assigned_mechanic,
+            title=f"OT generada desde {self.quotation_number}",
+            description=self.description,
+            estimated_hours=self.estimated_hours,
+            estimated_cost=self.estimated_total,
+            final_cost=self.final_total,
+            status='approved'  # Iniciar como aprobada
+        )
+
+        # Copiar items de cotización a items de OT
+        for quote_item in self.items.all():
+            WorkOrderItem.objects.create(
+                work_order=work_order,
+                item_type=quote_item.item_type,
+                service=quote_item.service,
+                part=quote_item.part,
+                description=quote_item.description,
+                service_quantity=quote_item.service_quantity,
+                part_quantity=quote_item.part_quantity,
+                service_unit_price=quote_item.service_unit_price,
+                part_unit_price=quote_item.part_unit_price,
+                estimated_time_hours=quote_item.estimated_hours,
+                status='pending'
+            )
+
+        # Actualizar cotización
+        self.converted_to_work_order = work_order
+        self.status = 'converted'
+        self.save()
+
+        return work_order
+
+
+class QuotationItem(models.Model):
+    """Items individuales de las cotizaciones"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    quotation = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name='items')
+
+    # Tipo de ítem
+    ITEM_TYPE_CHOICES = [
+        ('service', 'Servicio'),
+        ('part', 'Repuesto'),
+        ('labor', 'Mano de Obra'),
+        ('other', 'Otro'),
+    ]
+    item_type = models.CharField(max_length=10, choices=ITEM_TYPE_CHOICES, default='service')
+
+    # Relaciones opcionales
+    service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True, related_name='quotation_items')
+    part = models.ForeignKey(SparePart, on_delete=models.SET_NULL, null=True, blank=True, related_name='quotation_items')
+
+    # Información del ítem
+    description = models.TextField(help_text="Descripción detallada del ítem")
+
+    # Cantidades y precios
+    service_quantity = models.DecimalField(max_digits=6, decimal_places=2, default=1, help_text="Cantidad de servicios (horas)")
+    part_quantity = models.IntegerField(default=1, help_text="Cantidad de repuestos")
+
+    # Precios unitarios
+    service_unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Precio por hora de servicio")
+    part_unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Precio unitario del repuesto")
+
+    # Costos calculados
+    labor_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Costo total de mano de obra")
+    parts_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Costo total de repuestos")
+    total_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Costo total del ítem")
+
+    # Estimaciones
+    estimated_hours = models.DecimalField(max_digits=4, decimal_places=2, default=0, help_text="Tiempo estimado en horas")
 
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        db_table = 'work_order_details'
+        db_table = 'quotation_items'
+        ordering = ['created_at']
 
-    @property
-    def total_price(self):
-        return self.quantity * self.unit_price
+    def __str__(self):
+        return f"{self.get_item_type_display()}: {self.description[:50]}"
+
+    def save(self, *args, **kwargs):
+        # Calcular costos automáticamente
+        self.labor_cost = self.service_quantity * self.service_unit_price
+        self.parts_cost = self.part_quantity * self.part_unit_price
+        self.total_cost = self.labor_cost + self.parts_cost
+        super().save(*args, **kwargs)
+
+
+class WorkOrderDetail(WorkOrderItem):
+    """Alias para compatibilidad hacia atrás"""
+    class Meta:
+        proxy = True
 
 
 class Appointment(models.Model):

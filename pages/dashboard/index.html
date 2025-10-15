@@ -86,7 +86,7 @@
                 <div class="module-card">
                     <h3><i class='bx bx-clipboard'></i> Órdenes de Trabajo</h3>
                     <p>Controla reparaciones y servicios</p>
-                    <button class="btn btn-primary">
+                    <button class="btn btn-primary" onclick="showWorkOrders()">
                         <i class='bx bx-right-arrow-alt'></i>
                         Acceder
                     </button>
@@ -115,6 +115,55 @@
                         Acceder
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Órdenes de Trabajo (oculta por defecto) -->
+    <div id="workOrdersSection" class="dashboard hidden">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-clipboard'></i> Órdenes de Trabajo</h2>
+            <div>
+                <button class="btn btn-secondary" onclick="showDashboard()">
+                    <i class='bx bx-arrow-back'></i>
+                    Volver
+                </button>
+                <button class="btn btn-primary" onclick="showCreateWorkOrderModal()">
+                    <i class='bx bx-plus'></i>
+                    Nueva Orden de Trabajo
+                </button>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <div class="work-orders-filters">
+                <div class="filter-group">
+                    <label for="workOrderStatusFilter">Estado:</label>
+                    <select id="workOrderStatusFilter" onchange="filterWorkOrders()">
+                        <option value="">Todos</option>
+                        <option value="draft">Borrador</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="approved">Aprobada</option>
+                        <option value="in_progress">En Progreso</option>
+                        <option value="quality_check">Control de Calidad</option>
+                        <option value="completed">Completada</option>
+                        <option value="invoiced">Facturada</option>
+                        <option value="cancelled">Cancelada</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="workOrderSearch">Buscar:</label>
+                    <input type="text" id="workOrderSearch" placeholder="Número, cliente o vehículo..." onkeyup="filterWorkOrders()">
+                </div>
+                <div class="filter-group">
+                    <label for="workOrderMechanicFilter">Mecánico:</label>
+                    <select id="workOrderMechanicFilter" onchange="filterWorkOrders()">
+                        <option value="">Todos</option>
+                        <!-- Los mecánicos se cargarán dinámicamente -->
+                    </select>
+                </div>
+            </div>
+            <div id="workOrdersList" class="work-orders-list">
+                <!-- Las órdenes de trabajo se cargarán aquí dinámicamente -->
             </div>
         </div>
     </div>
@@ -420,6 +469,144 @@
                 <button type="submit" class="btn btn-primary btn-full">
                     <i class='bx bx-save'></i>
                     <span id="customerSubmitText">Guardar Cliente</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para crear/editar orden de trabajo -->
+    <div id="workOrderModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="workOrderModalTitle"><i class='bx bx-plus'></i> Nueva Orden de Trabajo</h3>
+                <button class="close-btn" onclick="hideWorkOrderModal()">&times;</button>
+            </div>
+            <form class="work-order-form" onsubmit="handleWorkOrderSubmit(event)">
+                <input type="hidden" id="workOrderId" name="workOrderId">
+
+                <!-- Información Básica -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 1rem; font-size: 1.1rem;">📋 Información Básica</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workOrderTitle">Título *</label>
+                            <input type="text" id="workOrderTitle" name="title" required placeholder="Ej: Cambio de aceite y filtros">
+                        </div>
+                        <div class="form-group">
+                            <label for="workOrderPriority">Prioridad</label>
+                            <select id="workOrderPriority" name="priority">
+                                <option value="low">Baja</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="high">Alta</option>
+                                <option value="urgent">Urgente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workOrderDescription">Descripción</label>
+                        <textarea id="workOrderDescription" name="description" rows="3" placeholder="Descripción detallada del trabajo a realizar..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Cliente y Vehículo -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-green); margin-bottom: 1rem; font-size: 1.1rem;">🚗 Cliente y Vehículo</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workOrderCustomer">Cliente *</label>
+                            <select id="workOrderCustomer" name="customer" required onchange="loadCustomerVehicles()">
+                                <option value="">Seleccionar cliente...</option>
+                                <!-- Los clientes se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="workOrderVehicle">Vehículo *</label>
+                            <select id="workOrderVehicle" name="vehicle" required>
+                                <option value="">Seleccionar vehículo...</option>
+                                <!-- Los vehículos se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workOrderMileage">Kilometraje Actual</label>
+                            <input type="number" id="workOrderMileage" name="mileage_at_entry" placeholder="Ej: 50000">
+                        </div>
+                        <div class="form-group">
+                            <label for="workOrderMechanic">Mecánico Asignado</label>
+                            <select id="workOrderMechanic" name="assigned_mechanic">
+                                <option value="">Sin asignar</option>
+                                <!-- Los mecánicos se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estimaciones -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-orange); margin-bottom: 1rem; font-size: 1.1rem;">⏱️ Estimaciones</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workOrderEstimatedHours">Horas Estimadas</label>
+                            <input type="number" step="0.5" id="workOrderEstimatedHours" name="estimated_hours" placeholder="Ej: 2.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="workOrderEstimatedCost">Costo Estimado</label>
+                            <input type="number" id="workOrderEstimatedCost" name="estimated_cost" placeholder="Ej: 150000">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workOrderStartDate">Fecha de Inicio</label>
+                            <input type="datetime-local" id="workOrderStartDate" name="start_date">
+                        </div>
+                        <div class="form-group">
+                            <label for="workOrderEstimatedCompletion">Fecha Estimada de Fin</label>
+                            <input type="datetime-local" id="workOrderEstimatedCompletion" name="estimated_completion_date">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Síntomas y Diagnóstico -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-pink); margin-bottom: 1rem; font-size: 1.1rem;">🔍 Síntomas y Diagnóstico</h4>
+
+                    <div class="form-group">
+                        <label for="workOrderSymptoms">Síntomas Reportados</label>
+                        <textarea id="workOrderSymptoms" name="symptoms" rows="2" placeholder="¿Qué problemas reporta el cliente?..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workOrderDiagnosis">Diagnóstico Inicial</label>
+                        <textarea id="workOrderDiagnosis" name="diagnosis" rows="2" placeholder="Diagnóstico preliminar del problema..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Notas -->
+                <div class="form-section">
+                    <h4 style="color: var(--logo-green); margin-bottom: 1rem; font-size: 1.1rem;">📝 Notas Adicionales</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workOrderCustomerNotes">Notas del Cliente</label>
+                            <textarea id="workOrderCustomerNotes" name="customer_notes" rows="2" placeholder="Información proporcionada por el cliente..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="workOrderInternalNotes">Notas Internas</label>
+                            <textarea id="workOrderInternalNotes" name="internal_notes" rows="2" placeholder="Notas internas del taller..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class='bx bx-save'></i>
+                    <span id="workOrderSubmitText">Crear Orden de Trabajo</span>
                 </button>
             </form>
         </div>

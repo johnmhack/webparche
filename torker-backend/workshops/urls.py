@@ -7,16 +7,30 @@ from rest_framework_simplejwt.views import (
 from . import views
 
 router = DefaultRouter()
+# Modelos principales
 router.register(r'workshops', views.WorkshopViewSet)
 router.register(r'customers', views.CustomerViewSet)
-router.register(r'motorcycles', views.MotorcycleViewSet)
-router.register(r'employees', views.EmployeeViewSet)
-router.register(r'parts', views.PartViewSet)
+router.register(r'vehicles', views.VehicleViewSet)
+router.register(r'mechanics', views.MechanicViewSet)
+router.register(r'services', views.ServiceViewSet)
+router.register(r'spare-parts', views.SparePartViewSet)
+
+# Órdenes de trabajo y cotizaciones
 router.register(r'work-orders', views.WorkOrderViewSet)
-router.register(r'appointments', views.AppointmentViewSet)
+router.register(r'quotations', views.QuotationViewSet)
+
+# Facturación DIAN
 router.register(r'invoices', views.InvoiceViewSet)
 router.register(r'credit-notes', views.CreditNoteViewSet)
 router.register(r'debit-notes', views.DebitNoteViewSet)
+
+# Otros
+router.register(r'appointments', views.AppointmentViewSet)
+
+# Mantener compatibilidad
+router.register(r'motorcycles', views.VehicleViewSet)  # Alias
+router.register(r'employees', views.MechanicViewSet)   # Alias
+router.register(r'parts', views.SparePartViewSet)      # Alias
 
 urlpatterns = [
     path('api/', include(router.urls)),

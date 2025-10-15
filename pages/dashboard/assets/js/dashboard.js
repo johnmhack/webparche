@@ -326,6 +326,432 @@ async function loadInvoices() {
 }
 
 // ====================
+// FUNCIONES DE ÓRDENES DE TRABAJO
+// ====================
+
+// Variables para órdenes de trabajo
+let currentWorkOrders = [];
+let currentMechanics = [];
+
+// Mostrar sección de órdenes de trabajo
+function showWorkOrders() {
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('workOrdersSection').classList.remove('hidden');
+    loadWorkOrders();
+    loadMechanicsForFilter();
+    showNotification('Módulo de Órdenes de Trabajo activado', 'info');
+}
+
+// Cargar lista de órdenes de trabajo
+async function loadWorkOrders() {
+    try {
+        const response = await apiRequest('/work-orders/');
+        if (response.ok) {
+            currentWorkOrders = await response.json();
+            renderWorkOrders(currentWorkOrders);
+        } else {
+            showNotification('Error al cargar órdenes de trabajo', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading work orders:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Renderizar órdenes de trabajo en la interfaz
+function renderWorkOrders(workOrders) {
+    const container = document.getElementById('workOrdersList');
+
+    if (workOrders.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: var(--surface-variant);">
+                <i class='bx bx-clipboard' style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p>No hay órdenes de trabajo</p>
+                <p>Crea tu primera orden de trabajo haciendo clic en "Nueva Orden de Trabajo"</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = workOrders.map(workOrder => `
+        <div class="work-order-card">
+            <div class="work-order-header">
+                <div class="work-order-number">OT-${workOrder.order_number}</div>
+                <div class="work-order-status ${workOrder.status} ${workOrder.is_overdue ? 'overdue' : ''}">
+                    ${getWorkOrderStatusDisplay(workOrder.status)}
+                    ${workOrder.is_overdue ? ' (Atrasada)' : ''}
+                </div>
+            </div>
+            <div class="work-order-info">
+                <div class="work-order-info-item">
+                    <div class="work-order-info-label">Cliente</div>
+                    <div class="work-order-info-value">${workOrder.customer_name}</div>
+                </div>
+                <div class="work-order-info-item">
+                    <div class="work-order-info-label">Vehículo</div>
+                    <div class="work-order-info-value">${workOrder.vehicle_info}</div>
+                </div>
+                <div class="work-order-info-item">
+                    <div class="work-order-info-label">Mecánico</div>
+                    <div class="work-order-info-value">${workOrder.assigned_mechanic_name || 'Sin asignar'}</div>
+                </div>
+                <div class="work-order-info-item">
+                    <div class="work-order-info-label">Progreso</div>
+                    <div class="work-order-info-value">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${workOrder.progress_percentage}%"></div>
+                        </div>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">${workOrder.progress_percentage}%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="work-order-costs">
+                <div class="work-order-cost-item">
+                    <span class="cost-label">Estimado:</span>
+                    <span class="cost-value">$${workOrder.estimated_cost?.toLocaleString('es-CO') || '0'}</span>
+                </div>
+                <div class="work-order-cost-item">
+                    <span class="cost-label">Real:</span>
+                    <span class="cost-value">$${workOrder.final_cost?.toLocaleString('es-CO') || '0'}</span>
+                </div>
+            </div>
+            <div class="work-order-actions">
+                <button class="btn btn-outline" onclick="viewWorkOrderDetails(${workOrder.id})">
+                    <i class='bx bx-show'></i>
+                    Ver
+                </button>
+                <button class="btn btn-secondary" onclick="editWorkOrder(${workOrder.id})">
+                    <i class='bx bx-edit'></i>
+                    Editar
+                </button>
+                <div class="status-actions">
+                    ${getWorkOrderStatusActions(workOrder)}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Función para obtener el display del estado de OT
+function getWorkOrderStatusDisplay(status) {
+    const statusMap = {
+        'draft': 'Borrador',
+        'pending': 'Pendiente',
+        'approved': 'Aprobada',
+        'in_progress': 'En Progreso',
+        'quality_check': 'Control Calidad',
+        'completed': 'Completada',
+        'invoiced': 'Facturada',
+        'cancelled': 'Cancelada'
+    };
+    return statusMap[status] || 'Desconocido';
+}
+
+// Función para obtener acciones de estado de OT
+function getWorkOrderStatusActions(workOrder) {
+    const actions = [];
+
+    switch (workOrder.status) {
+        case 'draft':
+            actions.push(`<button class="btn btn-success" onclick="changeWorkOrderStatus(${workOrder.id}, 'approved')"><i class='bx bx-check'></i> Aprobar</button>`);
+            break;
+        case 'approved':
+            actions.push(`<button class="btn btn-primary" onclick="changeWorkOrderStatus(${workOrder.id}, 'in_progress')"><i class='bx bx-play'></i> Iniciar</button>`);
+            break;
+        case 'in_progress':
+            actions.push(`<button class="btn btn-warning" onclick="changeWorkOrderStatus(${workOrder.id}, 'quality_check')"><i class='bx bx-check-circle'></i> Control</button>`);
+            actions.push(`<button class="btn btn-success" onclick="changeWorkOrderStatus(${workOrder.id}, 'completed')"><i class='bx bx-check-double'></i> Completar</button>`);
+            break;
+        case 'quality_check':
+            actions.push(`<button class="btn btn-success" onclick="changeWorkOrderStatus(${workOrder.id}, 'completed')"><i class='bx bx-check-double'></i> Aprobar</button>`);
+            actions.push(`<button class="btn btn-warning" onclick="changeWorkOrderStatus(${workOrder.id}, 'in_progress')"><i class='bx bx-undo'></i> Revisar</button>`);
+            break;
+        case 'completed':
+            actions.push(`<button class="btn btn-primary" onclick="createInvoiceFromWorkOrder(${workOrder.id})"><i class='bx bx-receipt'></i> Facturar</button>`);
+            break;
+    }
+
+    if (workOrder.status !== 'cancelled' && workOrder.status !== 'invoiced') {
+        actions.push(`<button class="btn btn-danger" onclick="changeWorkOrderStatus(${workOrder.id}, 'cancelled')"><i class='bx bx-x'></i> Cancelar</button>`);
+    }
+
+    return actions.join('');
+}
+
+// Filtrar órdenes de trabajo
+function filterWorkOrders() {
+    const statusFilter = document.getElementById('workOrderStatusFilter').value;
+    const searchTerm = document.getElementById('workOrderSearch').value.toLowerCase();
+    const mechanicFilter = document.getElementById('workOrderMechanicFilter').value;
+
+    let filtered = currentWorkOrders;
+
+    if (statusFilter) {
+        filtered = filtered.filter(wo => wo.status === statusFilter);
+    }
+
+    if (mechanicFilter) {
+        filtered = filtered.filter(wo => wo.assigned_mechanic === parseInt(mechanicFilter));
+    }
+
+    if (searchTerm) {
+        filtered = filtered.filter(wo =>
+            wo.order_number.toString().includes(searchTerm) ||
+            wo.customer_name.toLowerCase().includes(searchTerm) ||
+            wo.vehicle_info.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    renderWorkOrders(filtered);
+}
+
+// Cargar mecánicos para el filtro
+async function loadMechanicsForFilter() {
+    try {
+        const response = await apiRequest('/mechanics/');
+        if (response.ok) {
+            currentMechanics = await response.json();
+            const select = document.getElementById('workOrderMechanicFilter');
+            select.innerHTML = '<option value="">Todos</option>' +
+                currentMechanics.map(mechanic =>
+                    `<option value="${mechanic.id}">${mechanic.first_name} ${mechanic.last_name}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading mechanics:', error);
+    }
+}
+
+// Mostrar modal para crear orden de trabajo
+function showCreateWorkOrderModal() {
+    document.getElementById('workOrderModalTitle').innerHTML = "<i class='bx bx-plus'></i> Nueva Orden de Trabajo";
+    document.getElementById('workOrderSubmitText').textContent = 'Crear Orden de Trabajo';
+    document.getElementById('workOrderModal').classList.remove('hidden');
+
+    // Limpiar formulario
+    document.querySelector('.work-order-form').reset();
+    document.getElementById('workOrderId').value = '';
+
+    // Cargar datos para los selects
+    loadCustomersForWorkOrder();
+    loadMechanicsForWorkOrder();
+}
+
+// Cargar clientes para el select de OT
+async function loadCustomersForWorkOrder() {
+    try {
+        const response = await apiRequest('/customers/');
+        if (response.ok) {
+            const customers = await response.json();
+            const select = document.getElementById('workOrderCustomer');
+            select.innerHTML = '<option value="">Seleccionar cliente...</option>' +
+                customers.map(customer =>
+                    `<option value="${customer.id}">${customer.first_name} ${customer.last_name}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading customers:', error);
+    }
+}
+
+// Cargar mecánicos para el select de OT
+async function loadMechanicsForWorkOrder() {
+    try {
+        const response = await apiRequest('/mechanics/');
+        if (response.ok) {
+            const mechanics = await response.json();
+            const select = document.getElementById('workOrderMechanic');
+            select.innerHTML = '<option value="">Sin asignar</option>' +
+                mechanics.map(mechanic =>
+                    `<option value="${mechanic.id}">${mechanic.first_name} ${mechanic.last_name}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading mechanics:', error);
+    }
+}
+
+// Cargar vehículos del cliente seleccionado
+async function loadCustomerVehicles() {
+    const customerId = document.getElementById('workOrderCustomer').value;
+    if (!customerId) {
+        document.getElementById('workOrderVehicle').innerHTML = '<option value="">Seleccionar vehículo...</option>';
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/vehicles/');
+        if (response.ok) {
+            const vehicles = await response.json();
+            const customerVehicles = vehicles.filter(v => v.customer === parseInt(customerId));
+            const select = document.getElementById('workOrderVehicle');
+            select.innerHTML = '<option value="">Seleccionar vehículo...</option>' +
+                customerVehicles.map(vehicle =>
+                    `<option value="${vehicle.id}">${vehicle.brand} ${vehicle.model} ${vehicle.year}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading vehicles:', error);
+    }
+}
+
+// Ocultar modal de orden de trabajo
+function hideWorkOrderModal() {
+    document.getElementById('workOrderModal').classList.add('hidden');
+}
+
+// Manejar envío del formulario de orden de trabajo
+async function handleWorkOrderSubmit(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const workOrderData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        priority: formData.get('priority'),
+        customer: formData.get('customer'),
+        vehicle: formData.get('vehicle'),
+        assigned_mechanic: formData.get('assigned_mechanic') || null,
+        mileage_at_entry: formData.get('mileage_at_entry') || null,
+        estimated_hours: formData.get('estimated_hours') || null,
+        estimated_cost: formData.get('estimated_cost') || null,
+        start_date: formData.get('start_date') || null,
+        estimated_completion_date: formData.get('estimated_completion_date') || null,
+        symptoms: formData.get('symptoms') || null,
+        diagnosis: formData.get('diagnosis') || null,
+        customer_notes: formData.get('customer_notes') || null,
+        internal_notes: formData.get('internal_notes') || null
+    };
+
+    // Validar datos básicos
+    if (!workOrderData.title || !workOrderData.customer || !workOrderData.vehicle) {
+        showNotification('Título, cliente y vehículo son obligatorios', 'error');
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/work-orders/', {
+            method: 'POST',
+            body: JSON.stringify(workOrderData)
+        });
+
+        if (response.ok) {
+            const workOrder = await response.json();
+            showNotification(`Orden de Trabajo OT-${workOrder.order_number} creada exitosamente`, 'success');
+
+            hideWorkOrderModal();
+            event.target.reset();
+            loadWorkOrders(); // Recargar lista
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al crear orden de trabajo', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating work order:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Cambiar estado de orden de trabajo
+async function changeWorkOrderStatus(workOrderId, newStatus) {
+    try {
+        const response = await apiRequest(`/work-orders/${workOrderId}/change_status/`, {
+            method: 'POST',
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showNotification(`Estado de OT actualizado: ${getWorkOrderStatusDisplay(newStatus)}`, 'success');
+            loadWorkOrders(); // Recargar lista
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al cambiar estado', 'error');
+        }
+    } catch (error) {
+        console.error('Error changing work order status:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Ver detalles de orden de trabajo
+function viewWorkOrderDetails(workOrderId) {
+    const workOrder = currentWorkOrders.find(wo => wo.id === workOrderId);
+    if (workOrder) {
+        const details = `
+            📋 Orden de Trabajo OT-${workOrder.order_number}
+            Cliente: ${workOrder.customer_name}
+            Vehículo: ${workOrder.vehicle_info}
+            Mecánico: ${workOrder.assigned_mechanic_name || 'Sin asignar'}
+            Estado: ${getWorkOrderStatusDisplay(workOrder.status)}
+            Progreso: ${workOrder.progress_percentage}%
+            Costo Estimado: $${workOrder.estimated_cost?.toLocaleString('es-CO') || '0'}
+            Costo Real: $${workOrder.final_cost?.toLocaleString('es-CO') || '0'}
+        `;
+        showNotification(details, 'info');
+    }
+}
+
+// Editar orden de trabajo
+function editWorkOrder(workOrderId) {
+    const workOrder = currentWorkOrders.find(wo => wo.id === workOrderId);
+    if (!workOrder) return;
+
+    // Por ahora mostrar mensaje, implementar edición completa después
+    showNotification('Edición de órdenes de trabajo próximamente', 'info');
+}
+
+// Crear factura tradicional desde orden de trabajo
+async function createInvoiceFromWorkOrder(workOrderId) {
+    try {
+        const response = await apiRequest('/invoices/create_from_work_order/', {
+            method: 'POST',
+            body: JSON.stringify({
+                work_order_id: workOrderId,
+                payment_method: 'cash'
+            })
+        });
+
+        if (response.ok) {
+            const invoice = await response.json();
+            showNotification(`Factura ${invoice.invoice_number} creada desde OT-${workOrderId}`, 'success');
+            loadWorkOrders(); // Recargar lista
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al crear factura', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating invoice from work order:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Crear factura electrónica DIAN desde orden de trabajo
+async function createElectronicInvoiceFromWorkOrder(workOrderId) {
+    try {
+        const response = await apiRequest('/electronic-invoices/create_from_work_order/', {
+            method: 'POST',
+            body: JSON.stringify({
+                work_order_id: workOrderId,
+                payment_method: 'cash'
+            })
+        });
+
+        if (response.ok) {
+            const invoice = await response.json();
+            showNotification(`Factura Electrónica DIAN ${invoice.invoice_number} creada desde OT-${workOrderId}`, 'success');
+            loadWorkOrders(); // Recargar lista
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al crear factura electrónica', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating electronic invoice from work order:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// ====================
 // FUNCIONES DE CLIENTES
 // ====================
 
