@@ -451,8 +451,8 @@ async function checkAuthStatus() {
         // Intentar cargar datos del usuario
         const success = await loadUserData();
         if (success) {
-            // Usuario ya autenticado, redirigir al dashboard
-            window.location.href = '../dashboard/';
+            // Usuario ya autenticado, mostrar dashboard directamente
+            showDashboard();
         } else {
             // Tokens inválidos, limpiar
             logout();
