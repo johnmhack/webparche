@@ -48,7 +48,7 @@ document.querySelectorAll('.faq-item h6').forEach(faqItemHeading => {
     const menuIcon = document.querySelector('.menu-icon');
     const menu = document.querySelector('.menu');
     if (!menuIcon || !menu) {
-        console.error('Error: No se encuentran los elementos .menu-icon o .menu en el DOM.');
+        // Error: No se encuentran los elementos .menu-icon o .menu en el DOM.
         return;
     }
     menuIcon.addEventListener('click', () => {

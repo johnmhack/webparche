@@ -369,7 +369,7 @@ def create_test_user(request):
         user = User.objects.create_user(
             username='test@example.com',
             email='test@example.com',
-            password='test123',
+            password='CHANGE_THIS_PASSWORD_IN_PRODUCTION',
             first_name='Usuario',
             last_name='Prueba'
         )
@@ -384,7 +384,7 @@ def create_test_user(request):
         return Response({
             'message': 'Usuario creado exitosamente',
             'email': 'test@example.com',
-            'password': 'test123'
+            'password': 'CHANGE_THIS_PASSWORD_IN_PRODUCTION'
         })
 
     except Exception as e:

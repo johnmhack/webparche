@@ -17,7 +17,7 @@ def test_registration():
         "first_name": "Test",
         "last_name": "Frontend",
         "phone": "+1234567890",
-        "password": "test123456"
+        "password": "CHANGE_THIS_PASSWORD_IN_PRODUCTION"
     }
 
     try:
@@ -42,7 +42,7 @@ def test_login():
 
     data = {
         "email": "test_frontend@example.com",
-        "password": "test123456"
+        "password": "CHANGE_THIS_PASSWORD_IN_PRODUCTION"
     }
 
     try:

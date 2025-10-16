@@ -134,7 +134,7 @@ class Workshop(models.Model):
 
     @property
     def is_subscription_active(self):
-        return self.subscription_expires > timezone.now().date() and self.is_active
+        return self.subscription_expires >= timezone.now() and self.is_active
 
 
 class Mechanic(models.Model):
@@ -759,8 +759,8 @@ class WorkOrder(models.Model):
     warranty_start_date = models.DateField(null=True, blank=True)
 
     # Archivos y documentación
-    photos_before = models.JSONField(blank=True, help_text="URLs de fotos antes del trabajo")
-    photos_after = models.JSONField(blank=True, help_text="URLs de fotos después del trabajo")
+    photos_before = models.JSONField(blank=True, default=dict, help_text="URLs de fotos antes del trabajo")
+    photos_after = models.JSONField(blank=True, default=dict, help_text="URLs de fotos después del trabajo")
     documents = models.JSONField(blank=True, default=dict, help_text="URLs de documentos adjuntos")
     description = models.TextField(blank=True, help_text="Descripción detallada del problema")
 

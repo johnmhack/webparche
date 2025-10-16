@@ -24,7 +24,7 @@ class Command(BaseCommand):
             defaults={
                 'environment': options['environment'],
                 'test_username': 'test@example.com',
-                'test_password': 'test123',
+                'test_password': 'CHANGE_THIS_PASSWORD_IN_PRODUCTION',
                 'signature_provider': 'camerfirma',
                 'enable_schematron_validation': True,
                 'enable_xml_validation': True,

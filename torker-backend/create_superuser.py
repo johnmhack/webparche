@@ -28,7 +28,7 @@ def create_superuser():
             email='admin@torker.com',
             first_name='Admin',
             last_name='Torker',
-            password='admin123'
+            password='CHANGE_THIS_PASSWORD_IN_PRODUCTION'
         )
 
         # Crear taller

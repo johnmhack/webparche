@@ -13,7 +13,7 @@ class Command(BaseCommand):
         user = User.objects.create_user(
             username='test@example.com',
             email='test@example.com',
-            password='test123',
+            password='CHANGE_THIS_PASSWORD_IN_PRODUCTION',
             first_name='Usuario',
             last_name='Prueba'
         )
