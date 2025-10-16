@@ -27,22 +27,8 @@ async function apiRequest(endpoint, options = {}) {
         config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
-    console.log('🌐 DEBUG API - Request:', {
-        url: url,
-        method: config.method || 'GET',
-        headers: config.headers,
-        body: config.body ? config.body : 'No body',
-        bodyLength: config.body ? config.body.length : 0
-    });
-
     try {
         const response = await fetch(url, config);
-
-        console.log('📥 DEBUG API - Response:', {
-            status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries())
-        });
 
         // Si el token expiró, intentar refresh
         if (response.status === 401 && refreshToken) {
@@ -202,23 +188,12 @@ async function handleLogin(event) {
     const email = formData.get('email');
     const password = formData.get('password');
 
-    console.log('🔍 DEBUG LOGIN - FormData values:', {
-        email: email,
-        password: password,
-        emailType: typeof email,
-        passwordType: typeof password,
-        emailLength: email ? email.length : 0,
-        passwordLength: password ? password.length : 0
-    });
-
     if (!email || !password) {
         showNotification('Por favor completa todos los campos.', 'error');
         return;
     }
 
     const loginData = { email, password };
-    console.log('📤 DEBUG LOGIN - Data to send:', loginData);
-    console.log('📤 DEBUG LOGIN - JSON string:', JSON.stringify(loginData));
 
     try {
         const response = await apiRequest('/auth/login/', {
@@ -228,7 +203,6 @@ async function handleLogin(event) {
 
         if (response.ok) {
             const data = await response.json();
-            console.log('✅ DEBUG LOGIN - Login successful:', data);
 
             // Guardar tokens
             accessToken = data.access;
@@ -238,14 +212,10 @@ async function handleLogin(event) {
             localStorage.setItem('torker_access_token', accessToken);
             localStorage.setItem('torker_refresh_token', refreshToken);
 
-            console.log('💾 DEBUG LOGIN - Tokens saved to localStorage');
-
             // Cargar datos del usuario y taller
-            console.log('🔄 DEBUG LOGIN - Loading user data...');
             const userDataSuccess = await loadUserData();
 
             if (userDataSuccess) {
-                console.log('✅ DEBUG LOGIN - User data loaded, redirecting to dashboard...');
                 // Redirigir al dashboard
                 window.location.href = '../dashboard/';
 
@@ -258,13 +228,11 @@ async function handleLogin(event) {
                 // Limpiar formulario
                 event.target.reset();
             } else {
-                console.log('❌ DEBUG LOGIN - Failed to load user data');
                 showNotification('Error al cargar datos del usuario.', 'error');
             }
 
         } else {
             const errorData = await response.json();
-            console.log('❌ DEBUG LOGIN - Login failed:', errorData);
             showNotification(errorData.detail || 'Error al iniciar sesión.', 'error');
         }
     } catch (error) {
@@ -454,14 +422,10 @@ function getNotificationIcon(type) {
 // Función para cargar datos del usuario y taller
 async function loadUserData() {
     try {
-        console.log('🌐 DEBUG LOAD USER - Requesting dashboard data...');
         const response = await apiRequest('/dashboard/');
-        console.log('📥 DEBUG LOAD USER - Dashboard response:', response.status, response.statusText);
 
         if (response.ok) {
             const data = await response.json();
-            console.log('✅ DEBUG LOAD USER - Dashboard data:', data);
-
             currentUser = {
                 id: data.workshop.owner,
                 email: data.workshop.owner_email || '',
@@ -470,50 +434,35 @@ async function loadUserData() {
                 stats: data.stats
             };
             isAuthenticated = true;
-            console.log('✅ DEBUG LOAD USER - User data set successfully');
             return true;
         } else {
-            console.error('❌ DEBUG LOAD USER - Dashboard request failed:', response.status);
-            const errorText = await response.text();
-            console.error('❌ DEBUG LOAD USER - Error response:', errorText);
+            console.error('Error loading user data');
             return false;
         }
     } catch (error) {
-        console.error('❌ DEBUG LOAD USER - Exception loading user data:', error);
+        console.error('Error loading user data:', error);
         return false;
     }
 }
 
 // Función para verificar autenticación al cargar la página
 async function checkAuthStatus() {
-    console.log('🔍 Verificando autenticación en página Torker...');
-
     const savedAccessToken = localStorage.getItem('torker_access_token');
     const savedRefreshToken = localStorage.getItem('torker_refresh_token');
-
-    console.log('📦 Tokens encontrados:', {
-        access: !!savedAccessToken,
-        refresh: !!savedRefreshToken
-    });
 
     if (savedAccessToken && savedRefreshToken) {
         accessToken = savedAccessToken;
         refreshToken = savedRefreshToken;
 
-        console.log('🔄 Intentando cargar datos del usuario...');
         // Intentar cargar datos del usuario
         const success = await loadUserData();
         if (success) {
-            console.log('✅ Usuario ya autenticado, redirigiendo a dashboard...');
             // Usuario ya autenticado, redirigir a dashboard
             window.location.href = '../dashboard/';
         } else {
-            console.log('❌ Tokens inválidos, limpiando sesión...');
             // Tokens inválidos, limpiar
             logout();
         }
-    } else {
-        console.log('❌ No hay tokens, usuario debe hacer login');
     }
 }
 
