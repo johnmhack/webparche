@@ -22,7 +22,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('workshops.urls')),
+    path('api/', include('workshops.urls')),
 ]
 
 # Servir archivos estáticos en desarrollo
