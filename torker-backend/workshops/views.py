@@ -65,9 +65,9 @@ class DashboardView(APIView):
                 'workshop': WorkshopSerializer(workshop).data,
                 'stats': {
                     'customers': workshop.customers.count(),
-                    'motorcycles': workshop.motorcycles.count(),
+                    'vehicles': workshop.vehicles.count(),
                     'work_orders': workshop.work_orders.count(),
-                    'employees': workshop.employees.count(),
+                    'mechanics': workshop.mechanics.count(),
                 }
             })
         except Workshop.DoesNotExist:
