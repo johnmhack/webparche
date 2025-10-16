@@ -27,8 +27,22 @@ async function apiRequest(endpoint, options = {}) {
         config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
+    console.log('🌐 DEBUG API - Request:', {
+        url: url,
+        method: config.method || 'GET',
+        headers: config.headers,
+        body: config.body ? config.body : 'No body',
+        bodyLength: config.body ? config.body.length : 0
+    });
+
     try {
         const response = await fetch(url, config);
+
+        console.log('📥 DEBUG API - Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries())
+        });
 
         // Si el token expiró, intentar refresh
         if (response.status === 401 && refreshToken) {
@@ -188,15 +202,28 @@ async function handleLogin(event) {
     const email = formData.get('email');
     const password = formData.get('password');
 
+    console.log('🔍 DEBUG LOGIN - FormData values:', {
+        email: email,
+        password: password,
+        emailType: typeof email,
+        passwordType: typeof password,
+        emailLength: email ? email.length : 0,
+        passwordLength: password ? password.length : 0
+    });
+
     if (!email || !password) {
         showNotification('Por favor completa todos los campos.', 'error');
         return;
     }
 
+    const loginData = { email, password };
+    console.log('📤 DEBUG LOGIN - Data to send:', loginData);
+    console.log('📤 DEBUG LOGIN - JSON string:', JSON.stringify(loginData));
+
     try {
         const response = await apiRequest('/auth/login/', {
             method: 'POST',
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify(loginData)
         });
 
         if (response.ok) {
