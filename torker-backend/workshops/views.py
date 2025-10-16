@@ -800,6 +800,14 @@ class ElectronicInvoiceViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'No hay resolución DIAN activa para facturas electrónicas'},
                               status=status.HTTP_400_BAD_REQUEST)
 
+            # Validar estado de la resolución
+            resolution_status = dian_resolution.get_resolution_status()
+            if resolution_status['status'] == 'critical':
+                return Response({
+                    'error': f'Resolución DIAN al {resolution_status["usage_percentage"]:.1f}% de capacidad. Contacte a la DIAN para renovar.',
+                    'resolution_status': resolution_status
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             # Crear factura electrónica
             electronic_invoice = ElectronicInvoice.objects.create(
                 workshop=work_order.workshop,
@@ -827,6 +835,18 @@ class ElectronicInvoiceViewSet(viewsets.ModelViewSet):
                 # Configuración fiscal
                 tax_rate=work_order.workshop.default_tax_rate,
             )
+
+            # Validar que el número generado sea correcto
+            if not electronic_invoice.validate_invoice_number():
+                electronic_invoice.delete()
+                return Response({'error': 'Error en generación de número de factura'},
+                              status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            # Verificar duplicados
+            if electronic_invoice.check_duplicate_invoice():
+                electronic_invoice.delete()
+                return Response({'error': 'Número de factura duplicado'},
+                              status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             # Crear detalles de factura electrónica desde los ítems de la orden de trabajo
             subtotal = 0
@@ -887,8 +907,12 @@ class ElectronicInvoiceViewSet(viewsets.ModelViewSet):
             # Cambiar estado de la OT a facturada
             work_order.change_status('invoiced', request.user, f'Factura electrónica DIAN {electronic_invoice.invoice_number} creada')
 
+            # Preparar respuesta con información adicional
             serializer = self.get_serializer(electronic_invoice)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            response_data = serializer.data
+            response_data['resolution_status'] = resolution_status
+
+            return Response(response_data, status=status.HTTP_201_CREATED)
 
         except WorkOrder.DoesNotExist:
             return Response({'error': 'Orden de trabajo no encontrada o no completada'},

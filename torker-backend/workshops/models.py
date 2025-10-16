@@ -1020,6 +1020,26 @@ class DianResolution(models.Model):
         """Números disponibles en la resolución"""
         return self.to_number - self.current_number
 
+    @property
+    def usage_percentage(self):
+        """Porcentaje de uso de la resolución"""
+        total_range = self.to_number - self.from_number + 1
+        if total_range <= 0:
+            return 0
+        return (self.current_number / total_range) * 100
+
+    @property
+    def status(self):
+        """Estado de la resolución basado en uso"""
+        if not self.is_valid:
+            return 'expired'
+        if self.usage_percentage >= 90:
+            return 'critical'
+        elif self.usage_percentage >= 75:
+            return 'warning'
+        else:
+            return 'ok'
+
     def get_next_number(self):
         """Obtener siguiente número disponible"""
         if not self.is_valid:
@@ -1030,6 +1050,33 @@ class DianResolution(models.Model):
         self.current_number += 1
         self.save()
         return f"{self.prefix}{self.current_number:04d}"
+
+    def validate_invoice_number(self, invoice_number: str) -> bool:
+        """Validar que un número de factura pertenece a esta resolución"""
+        if not invoice_number.startswith(self.prefix):
+            return False
+
+        try:
+            number_part = invoice_number[len(self.prefix):]
+            number = int(number_part)
+            return self.from_number <= number <= self.to_number
+        except ValueError:
+            return False
+
+    def get_resolution_status(self):
+        """Obtener estado completo de la resolución"""
+        return {
+            'resolution_number': self.resolution_number,
+            'prefix': self.prefix,
+            'range': f"{self.from_number}-{self.to_number}",
+            'current': self.current_number,
+            'available': self.available_numbers,
+            'usage_percentage': round(self.usage_percentage, 2),
+            'status': self.status,
+            'is_valid': self.is_valid,
+            'expires_date': self.expires_date,
+            'days_until_expiry': (self.expires_date - timezone.now().date()).days if self.is_valid else 0
+        }
 
 
 class DianConfiguration(models.Model):
@@ -1210,6 +1257,17 @@ class ElectronicInvoice(models.Model):
         # Algoritmo simplificado - en producción usar algoritmo oficial DIAN
         data = f"{self.invoice_number}{self.issue_date.strftime('%Y-%m-%d %H:%M:%S')}{self.total}{self.workshop_nit}"
         return hashlib.sha384(data.encode()).hexdigest()
+
+    def validate_invoice_number(self):
+        """Validar que el número de factura es válido según la resolución"""
+        return self.dian_resolution.validate_invoice_number(self.invoice_number)
+
+    def check_duplicate_invoice(self):
+        """Verificar que el número no haya sido usado anteriormente"""
+        return ElectronicInvoice.objects.filter(
+            workshop=self.workshop,
+            invoice_number=self.invoice_number
+        ).exclude(id=self.id).exists()
 
     def save(self, *args, **kwargs):
         if not self.invoice_number:

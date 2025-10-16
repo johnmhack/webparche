@@ -255,6 +255,10 @@ class DianResolutionSerializer(serializers.ModelSerializer):
     days_until_expiry = serializers.SerializerMethodField()
     is_expired = serializers.SerializerMethodField()
     status_display = serializers.SerializerMethodField()
+    usage_percentage = serializers.ReadOnlyField()
+    status = serializers.ReadOnlyField()
+    available_numbers = serializers.ReadOnlyField()
+    resolution_status = serializers.SerializerMethodField()
 
     class Meta:
         model = DianResolution
@@ -269,6 +273,9 @@ class DianResolutionSerializer(serializers.ModelSerializer):
 
     def get_status_display(self, obj):
         return "Activa" if obj.is_active else "Inactiva"
+
+    def get_resolution_status(self, obj):
+        return obj.get_resolution_status()
 
 
 class ElectronicInvoiceDetailSerializer(serializers.ModelSerializer):
