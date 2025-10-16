@@ -228,6 +228,7 @@ async function handleLogin(event) {
 
         if (response.ok) {
             const data = await response.json();
+            console.log('✅ DEBUG LOGIN - Login successful:', data);
 
             // Guardar tokens
             accessToken = data.access;
@@ -237,23 +238,33 @@ async function handleLogin(event) {
             localStorage.setItem('torker_access_token', accessToken);
             localStorage.setItem('torker_refresh_token', refreshToken);
 
+            console.log('💾 DEBUG LOGIN - Tokens saved to localStorage');
+
             // Cargar datos del usuario y taller
-            await loadUserData();
+            console.log('🔄 DEBUG LOGIN - Loading user data...');
+            const userDataSuccess = await loadUserData();
 
-            // Redirigir al dashboard
-            window.location.href = '../dashboard/';
+            if (userDataSuccess) {
+                console.log('✅ DEBUG LOGIN - User data loaded, redirecting to dashboard...');
+                // Redirigir al dashboard
+                window.location.href = '../dashboard/';
 
-            // Ocultar modal de login
-            hideLogin();
+                // Ocultar modal de login
+                hideLogin();
 
-            // Mostrar mensaje de éxito
-            showNotification('¡Bienvenido! Has iniciado sesión correctamente.', 'success');
+                // Mostrar mensaje de éxito
+                showNotification('¡Bienvenido! Has iniciado sesión correctamente.', 'success');
 
-            // Limpiar formulario
-            event.target.reset();
+                // Limpiar formulario
+                event.target.reset();
+            } else {
+                console.log('❌ DEBUG LOGIN - Failed to load user data');
+                showNotification('Error al cargar datos del usuario.', 'error');
+            }
 
         } else {
             const errorData = await response.json();
+            console.log('❌ DEBUG LOGIN - Login failed:', errorData);
             showNotification(errorData.detail || 'Error al iniciar sesión.', 'error');
         }
     } catch (error) {
@@ -443,10 +454,14 @@ function getNotificationIcon(type) {
 // Función para cargar datos del usuario y taller
 async function loadUserData() {
     try {
+        console.log('🌐 DEBUG LOAD USER - Requesting dashboard data...');
         const response = await apiRequest('/dashboard/');
+        console.log('📥 DEBUG LOAD USER - Dashboard response:', response.status, response.statusText);
 
         if (response.ok) {
             const data = await response.json();
+            console.log('✅ DEBUG LOAD USER - Dashboard data:', data);
+
             currentUser = {
                 id: data.workshop.owner,
                 email: data.workshop.owner_email || '',
@@ -455,13 +470,16 @@ async function loadUserData() {
                 stats: data.stats
             };
             isAuthenticated = true;
+            console.log('✅ DEBUG LOAD USER - User data set successfully');
             return true;
         } else {
-            console.error('Error loading user data');
+            console.error('❌ DEBUG LOAD USER - Dashboard request failed:', response.status);
+            const errorText = await response.text();
+            console.error('❌ DEBUG LOAD USER - Error response:', errorText);
             return false;
         }
     } catch (error) {
-        console.error('Error loading user data:', error);
+        console.error('❌ DEBUG LOAD USER - Exception loading user data:', error);
         return false;
     }
 }
