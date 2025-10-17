@@ -12,6 +12,10 @@ let refreshToken = null;
 // Configuración de la API
 const API_BASE_URL = 'https://webparche-production.up.railway.app/api';
 
+// Estado para controlar reintentos de autenticación
+let isRefreshingToken = false;
+let refreshPromise = null;
+
 // Funciones helper para API
 async function apiRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -29,20 +33,46 @@ async function apiRequest(endpoint, options = {}) {
     }
 
     try {
-        const response = await fetch(url, config);
+        let response = await fetch(url, config);
 
-        // Si el token expiró, intentar refresh
-        if (response.status === 401 && refreshToken) {
-            const newTokens = await refreshAccessToken();
-            if (newTokens) {
-                config.headers.Authorization = `Bearer ${newTokens.access}`;
-                return fetch(url, config);
+        // Si el token expiró, intentar refresh (solo una vez por sesión)
+        if (response.status === 401 && refreshToken && !isRefreshingToken) {
+            console.log('🔄 Token expirado, intentando refresh...');
+
+            isRefreshingToken = true;
+
+            // Si ya hay un refresh en proceso, esperar
+            if (!refreshPromise) {
+                refreshPromise = refreshAccessToken();
             }
+
+            const newTokens = await refreshPromise;
+
+            if (newTokens) {
+                console.log('✅ Token refrescado exitosamente');
+                config.headers.Authorization = `Bearer ${newTokens.access}`;
+
+                // Reintentar la petición original
+                response = await fetch(url, config);
+                console.log('🔄 Reintento de petición completado');
+            } else {
+                console.log('❌ Falló refresh de token, redirigiendo a login');
+                logout();
+                return response; // Retornar respuesta original con error
+            }
+
+            // Limpiar estado de refresh
+            isRefreshingToken = false;
+            refreshPromise = null;
         }
 
         return response;
     } catch (error) {
         console.error('API Request Error:', error);
+        // Solo mostrar error de conexión si no es un problema de autenticación
+        if (!isRefreshingToken) {
+            showNotification('Error de conexión con el servidor', 'error');
+        }
         throw error;
     }
 }
@@ -307,12 +337,12 @@ async function loadAppointments() {
         if (response.ok) {
             currentAppointments = await response.json();
             renderTodayAppointments();
-        } else {
+        } else if (response.status !== 401) { // No mostrar error para 401 (se maneja automáticamente)
             showNotification('Error al cargar citas', 'error');
         }
     } catch (error) {
         console.error('Error loading appointments:', error);
-        showNotification('Error de conexión', 'error');
+        // Error de conexión ya se maneja en apiRequest
     }
 }
 
@@ -911,12 +941,12 @@ async function loadParts() {
             filteredParts = [...currentParts];
             renderParts(filteredParts);
             updateInventoryStats();
-        } else {
+        } else if (response.status !== 401) { // No mostrar error para 401 (se maneja automáticamente)
             showNotification('Error al cargar repuestos', 'error');
         }
     } catch (error) {
         console.error('Error loading parts:', error);
-        showNotification('Error de conexión', 'error');
+        // Error de conexión ya se maneja en apiRequest
     }
 }
 
@@ -1303,12 +1333,12 @@ async function loadWorkOrders() {
         if (response.ok) {
             currentWorkOrders = await response.json();
             renderWorkOrders(currentWorkOrders);
-        } else {
+        } else if (response.status !== 401) { // No mostrar error para 401 (se maneja automáticamente)
             showNotification('Error al cargar órdenes de trabajo', 'error');
         }
     } catch (error) {
         console.error('Error loading work orders:', error);
-        showNotification('Error de conexión', 'error');
+        // Error de conexión ya se maneja en apiRequest
     }
 }
 
@@ -1727,12 +1757,12 @@ async function loadCustomers() {
         if (response.ok) {
             currentCustomers = await response.json();
             renderCustomers(currentCustomers);
-        } else {
+        } else if (response.status !== 401) { // No mostrar error para 401 (se maneja automáticamente)
             showNotification('Error al cargar clientes', 'error');
         }
     } catch (error) {
         console.error('Error loading customers:', error);
-        showNotification('Error de conexión', 'error');
+        // Error de conexión ya se maneja en apiRequest
     }
 }
 
