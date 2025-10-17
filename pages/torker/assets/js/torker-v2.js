@@ -543,7 +543,13 @@ function openModule(moduleName) {
 document.addEventListener('DOMContentLoaded', function() {
     const moduleButtons = document.querySelectorAll('.module-card .btn');
     moduleButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(event) {
+            // Si el botón ya tiene onclick, no interferir
+            if (this.hasAttribute('onclick')) {
+                console.log('Botón con onclick directo, no interferir'); // Debug
+                return;
+            }
+
             const moduleCard = this.closest('.module-card');
             const moduleTitle = moduleCard.querySelector('h3').textContent.trim();
             console.log('Botón clickeado:', moduleTitle); // Debug
