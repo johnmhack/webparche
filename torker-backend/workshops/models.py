@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
 import uuid
 import hashlib
+from decimal import Decimal
 
 
 class UserManager(BaseUserManager):
@@ -699,7 +700,7 @@ class WorkOrder(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='work_orders')
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='work_orders')
-    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='work_orders')
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='work_orders', null=True, blank=True)
     assigned_mechanic = models.ForeignKey(Mechanic, on_delete=models.SET_NULL, null=True, blank=True, related_name='work_orders')
 
     # Numeración automática
@@ -719,7 +720,7 @@ class WorkOrder(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
 
     # Información del trabajo
-    title = models.CharField(max_length=200, help_text="Título breve del trabajo")
+    title = models.CharField(max_length=200, help_text="Título breve del trabajo", default="Orden de Trabajo")
     description = models.TextField(blank=True, help_text="Descripción detallada del problema")
     symptoms = models.TextField(blank=True, help_text="Síntomas reportados por el cliente")
     diagnosis = models.TextField(blank=True, help_text="Diagnóstico realizado")
@@ -797,7 +798,7 @@ class WorkOrder(models.Model):
             # Contar órdenes del día para este taller
             daily_count = WorkOrder.objects.filter(
                 workshop=self.workshop,
-                created_date__date=today
+                created_at__date=today
             ).count() + 1
             self.order_number = f"OT{workshop_prefix}-{today.strftime('%Y%m%d')}-{daily_count:03d}"
         super().save(*args, **kwargs)
@@ -1208,7 +1209,8 @@ class ElectronicInvoice(models.Model):
     # Archivos XML
     xml_content = models.TextField(blank=True)  # XML sin firma
     signed_xml_content = models.TextField(blank=True)  # XML firmado
-    qr_code_url = models.URLField(blank=True)  # URL del código QR
+    qr_code_url = models.URLField(blank=True)  # URL completa del QR según DIAN
+    qr_code_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)  # Imagen del QR generado
 
     # Respuestas DIAN
     dian_response_code = models.CharField(max_length=10, blank=True)
@@ -1322,7 +1324,7 @@ class ElectronicInvoiceDetail(models.Model):
 
         # Calcular IVA si aplica
         if self.tax_rate > 0:
-            self.tax_amount = self.subtotal * (self.tax_rate / 100)
+            self.tax_amount = self.subtotal * (Decimal(str(self.tax_rate)) / 100)
         else:
             self.tax_amount = 0
 

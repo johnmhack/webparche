@@ -308,6 +308,7 @@ class ElectronicInvoiceSerializer(serializers.ModelSerializer):
     details = ElectronicInvoiceDetailSerializer(many=True, read_only=True)
     dian_status_display = serializers.SerializerMethodField()
     qr_code_url = serializers.SerializerMethodField()
+    qr_code_image_url = serializers.SerializerMethodField()
     xml_download_url = serializers.SerializerMethodField()
     pdf_download_url = serializers.SerializerMethodField()
 
@@ -316,7 +317,7 @@ class ElectronicInvoiceSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = [
             'workshop', 'invoice_number', 'consecutive_number', 'cude',
-            'xml_content', 'qr_code', 'dian_status', 'dian_response_code',
+            'xml_content', 'qr_code_url', 'qr_code_image', 'dian_status', 'dian_response_code',
             'dian_response_message', 'dian_response_date', 'subtotal',
             'tax_amount', 'total', 'issue_date'
         ]
@@ -335,8 +336,13 @@ class ElectronicInvoiceSerializer(serializers.ModelSerializer):
         return status_map.get(obj.dian_status, 'Desconocido')
 
     def get_qr_code_url(self, obj):
-        if obj.qr_code:
-            return obj.qr_code
+        if obj.qr_code_url:
+            return obj.qr_code_url
+        return None
+
+    def get_qr_code_image_url(self, obj):
+        if obj.qr_code_image:
+            return obj.qr_code_image.url
         return None
 
     def get_xml_download_url(self, obj):

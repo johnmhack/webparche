@@ -10,6 +10,10 @@ import hashlib
 import uuid
 from decimal import Decimal
 from typing import Dict, List, Optional
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
+from PIL import Image, ImageDraw
 from .models import ElectronicInvoice, ElectronicInvoiceDetail, DianConfiguration
 
 
@@ -120,8 +124,8 @@ class DianXmlGenerator:
                      schemeID="4",
                      schemeName="31").text = "800197268"
 
-        # QR Code (placeholder)
-        ET.SubElement(dian_extensions, "{dian:gov:co:facturaelectronica:Structures-2-1}QRCode").text = self._generate_qr_placeholder()
+        # QR Code (URL completa según DIAN)
+        ET.SubElement(dian_extensions, "{dian:gov:co:facturaelectronica:Structures-2-1}QRCode").text = self._generate_qr_url()
 
     def _add_ubl_version(self):
         """Versión UBL"""
@@ -389,10 +393,68 @@ class DianXmlGenerator:
             ET.SubElement(price, "cbc:PriceAmount", currencyID="COP").text = f"{detail.unit_price:.2f}"
             ET.SubElement(price, "cbc:BaseQuantity", unitCode="NIU").text = "1.00"
 
-    def _generate_qr_placeholder(self) -> str:
-        """Generar placeholder para código QR"""
-        # En producción, esto sería generado por DIAN
-        return f"https://catalogo-vpfe-hab.dian.gov.co/document/searchqr?documentkey={self.invoice.cude}"
+    def _generate_qr_url(self) -> str:
+        """Generar URL completa del QR según especificaciones DIAN Resolución 000042"""
+        # URL base de validación DIAN (producción)
+        base_url = "https://catalogo-vpfe.dian.gov.co/document/searchqr"
+
+        # Construir parámetros obligatorios según DIAN
+        params = {
+            'documentKey': self.invoice.cude,  # CUDE (Código Único de Documento Electrónico)
+            'nit': self.invoice.workshop_nit,  # NIT del emisor
+            'documentType': '01',  # Tipo de documento: 01 = Factura Electrónica
+            'documentNumber': self.invoice.invoice_number,  # Número completo de factura
+            'issueDate': self.invoice.issue_date.strftime('%Y-%m-%d'),  # Fecha de emisión
+            'totalAmount': f"{self.invoice.total:.2f}"  # Valor total de la factura
+        }
+
+        # Construir URL con parámetros
+        param_string = "&".join([f"{k}={v}" for k, v in params.items()])
+        qr_url = f"{base_url}?{param_string}"
+
+        # Generar imagen QR y guardarla
+        self._generate_qr_image(qr_url)
+
+        return qr_url
+
+    def _generate_qr_image(self, qr_url: str):
+        """Generar imagen QR y guardarla en el modelo"""
+        try:
+            # Crear código QR
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(qr_url)
+            qr.make(fit=True)
+
+            # Crear imagen
+            img = qr.make_image(fill_color="black", back_color="white")
+
+            # Convertir a RGB si es necesario
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+
+            # Guardar en memoria
+            buffer = BytesIO()
+            img.save(buffer, format='PNG')
+            buffer.seek(0)
+
+            # Crear nombre de archivo único
+            filename = f"qr_{self.invoice.invoice_number}_{self.invoice.cude[:8]}.png"
+
+            # Guardar en el modelo
+            self.invoice.qr_code_image.save(filename, ContentFile(buffer.getvalue()), save=False)
+            self.invoice.qr_code_url = qr_url
+            self.invoice.save(update_fields=['qr_code_image', 'qr_code_url'])
+
+        except Exception as e:
+            # Log error pero no fallar la generación del XML
+            print(f"Error generando QR: {e}")
+            self.invoice.qr_code_url = qr_url
+            self.invoice.save(update_fields=['qr_code_url'])
 
     def get_xml_string(self, pretty_print: bool = True) -> str:
         """Obtener XML como string"""
@@ -432,7 +494,7 @@ class DianXmlGenerator:
         xml_parts.append('            <sts:AuthorizationProvider>')
         xml_parts.append('              <sts:AuthorizationProviderID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="4" schemeName="31">800197268</sts:AuthorizationProviderID>')
         xml_parts.append('            </sts:AuthorizationProvider>')
-        xml_parts.append(f'            <sts:QRCode>https://catalogo-vpfe-hab.dian.gov.co/document/searchqr?documentkey={self.invoice.cude}</sts:QRCode>')
+        xml_parts.append(f'            <sts:QRCode>{self._generate_qr_url()}</sts:QRCode>')
         xml_parts.append('          </sts:SoftwareProvider>')
         xml_parts.append('        </sts:DianExtensions>')
         xml_parts.append('      </ext:ExtensionContent>')
