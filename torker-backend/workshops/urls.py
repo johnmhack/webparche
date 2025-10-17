@@ -24,7 +24,8 @@ router.register(r'invoices', views.InvoiceViewSet)
 router.register(r'credit-notes', views.CreditNoteViewSet)
 router.register(r'debit-notes', views.DebitNoteViewSet)
 
-# Otros
+# Agenda y citas
+router.register(r'service-types', views.ServiceTypeViewSet)
 router.register(r'appointments', views.AppointmentViewSet)
 
 # Mantener compatibilidad

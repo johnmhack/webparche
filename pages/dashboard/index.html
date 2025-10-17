@@ -78,7 +78,7 @@
                 <div class="module-card">
                     <h3><i class='bx bx-calendar'></i> Agenda</h3>
                     <p>Gestiona citas y horarios de trabajo</p>
-                    <button class="btn btn-primary">
+                    <button class="btn btn-primary" onclick="showAgenda()">
                         <i class='bx bx-right-arrow-alt'></i>
                         Acceder
                     </button>
@@ -474,6 +474,51 @@
         </div>
     </div>
 
+    <!-- Sección de Agenda (oculta por defecto) -->
+    <div id="agendaSection" class="dashboard hidden">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-calendar'></i> Agenda</h2>
+            <div>
+                <button class="btn btn-secondary" onclick="showDashboard()">
+                    <i class='bx bx-arrow-back'></i>
+                    Volver
+                </button>
+                <button class="btn btn-primary" onclick="showCreateAppointmentModal()">
+                    <i class='bx bx-plus'></i>
+                    Nueva Cita
+                </button>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <!-- Vista de Calendario -->
+            <div class="agenda-calendar-view">
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button class="btn btn-outline" onclick="previousMonth()">&larr;</button>
+                        <h3 id="currentMonthYear">Octubre 2024</h3>
+                        <button class="btn btn-outline" onclick="nextMonth()">&rarr;</button>
+                    </div>
+                    <div class="calendar-view-toggle">
+                        <button class="btn btn-sm" onclick="setCalendarView('month')">Mes</button>
+                        <button class="btn btn-sm" onclick="setCalendarView('week')">Semana</button>
+                        <button class="btn btn-sm btn-primary" onclick="setCalendarView('day')">Día</button>
+                    </div>
+                </div>
+                <div id="calendarGrid" class="calendar-grid">
+                    <!-- El calendario se generará dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Lista de Citas del Día -->
+            <div class="agenda-today-appointments">
+                <h4><i class='bx bx-time-five'></i> Citas de Hoy</h4>
+                <div id="todayAppointmentsList" class="appointments-list">
+                    <!-- Las citas se cargarán dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Sección de Inventario (oculta por defecto) -->
     <div id="inventorySection" class="dashboard hidden">
         <div class="dashboard-header">
@@ -713,6 +758,143 @@
                 <button type="submit" class="btn btn-primary btn-full">
                     <i class='bx bx-save'></i>
                     <span id="submitBtnText">Guardar Repuesto</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para crear/editar cita -->
+    <div id="appointmentModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="appointmentModalTitle"><i class='bx bx-plus'></i> Nueva Cita</h3>
+                <button class="close-btn" onclick="hideAppointmentModal()">&times;</button>
+            </div>
+            <form class="appointment-form" onsubmit="handleAppointmentSubmit(event)">
+                <input type="hidden" id="appointmentId" name="appointmentId">
+
+                <!-- Información del Cliente -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 1rem; font-size: 1.1rem;">👤 Cliente y Vehículo</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="appointmentCustomer">Cliente *</label>
+                            <select id="appointmentCustomer" name="customer" required onchange="loadCustomerVehiclesForAppointment()">
+                                <option value="">Seleccionar cliente...</option>
+                                <!-- Los clientes se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentVehicle">Vehículo</label>
+                            <select id="appointmentVehicle" name="vehicle">
+                                <option value="">Seleccionar vehículo...</option>
+                                <!-- Los vehículos se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Servicio y Fecha/Hora -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-green); margin-bottom: 1rem; font-size: 1.1rem;">🔧 Servicio y Horario</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="appointmentServiceType">Tipo de Servicio</label>
+                            <select id="appointmentServiceType" name="service_type" onchange="updateAppointmentDuration()">
+                                <option value="">Seleccionar servicio...</option>
+                                <!-- Los tipos de servicio se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentMechanic">Mecánico</label>
+                            <select id="appointmentMechanic" name="assigned_mechanic">
+                                <option value="">Sin asignar</option>
+                                <!-- Los mecánicos se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="appointmentDate">Fecha *</label>
+                            <input type="date" id="appointmentDate" name="appointment_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentStartTime">Hora de Inicio *</label>
+                            <input type="time" id="appointmentStartTime" name="start_time" required onchange="calculateEndTime()">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="appointmentDuration">Duración (minutos) *</label>
+                            <input type="number" id="appointmentDuration" name="duration_minutes" required min="15" max="480" step="15" onchange="calculateEndTime()">
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentEndTime">Hora de Fin</label>
+                            <input type="time" id="appointmentEndTime" name="end_time" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customServiceDescription">Descripción del Servicio</label>
+                        <input type="text" id="customServiceDescription" name="custom_service_description" placeholder="Si no seleccionó un tipo de servicio...">
+                    </div>
+                </div>
+
+                <!-- Información Adicional -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-orange); margin-bottom: 1rem; font-size: 1.1rem;">📝 Información Adicional</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="appointmentPriority">Prioridad</label>
+                            <select id="appointmentPriority" name="priority">
+                                <option value="low">Baja</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="high">Alta</option>
+                                <option value="urgent">Urgente</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentEstimatedCost">Costo Estimado</label>
+                            <input type="number" id="appointmentEstimatedCost" name="estimated_cost" min="0" step="1000" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contactPhone">Teléfono de Contacto</label>
+                            <input type="tel" id="contactPhone" name="contact_phone" placeholder="+57 300 123 4567">
+                        </div>
+                        <div class="form-group">
+                            <label for="contactEmail">Email de Contacto</label>
+                            <input type="email" id="contactEmail" name="contact_email" placeholder="cliente@email.com">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notas -->
+                <div class="form-section">
+                    <h4 style="color: var(--neon-pink); margin-bottom: 1rem; font-size: 1.1rem;">📋 Notas</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="appointmentNotes">Notas Internas</label>
+                            <textarea id="appointmentNotes" name="notes" rows="2" placeholder="Notas para el taller..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentCustomerNotes">Notas del Cliente</label>
+                            <textarea id="appointmentCustomerNotes" name="customer_notes" rows="2" placeholder="Información del cliente..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class='bx bx-save'></i>
+                    <span id="appointmentSubmitText">Programar Cita</span>
                 </button>
             </form>
         </div>

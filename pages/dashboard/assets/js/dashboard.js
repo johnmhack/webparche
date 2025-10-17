@@ -248,6 +248,520 @@ document.addEventListener('DOMContentLoaded', async function() {
     await checkAuthStatus();
 });
 
+// ====================
+// FUNCIONES DE AGENDA
+// ====================
+
+// Variables para agenda
+let currentAppointments = [];
+let currentServiceTypes = [];
+let currentCalendarDate = new Date();
+let calendarView = 'month'; // 'month', 'week', 'day'
+
+// Mostrar sección de agenda
+function showAgenda() {
+    console.log('🎯 Dashboard - Función showAgenda ejecutada - Abriendo módulo Agenda');
+
+    // Ocultar otras secciones
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('agendaSection').classList.add('hidden');
+    document.getElementById('invoicesSection').classList.add('hidden');
+    document.getElementById('customersSection').classList.add('hidden');
+    document.getElementById('inventorySection').classList.add('hidden');
+    document.getElementById('workOrdersSection').classList.add('hidden');
+
+    // Mostrar sección de agenda
+    const agendaSection = document.getElementById('agendaSection');
+    if (agendaSection) {
+        agendaSection.classList.remove('hidden');
+        console.log('📅 Dashboard - Sección de agenda mostrada, cargando datos...');
+        loadServiceTypes();
+        loadAppointments();
+        renderCalendar();
+        showNotification('Módulo de Agenda activado', 'info');
+    } else {
+        console.error('❌ Dashboard - Elemento agendaSection no encontrado');
+        showNotification('Error: Sección de agenda no encontrada', 'error');
+    }
+}
+
+// Cargar tipos de servicios
+async function loadServiceTypes() {
+    try {
+        const response = await apiRequest('/service-types/');
+        if (response.ok) {
+            currentServiceTypes = await response.json();
+        } else {
+            showNotification('Error al cargar tipos de servicio', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading service types:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Cargar citas
+async function loadAppointments() {
+    try {
+        const response = await apiRequest('/appointments/');
+        if (response.ok) {
+            currentAppointments = await response.json();
+            renderTodayAppointments();
+        } else {
+            showNotification('Error al cargar citas', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading appointments:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Renderizar calendario
+function renderCalendar() {
+    const calendarGrid = document.getElementById('calendarGrid');
+    const currentMonthYear = document.getElementById('currentMonthYear');
+
+    if (calendarView === 'month') {
+        renderMonthView(calendarGrid, currentMonthYear);
+    } else if (calendarView === 'week') {
+        renderWeekView(calendarGrid, currentMonthYear);
+    } else if (calendarView === 'day') {
+        renderDayView(calendarGrid, currentMonthYear);
+    }
+}
+
+// Renderizar vista mensual
+function renderMonthView(container, titleElement) {
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+
+    titleElement.textContent = `${getMonthName(month)} ${year}`;
+
+    // Obtener primer día del mes y último día
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay()); // Comenzar desde el domingo anterior
+
+    const endDate = new Date(lastDay);
+    endDate.setDate(endDate.getDate() + (6 - lastDay.getDay())); // Terminar el sábado siguiente
+
+    let html = `
+        <div class="calendar-header-days">
+            <div class="calendar-day-header">Dom</div>
+            <div class="calendar-day-header">Lun</div>
+            <div class="calendar-day-header">Mar</div>
+            <div class="calendar-day-header">Mié</div>
+            <div class="calendar-day-header">Jue</div>
+            <div class="calendar-day-header">Vie</div>
+            <div class="calendar-day-header">Sáb</div>
+        </div>
+        <div class="calendar-body">
+    `;
+
+    let currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+        const weekStart = currentDate.getDay() === 0;
+        if (weekStart) {
+            html += '<div class="calendar-week">';
+        }
+
+        const isCurrentMonth = currentDate.getMonth() === month;
+        const isToday = isSameDate(currentDate, new Date());
+        const dayAppointments = getAppointmentsForDate(currentDate);
+
+        html += `
+            <div class="calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}" onclick="selectDate('${currentDate.toISOString().split('T')[0]}')">
+                <div class="calendar-day-number">${currentDate.getDate()}</div>
+                <div class="calendar-day-appointments">
+                    ${dayAppointments.slice(0, 3).map(apt => `
+                        <div class="calendar-appointment ${apt.status}" style="background-color: ${apt.service_type?.color || '#3b82f6'}">
+                            <span class="appointment-time">${formatTime(apt.start_time)}</span>
+                            <span class="appointment-title">${apt.customer_full_name.split(' ')[0]}</span>
+                        </div>
+                    `).join('')}
+                    ${dayAppointments.length > 3 ? `<div class="calendar-more">+${dayAppointments.length - 3} más</div>` : ''}
+                </div>
+            </div>
+        `;
+
+        const weekEnd = currentDate.getDay() === 6;
+        if (weekEnd) {
+            html += '</div>';
+        }
+
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    html += '</div></div>';
+    container.innerHTML = html;
+}
+
+// Funciones auxiliares para calendario
+function getMonthName(month) {
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return months[month];
+}
+
+function isSameDate(date1, date2) {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+}
+
+function getAppointmentsForDate(date) {
+    const dateStr = date.toISOString().split('T')[0];
+    return currentAppointments.filter(apt => apt.appointment_date === dateStr);
+}
+
+function formatTime(timeStr) {
+    return timeStr.substring(0, 5); // HH:MM
+}
+
+// Renderizar vista semanal (simplificada)
+function renderWeekView(container, titleElement) {
+    // Implementación simplificada - mostrar solo mensaje por ahora
+    container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-secondary);">Vista semanal próximamente</div>';
+    titleElement.textContent = 'Vista Semanal';
+}
+
+// Renderizar vista diaria (simplificada)
+function renderDayView(container, titleElement) {
+    // Implementación simplificada - mostrar solo mensaje por ahora
+    container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-secondary);">Vista diaria próximamente</div>';
+    titleElement.textContent = 'Vista Diaria';
+}
+
+// Cambiar vista del calendario
+function setCalendarView(view) {
+    calendarView = view;
+    renderCalendar();
+
+    // Actualizar botones
+    document.querySelectorAll('.calendar-view-toggle button').forEach(btn => {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-sm');
+    });
+
+    event.target.classList.add('btn-primary');
+    event.target.classList.remove('btn-sm');
+}
+
+// Navegación del calendario
+function previousMonth() {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+    renderCalendar();
+}
+
+function nextMonth() {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+    renderCalendar();
+}
+
+// Seleccionar fecha en el calendario
+function selectDate(dateStr) {
+    // Por ahora solo mostrar notificación
+    const date = new Date(dateStr);
+    const appointments = getAppointmentsForDate(date);
+
+    if (appointments.length > 0) {
+        const aptList = appointments.map(apt =>
+            `${formatTime(apt.start_time)} - ${apt.customer_full_name} (${apt.service_type?.name || apt.custom_service_description})`
+        ).join('\n');
+        showNotification(`Citas para ${date.toLocaleDateString('es-CO')}:\n${aptList}`, 'info');
+    } else {
+        showNotification(`No hay citas programadas para ${date.toLocaleDateString('es-CO')}`, 'info');
+    }
+}
+
+// Renderizar citas de hoy
+function renderTodayAppointments() {
+    const today = new Date().toISOString().split('T')[0];
+    const todayAppointments = currentAppointments.filter(apt => apt.appointment_date === today);
+
+    const container = document.getElementById('todayAppointmentsList');
+
+    if (todayAppointments.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <i class='bx bx-calendar-x' style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                <p>No hay citas programadas para hoy</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = todayAppointments.map(appointment => `
+        <div class="appointment-card ${appointment.status}" onclick="viewAppointmentDetails(${appointment.id})">
+            <div class="appointment-header">
+                <div class="appointment-time">${formatTime(appointment.start_time)} - ${formatTime(appointment.end_time)}</div>
+                <div class="appointment-status ${appointment.status}">${getAppointmentStatusDisplay(appointment.status)}</div>
+            </div>
+            <div class="appointment-info">
+                <div class="appointment-customer">${appointment.customer_full_name}</div>
+                <div class="appointment-service">${appointment.service_type?.name || appointment.custom_service_description}</div>
+                <div class="appointment-vehicle">${appointment.vehicle_info}</div>
+            </div>
+            <div class="appointment-actions">
+                <button class="btn btn-outline btn-sm" onclick="editAppointment(${appointment.id}); event.stopPropagation();">
+                    <i class='bx bx-edit'></i>
+                    Editar
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="cancelAppointment(${appointment.id}); event.stopPropagation();">
+                    <i class='bx bx-x'></i>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Obtener display del estado de cita
+function getAppointmentStatusDisplay(status) {
+    const statusMap = {
+        'scheduled': 'Programada',
+        'confirmed': 'Confirmada',
+        'in_progress': 'En Progreso',
+        'completed': 'Completada',
+        'no_show': 'No Asistió',
+        'cancelled': 'Cancelada'
+    };
+    return statusMap[status] || 'Desconocido';
+}
+
+// Mostrar modal para crear cita
+function showCreateAppointmentModal() {
+    document.getElementById('appointmentModalTitle').innerHTML = "<i class='bx bx-plus'></i> Nueva Cita";
+    document.getElementById('appointmentSubmitText').textContent = 'Programar Cita';
+    document.getElementById('appointmentModal').classList.remove('hidden');
+
+    // Limpiar formulario
+    document.querySelector('.appointment-form').reset();
+    document.getElementById('appointmentId').value = '';
+
+    // Cargar datos para los selects
+    loadCustomersForAppointment();
+    loadServiceTypesForAppointment();
+    loadMechanicsForAppointment();
+
+    // Establecer fecha por defecto a hoy
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('appointmentDate').value = today;
+}
+
+// Cargar clientes para citas
+async function loadCustomersForAppointment() {
+    try {
+        const response = await apiRequest('/customers/');
+        if (response.ok) {
+            const customers = await response.json();
+            const select = document.getElementById('appointmentCustomer');
+            select.innerHTML = '<option value="">Seleccionar cliente...</option>' +
+                customers.map(customer =>
+                    `<option value="${customer.id}">${customer.first_name} ${customer.last_name}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading customers for appointment:', error);
+    }
+}
+
+// Cargar tipos de servicio para citas
+function loadServiceTypesForAppointment() {
+    const select = document.getElementById('appointmentServiceType');
+    select.innerHTML = '<option value="">Seleccionar servicio...</option>' +
+        currentServiceTypes.map(service =>
+            `<option value="${service.id}">${service.name} (${service.estimated_duration} min)</option>`
+        ).join('');
+}
+
+// Cargar mecánicos para citas
+async function loadMechanicsForAppointment() {
+    try {
+        const response = await apiRequest('/mechanics/');
+        if (response.ok) {
+            const mechanics = await response.json();
+            const select = document.getElementById('appointmentMechanic');
+            select.innerHTML = '<option value="">Sin asignar</option>' +
+                mechanics.map(mechanic =>
+                    `<option value="${mechanic.id}">${mechanic.first_name} ${mechanic.last_name}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading mechanics for appointment:', error);
+    }
+}
+
+// Cargar vehículos del cliente seleccionado
+async function loadCustomerVehiclesForAppointment() {
+    const customerId = document.getElementById('appointmentCustomer').value;
+    if (!customerId) {
+        document.getElementById('appointmentVehicle').innerHTML = '<option value="">Seleccionar vehículo...</option>';
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/vehicles/');
+        if (response.ok) {
+            const vehicles = await response.json();
+            const customerVehicles = vehicles.filter(v => v.customer === parseInt(customerId));
+            const select = document.getElementById('appointmentVehicle');
+            select.innerHTML = '<option value="">Seleccionar vehículo...</option>' +
+                customerVehicles.map(vehicle =>
+                    `<option value="${vehicle.id}">${vehicle.brand} ${vehicle.model} ${vehicle.year}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading vehicles for appointment:', error);
+    }
+}
+
+// Calcular hora de fin automáticamente
+function calculateEndTime() {
+    const startTime = document.getElementById('appointmentStartTime').value;
+    const duration = parseInt(document.getElementById('appointmentDuration').value) || 60;
+
+    if (startTime) {
+        const [hours, minutes] = startTime.split(':').map(Number);
+        const startMinutes = hours * 60 + minutes;
+        const endMinutes = startMinutes + duration;
+
+        const endHours = Math.floor(endMinutes / 60);
+        const endMins = endMinutes % 60;
+
+        const endTimeStr = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+        document.getElementById('appointmentEndTime').value = endTimeStr;
+    }
+}
+
+// Actualizar duración cuando se selecciona tipo de servicio
+function updateAppointmentDuration() {
+    const serviceTypeId = document.getElementById('appointmentServiceType').value;
+    const serviceType = currentServiceTypes.find(st => st.id === parseInt(serviceTypeId));
+
+    if (serviceType) {
+        document.getElementById('appointmentDuration').value = serviceType.estimated_duration;
+        calculateEndTime();
+    }
+}
+
+// Ocultar modal de cita
+function hideAppointmentModal() {
+    document.getElementById('appointmentModal').classList.add('hidden');
+}
+
+// Manejar envío del formulario de cita
+async function handleAppointmentSubmit(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const appointmentData = {
+        customer: formData.get('customer'),
+        vehicle: formData.get('vehicle') || null,
+        service_type: formData.get('service_type') || null,
+        custom_service_description: formData.get('custom_service_description') || null,
+        appointment_date: formData.get('appointment_date'),
+        start_time: formData.get('start_time'),
+        duration_minutes: parseInt(formData.get('duration_minutes')) || 60,
+        assigned_mechanic: formData.get('assigned_mechanic') || null,
+        priority: formData.get('priority') || 'normal',
+        estimated_cost: parseFloat(formData.get('estimated_cost')) || 0,
+        contact_phone: formData.get('contact_phone') || null,
+        contact_email: formData.get('contact_email') || null,
+        notes: formData.get('notes') || null,
+        customer_notes: formData.get('customer_notes') || null
+    };
+
+    // Validar datos básicos
+    if (!appointmentData.customer || !appointmentData.appointment_date || !appointmentData.start_time) {
+        showNotification('Cliente, fecha y hora de inicio son obligatorios', 'error');
+        return;
+    }
+
+    if (!appointmentData.service_type && !appointmentData.custom_service_description) {
+        showNotification('Debe seleccionar un tipo de servicio o proporcionar una descripción', 'error');
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/appointments/', {
+            method: 'POST',
+            body: JSON.stringify(appointmentData)
+        });
+
+        if (response.ok) {
+            const appointment = await response.json();
+            showNotification(`Cita programada exitosamente para ${appointment.customer_full_name}`, 'success');
+
+            hideAppointmentModal();
+            event.target.reset();
+            loadAppointments(); // Recargar lista
+            renderCalendar(); // Actualizar calendario
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al programar cita', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating appointment:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Ver detalles de cita
+function viewAppointmentDetails(appointmentId) {
+    const appointment = currentAppointments.find(apt => apt.id === appointmentId);
+    if (!appointment) return;
+
+    const details = `
+        📅 Cita - ${appointment.customer_full_name}
+        Servicio: ${appointment.service_type?.name || appointment.custom_service_description}
+        Fecha: ${new Date(appointment.appointment_date).toLocaleDateString('es-CO')}
+        Hora: ${formatTime(appointment.start_time)} - ${formatTime(appointment.end_time)}
+        Mecánico: ${appointment.assigned_mechanic_name || 'Sin asignar'}
+        Estado: ${getAppointmentStatusDisplay(appointment.status)}
+        ${appointment.vehicle_info ? `Vehículo: ${appointment.vehicle_info}` : ''}
+        ${appointment.estimated_cost ? `Costo estimado: $${appointment.estimated_cost.toLocaleString('es-CO')}` : ''}
+    `;
+    showNotification(details, 'info');
+}
+
+// Editar cita
+function editAppointment(appointmentId) {
+    const appointment = currentAppointments.find(apt => apt.id === appointmentId);
+    if (!appointment) return;
+
+    // Por ahora mostrar mensaje, implementar edición completa después
+    showNotification('Edición de citas próximamente', 'info');
+}
+
+// Cancelar cita
+async function cancelAppointment(appointmentId) {
+    if (!confirm('¿Estás seguro de que deseas cancelar esta cita?')) {
+        return;
+    }
+
+    try {
+        const response = await apiRequest(`/appointments/${appointmentId}/cancel/`, {
+            method: 'POST',
+            body: JSON.stringify({ notes: 'Cancelada por usuario' })
+        });
+
+        if (response.ok) {
+            showNotification('Cita cancelada exitosamente', 'success');
+            loadAppointments(); // Recargar lista
+            renderCalendar(); // Actualizar calendario
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al cancelar cita', 'error');
+        }
+    } catch (error) {
+        console.error('Error cancelling appointment:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
 // Función para agregar efectos hover a las tarjetas
 function addCardEffects() {
     const cards = document.querySelectorAll('.stat-card, .module-card');
@@ -277,19 +791,22 @@ document.addEventListener('DOMContentLoaded', async function() {
             button.addEventListener('click', function() {
                 const moduleCard = this.closest('.module-card');
                 const moduleTitle = moduleCard.querySelector('h3').textContent.trim();
-    
+
                 console.log('🖱️ Dashboard - Botón clickeado:', moduleTitle);
-    
+
                 // Si el botón ya tiene onclick, no interferir
                 if (this.hasAttribute('onclick')) {
                     console.log('✅ Dashboard - Botón con onclick directo, ejecutando acción directa');
                     return;
                 }
-    
-                // Verificar si es el módulo de Inventario
+
+                // Verificar módulos disponibles
                 if (moduleTitle.includes('Inventario')) {
                     console.log('🎯 Dashboard - Detectado módulo Inventario, ejecutando showInventory()');
                     showInventory();
+                } else if (moduleTitle.includes('Agenda')) {
+                    console.log('📅 Dashboard - Detectado módulo Agenda, ejecutando showAgenda()');
+                    showAgenda();
                 } else {
                     console.log('⚠️ Dashboard - Módulo en desarrollo:', moduleTitle);
                     openModule(moduleTitle);
@@ -327,6 +844,7 @@ function showDashboard() {
     document.getElementById('customersSection').classList.add('hidden');
     document.getElementById('inventorySection').classList.add('hidden');
     document.getElementById('workOrdersSection').classList.add('hidden');
+    document.getElementById('agendaSection').classList.add('hidden');
 
     // Mostrar dashboard
     document.getElementById('dashboard').classList.remove('hidden');
@@ -369,6 +887,8 @@ function showInventory() {
     document.getElementById('invoicesSection').classList.add('hidden');
     document.getElementById('customersSection').classList.add('hidden');
     document.getElementById('workOrdersSection').classList.add('hidden');
+    document.getElementById('agendaSection').classList.add('hidden');
+    document.getElementById('agendaSection').classList.add('hidden');
 
     // Mostrar sección de inventario
     const inventorySection = document.getElementById('inventorySection');

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     User, Workshop, Customer, Vehicle, Mechanic,
     Service, SparePart, WorkOrder, WorkOrderItem, WorkOrderStatusLog,
-    Quotation, QuotationItem, Appointment,
+    Quotation, QuotationItem, Appointment, ServiceType,
     Invoice, InvoiceDetail, CreditNote, DebitNote,
     ElectronicInvoice, ElectronicInvoiceDetail, DianResolution
 )
@@ -198,13 +198,49 @@ class WorkOrderDetailSerializer(WorkOrderItemSerializer):
     pass
 
 
+class ServiceTypeSerializer(serializers.ModelSerializer):
+    """Serializer para tipos de servicios de agenda"""
+    estimated_duration_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ServiceType
+        fields = '__all__'
+        read_only_fields = ['workshop']
+
+    def get_estimated_duration_display(self, obj):
+        hours = obj.estimated_duration // 60
+        minutes = obj.estimated_duration % 60
+        if hours > 0:
+            return f"{hours}h {minutes}min"
+        return f"{minutes}min"
+
+
 class AppointmentSerializer(serializers.ModelSerializer):
+    """Serializer completo para citas de agenda"""
     customer_name = serializers.CharField(source='customer.first_name', read_only=True)
+    customer_full_name = serializers.SerializerMethodField()
+    vehicle_info = serializers.SerializerMethodField()
+    assigned_mechanic_name = serializers.CharField(source='assigned_mechanic.first_name', read_only=True)
+    service_type_name = serializers.CharField(source='service_type.name', read_only=True)
+    display_title = serializers.ReadOnlyField()
+    status_color = serializers.ReadOnlyField()
+    is_past = serializers.ReadOnlyField()
+    is_today = serializers.ReadOnlyField()
+    is_upcoming = serializers.ReadOnlyField()
+    needs_reminder = serializers.ReadOnlyField()
 
     class Meta:
         model = Appointment
         fields = '__all__'
-        read_only_fields = ['workshop']
+        read_only_fields = ['workshop', 'duration_minutes', 'estimated_cost', 'created_by', 'updated_at']
+
+    def get_customer_full_name(self, obj):
+        return f"{obj.customer.first_name} {obj.customer.last_name}"
+
+    def get_vehicle_info(self, obj):
+        if obj.vehicle:
+            return f"{obj.vehicle.brand} {obj.vehicle.model} {obj.vehicle.year}"
+        return "Sin vehículo especificado"
 
 
 class InvoiceDetailSerializer(serializers.ModelSerializer):

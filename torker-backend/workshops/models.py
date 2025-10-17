@@ -1762,35 +1762,231 @@ class WorkOrderDetail(WorkOrderItem):
         proxy = True
 
 
+class ServiceType(models.Model):
+    """Tipos de servicios disponibles para agendamiento"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='service_types')
+
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    category = models.CharField(max_length=50, choices=[
+        ('maintenance', 'Mantenimiento'),
+        ('repair', 'Reparación'),
+        ('diagnostic', 'Diagnóstico'),
+        ('emergency', 'Emergencia'),
+        ('inspection', 'Inspección'),
+        ('other', 'Otro'),
+    ], default='maintenance')
+
+    # Duración estimada en minutos
+    estimated_duration = models.IntegerField(default=60, help_text="Duración estimada en minutos")
+
+    # Precio base
+    base_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    # Color para visualización en calendario
+    color = models.CharField(max_length=7, default='#3b82f6', help_text="Color en formato hex (#RRGGBB)")
+
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'service_types'
+        unique_together = ['workshop', 'name']
+        ordering = ['category', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.get_category_display()})"
+
+
 class Appointment(models.Model):
-    """Citas del taller"""
+    """Citas del taller con funcionalidad completa de agenda"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='appointments')
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='appointments')
-    employee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, related_name='appointments')
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='appointments', null=True, blank=True)
+    assigned_mechanic = models.ForeignKey(Mechanic, on_delete=models.SET_NULL, null=True, blank=True, related_name='appointments')
 
+    # Información del servicio
+    service_type = models.ForeignKey(ServiceType, on_delete=models.SET_NULL, null=True, blank=True, related_name='appointments')
+    custom_service_description = models.CharField(max_length=255, blank=True, help_text="Descripción si no es un tipo de servicio estándar")
+
+    # Fechas y horarios
     appointment_date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    service_type = models.CharField(max_length=100, blank=True)
+
+    # Duración calculada automáticamente
+    duration_minutes = models.IntegerField(default=60, help_text="Duración en minutos")
 
     STATUS_CHOICES = [
         ('scheduled', 'Programada'),
         ('confirmed', 'Confirmada'),
+        ('in_progress', 'En Progreso'),
         ('completed', 'Completada'),
+        ('no_show', 'No Asistió'),
         ('cancelled', 'Cancelada'),
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
 
-    notes = models.TextField(blank=True)
+    # Información adicional
+    priority = models.CharField(max_length=10, choices=[
+        ('low', 'Baja'),
+        ('normal', 'Normal'),
+        ('high', 'Alta'),
+        ('urgent', 'Urgente'),
+    ], default='normal')
+
+    # Costos estimados
+    estimated_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    # Información de contacto y seguimiento
+    contact_phone = models.CharField(max_length=20, blank=True, help_text="Teléfono de contacto alternativo")
+    contact_email = models.EmailField(blank=True, help_text="Email de contacto alternativo")
+
+    # Recordatorios
+    reminder_sent = models.BooleanField(default=False)
+    reminder_sent_at = models.DateTimeField(null=True, blank=True)
+
+    # Notas y observaciones
+    notes = models.TextField(blank=True, help_text="Notas internas del taller")
+    customer_notes = models.TextField(blank=True, help_text="Notas para el cliente")
+
+    # Conversión a orden de trabajo
+    converted_to_work_order = models.ForeignKey(
+        WorkOrder,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='source_appointment'
+    )
+
+    # Control de creación y actualización
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_appointments')
     created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'appointments'
         ordering = ['appointment_date', 'start_time']
+        indexes = [
+            models.Index(fields=['workshop', 'appointment_date']),
+            models.Index(fields=['assigned_mechanic', 'appointment_date']),
+            models.Index(fields=['customer', 'appointment_date']),
+            models.Index(fields=['status', 'appointment_date']),
+        ]
 
     def __str__(self):
-        return f"{self.customer} - {self.appointment_date} {self.start_time}"
+        service = self.service_type.name if self.service_type else self.custom_service_description or "Servicio"
+        return f"{self.customer.full_name} - {service} - {self.appointment_date} {self.start_time}"
+
+    def save(self, *args, **kwargs):
+        # Calcular duración automáticamente si no está establecida
+        if not self.duration_minutes and self.start_time and self.end_time:
+            start_minutes = self.start_time.hour * 60 + self.start_time.minute
+            end_minutes = self.end_time.hour * 60 + self.end_time.minute
+            self.duration_minutes = end_minutes - start_minutes
+
+        # Calcular costo estimado si hay tipo de servicio
+        if self.service_type and not self.estimated_cost:
+            self.estimated_cost = self.service_type.base_price
+
+        super().save(*args, **kwargs)
+
+    @property
+    def is_past(self):
+        """Verificar si la cita ya pasó"""
+        now = timezone.now()
+        appointment_datetime = timezone.datetime.combine(self.appointment_date, self.start_time)
+        appointment_datetime = timezone.make_aware(appointment_datetime)
+        return now > appointment_datetime
+
+    @property
+    def is_today(self):
+        """Verificar si la cita es para hoy"""
+        return self.appointment_date == timezone.now().date()
+
+    @property
+    def is_upcoming(self):
+        """Verificar si la cita está próxima (próximas 24 horas)"""
+        now = timezone.now()
+        appointment_datetime = timezone.datetime.combine(self.appointment_date, self.start_time)
+        appointment_datetime = timezone.make_aware(appointment_datetime)
+        time_diff = appointment_datetime - now
+        return time_diff.total_seconds() > 0 and time_diff.total_seconds() <= 86400  # 24 horas
+
+    @property
+    def needs_reminder(self):
+        """Verificar si necesita recordatorio (24 horas antes)"""
+        if self.reminder_sent or self.status in ['completed', 'cancelled', 'no_show']:
+            return False
+        return self.is_upcoming
+
+    @property
+    def display_title(self):
+        """Título para mostrar en calendario"""
+        service = self.service_type.name if self.service_type else self.custom_service_description or "Servicio"
+        return f"{self.customer.first_name} - {service}"
+
+    @property
+    def status_color(self):
+        """Color CSS según estado"""
+        colors = {
+            'scheduled': '#f59e0b',    # amber
+            'confirmed': '#3b82f6',   # blue
+            'in_progress': '#f97316', # orange
+            'completed': '#22c55e',   # green
+            'no_show': '#ef4444',     # red
+            'cancelled': '#6b7280',   # gray
+        }
+        return colors.get(self.status, '#6b7280')
+
+    def send_reminder(self):
+        """Marcar recordatorio como enviado"""
+        self.reminder_sent = True
+        self.reminder_sent_at = timezone.now()
+        self.save()
+
+    def convert_to_work_order(self, notes=None):
+        """Convertir cita confirmada en orden de trabajo"""
+        if self.status not in ['confirmed', 'in_progress']:
+            raise ValueError("Solo se pueden convertir citas confirmadas o en progreso")
+
+        if self.converted_to_work_order:
+            raise ValueError("Esta cita ya fue convertida a orden de trabajo")
+
+        # Crear orden de trabajo
+        work_order = WorkOrder.objects.create(
+            workshop=self.workshop,
+            customer=self.customer,
+            vehicle=self.vehicle,
+            assigned_mechanic=self.assigned_mechanic,
+            title=f"OT generada desde cita: {self.display_title}",
+            description=f"Cita programada para {self.appointment_date} a las {self.start_time}",
+            estimated_hours=self.duration_minutes / 60,  # Convertir minutos a horas
+            estimated_cost=self.estimated_cost,
+            status='approved'  # Iniciar como aprobada
+        )
+
+        # Agregar servicio si existe
+        if self.service_type:
+            WorkOrderItem.objects.create(
+                work_order=work_order,
+                item_type='service',
+                service=self.service_type,  # Asumiendo que ServiceType es compatible con Service
+                description=self.service_type.description,
+                service_quantity=self.duration_minutes / 60,
+                service_unit_price=self.service_type.base_price / (self.duration_minutes / 60) if self.duration_minutes > 0 else 0,
+                estimated_time_hours=self.duration_minutes / 60,
+                status='pending'
+            )
+
+        # Actualizar cita
+        self.converted_to_work_order = work_order
+        self.status = 'completed'
+        self.save()
+
+        return work_order
 
 
 class Invoice(models.Model):

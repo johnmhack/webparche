@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from .models import (
     User, Workshop, Customer, Vehicle, Mechanic,
     Service, SparePart, WorkOrder, WorkOrderItem, WorkOrderStatusLog,
-    Quotation, QuotationItem, Appointment,
+    Quotation, QuotationItem, Appointment, ServiceType,
     Invoice, InvoiceDetail, CreditNote, DebitNote,
     ElectronicInvoice, DianResolution
 )
@@ -16,7 +16,7 @@ from .serializers import (
     UserSerializer, WorkshopSerializer, CustomerSerializer,
     VehicleSerializer, MechanicSerializer, ServiceSerializer, SparePartSerializer,
     WorkOrderSerializer, WorkOrderItemSerializer, WorkOrderStatusLogSerializer,
-    QuotationSerializer, QuotationItemSerializer, AppointmentSerializer,
+    QuotationSerializer, QuotationItemSerializer, AppointmentSerializer, ServiceTypeSerializer,
     InvoiceSerializer, InvoiceDetailSerializer, CreditNoteSerializer, DebitNoteSerializer,
     ElectronicInvoiceSerializer, DianResolutionSerializer
 )
@@ -342,7 +342,21 @@ class QuotationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+class ServiceTypeViewSet(viewsets.ModelViewSet):
+    """API para gestión de tipos de servicios de agenda"""
+    serializer_class = ServiceTypeSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = ServiceType.objects.all()
+
+    def get_queryset(self):
+        return ServiceType.objects.filter(workshop=self.request.user.workshop)
+
+    def perform_create(self, serializer):
+        serializer.save(workshop=self.request.user.workshop)
+
+
 class AppointmentViewSet(viewsets.ModelViewSet):
+    """API completa para gestión de citas de agenda"""
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated]
     queryset = Appointment.objects.all()
@@ -351,7 +365,143 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         return Appointment.objects.filter(workshop=self.request.user.workshop)
 
     def perform_create(self, serializer):
-        serializer.save(workshop=self.request.user.workshop)
+        serializer.save(workshop=self.request.user.workshop, created_by=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def calendar_view(self, request):
+        """Vista de calendario con citas para un período específico"""
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        mechanic_id = request.query_params.get('mechanic_id')
+
+        queryset = self.get_queryset()
+
+        if start_date and end_date:
+            queryset = queryset.filter(appointment_date__range=[start_date, end_date])
+        elif start_date:
+            queryset = queryset.filter(appointment_date__gte=start_date)
+        elif end_date:
+            queryset = queryset.filter(appointment_date__lte=end_date)
+
+        if mechanic_id:
+            queryset = queryset.filter(assigned_mechanic_id=mechanic_id)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def upcoming(self, request):
+        """Obtener citas próximas (próximas 24 horas)"""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        now = timezone.now()
+        tomorrow = now + timedelta(days=1)
+
+        appointments = self.get_queryset().filter(
+            appointment_date__gte=now.date(),
+            appointment_date__lte=tomorrow.date(),
+            status__in=['scheduled', 'confirmed']
+        ).order_by('appointment_date', 'start_time')
+
+        serializer = self.get_serializer(appointments, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def today(self, request):
+        """Obtener citas de hoy"""
+        today = timezone.now().date()
+        appointments = self.get_queryset().filter(
+            appointment_date=today
+        ).order_by('start_time')
+
+        serializer = self.get_serializer(appointments, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def confirm(self, request, pk=None):
+        """Confirmar una cita programada"""
+        appointment = self.get_object()
+        if appointment.status != 'scheduled':
+            return Response({'error': 'Solo se pueden confirmar citas programadas'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        appointment.status = 'confirmed'
+        appointment.save()
+
+        serializer = self.get_serializer(appointment)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        """Cancelar una cita"""
+        appointment = self.get_object()
+        notes = request.data.get('notes', '')
+
+        if appointment.status in ['completed', 'cancelled']:
+            return Response({'error': 'No se puede cancelar una cita completada o ya cancelada'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        appointment.status = 'cancelled'
+        appointment.customer_notes = notes
+        appointment.save()
+
+        serializer = self.get_serializer(appointment)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def complete(self, request, pk=None):
+        """Marcar cita como completada"""
+        appointment = self.get_object()
+        if appointment.status not in ['confirmed', 'in_progress']:
+            return Response({'error': 'Solo se pueden completar citas confirmadas o en progreso'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        appointment.status = 'completed'
+        appointment.save()
+
+        serializer = self.get_serializer(appointment)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def convert_to_work_order(self, request, pk=None):
+        """Convertir cita completada en orden de trabajo"""
+        appointment = self.get_object()
+
+        try:
+            work_order = appointment.convert_to_work_order()
+            work_order_serializer = WorkOrderSerializer(work_order)
+            return Response(work_order_serializer.data, status=status.HTTP_201_CREATED)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def send_reminder(self, request, pk=None):
+        """Enviar recordatorio manualmente"""
+        appointment = self.get_object()
+
+        if appointment.needs_reminder:
+            appointment.send_reminder()
+            return Response({'message': 'Recordatorio enviado exitosamente'})
+        else:
+            return Response({'message': 'No se necesita enviar recordatorio para esta cita'})
+
+    @action(detail=False, methods=['get'])
+    def needs_reminders(self, request):
+        """Obtener citas que necesitan recordatorios"""
+        appointments = self.get_queryset().filter(
+            reminder_sent=False,
+            status__in=['scheduled', 'confirmed']
+        )
+
+        # Filtrar solo las que están próximas (24 horas)
+        upcoming_appointments = []
+        for appointment in appointments:
+            if appointment.needs_reminder:
+                upcoming_appointments.append(appointment)
+
+        serializer = self.get_serializer(upcoming_appointments, many=True)
+        return Response(serializer.data)
 
 
 # TEMPORAL: Endpoint para crear usuario de prueba
