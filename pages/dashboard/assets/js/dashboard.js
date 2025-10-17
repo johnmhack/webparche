@@ -325,6 +325,8 @@ function showDashboard() {
     // Ocultar todas las secciones
     document.getElementById('invoicesSection').classList.add('hidden');
     document.getElementById('customersSection').classList.add('hidden');
+    document.getElementById('inventorySection').classList.add('hidden');
+    document.getElementById('workOrdersSection').classList.add('hidden');
 
     // Mostrar dashboard
     document.getElementById('dashboard').classList.remove('hidden');
