@@ -619,6 +619,13 @@
         console.log('📍 URL actual:', window.location.href);
         console.log('🎯 Elemento dashboard existe:', !!document.getElementById('dashboard'));
         console.log('🎯 Elemento inventorySection existe:', !!document.getElementById('inventorySection'));
+
+        // Verificar si estamos en la página correcta
+        if (window.location.href.includes('torker')) {
+            console.log('✅ Estamos en la página de Torker');
+        } else {
+            console.log('❌ NO estamos en la página de Torker');
+        }
     </script>
 </body>
 </html>
