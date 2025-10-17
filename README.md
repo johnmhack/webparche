@@ -1,5 +1,5 @@
 # Parche - Plataforma para Motociclistas
-# Test persistencia PostgreSQL - cambio pequeño
+# Test push - Verificación de sincronización con GitHub
 
 ## 📁 Estructura del Proyecto
 
