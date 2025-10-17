@@ -187,12 +187,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Servir archivos estáticos en desarrollo
-import os
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, '..', 'assets'),
-    os.path.join(BASE_DIR, '..', 'pages'),
-]
+# STATICFILES_DIRS vacío para evitar warnings en producción
+STATICFILES_DIRS = []
 
 # Media files
 MEDIA_URL = '/media/'

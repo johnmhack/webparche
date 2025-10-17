@@ -20,6 +20,7 @@ router.register(r'work-orders', views.WorkOrderViewSet)
 router.register(r'quotations', views.QuotationViewSet)
 
 # Facturación DIAN
+router.register(r'electronic-invoices', views.ElectronicInvoiceViewSet)
 router.register(r'invoices', views.InvoiceViewSet)
 router.register(r'credit-notes', views.CreditNoteViewSet)
 router.register(r'debit-notes', views.DebitNoteViewSet)

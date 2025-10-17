@@ -341,6 +341,7 @@ class Customer(models.Model):
     class Meta:
         db_table = 'customers'
         unique_together = ['workshop', 'document_type', 'document_number']  # Un cliente único por taller
+        ordering = ['-updated_at']
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.get_document_type_display()} {self.document_number}"
