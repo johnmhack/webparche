@@ -544,12 +544,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const moduleButtons = document.querySelectorAll('.module-card .btn');
     moduleButtons.forEach(button => {
         button.addEventListener('click', function() {
-            const moduleName = this.parentElement.querySelector('h3').textContent.replace(/[^\w\s]/g, '').trim();
+            const moduleCard = this.closest('.module-card');
+            const moduleTitle = moduleCard.querySelector('h3').textContent.trim();
+            console.log('Botón clickeado:', moduleTitle); // Debug
+
             // Verificar si es el módulo de Inventario
-            if (moduleName.includes('Inventario')) {
+            if (moduleTitle.includes('Inventario')) {
+                console.log('Abriendo módulo Inventario'); // Debug
                 showInventory();
             } else {
-                openModule(moduleName);
+                console.log('Módulo en desarrollo:', moduleTitle); // Debug
+                openModule(moduleTitle);
             }
         });
     });
@@ -942,6 +947,7 @@ let filteredParts = [];
 
 // Mostrar sección de inventario
 function showInventory() {
+    console.log('Función showInventory ejecutada'); // Debug
     document.getElementById('dashboard').classList.add('hidden');
     document.getElementById('inventorySection').classList.remove('hidden');
     document.getElementById('invoicesSection').classList.add('hidden');
