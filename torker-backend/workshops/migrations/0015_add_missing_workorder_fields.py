@@ -7,7 +7,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('workshops', '0014_fix_vehicle_column'),
+        ('workshops', '0013_quotation_quotationitem_workorderitem_and_more'),
     ]
 
     operations = [
