@@ -1282,4 +1282,266 @@ button:focus, a:focus, input:focus, textarea:focus, select:focus {
     .form-row {
         grid-template-columns: 1fr;
     }
+/* Sección de Inventario */
+.inventory-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.inventory-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    align-items: center;
+    background: var(--deeper-dark-blue);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 2px solid var(--neon-blue);
+}
+
+.parts-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.part-card {
+    background: var(--deeper-dark-blue);
+    border: 2px solid var(--neon-blue);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.part-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 24px var(--neon-blue);
+    border-color: var(--neon-green);
+}
+
+.part-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+}
+
+.part-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.part-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--neon-green);
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.part-code {
+    color: var(--surface-variant);
+    font-size: 0.9rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.part-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.part-status.low-stock {
+    background: var(--neon-pink);
+    color: var(--surface);
+}
+
+.part-status.normal-stock {
+    background: var(--neon-green);
+    color: var(--dark-blue);
+}
+
+.part-status.over-stock {
+    background: var(--neon-orange);
+    color: var(--dark-blue);
+}
+
+.part-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.part-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(0, 194, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 194, 255, 0.1);
+}
+
+.detail-label {
+    font-size: 0.85rem;
+    color: var(--surface-variant);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-size: 0.9rem;
+    color: var(--surface);
+    font-weight: 500;
+}
+
+.detail-value.low-stock {
+    color: var(--neon-pink);
+    font-weight: 700;
+}
+
+.part-description {
+    color: var(--surface-variant);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(0, 194, 255, 0.03);
+    border-radius: 8px;
+    border-left: 3px solid var(--neon-blue);
+}
+
+.part-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    min-height: 36px;
+}
+
+.btn-danger {
+    background: linear-gradient(90deg, var(--neon-pink), #ff4757);
+    color: var(--surface);
+    border: 2px solid var(--neon-pink);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(90deg, #ff4757, var(--neon-pink));
+    box-shadow: 0 0 16px var(--neon-pink);
+    border-color: #ff4757;
+}
+
+/* Modal grande para formularios */
+.large-modal .modal-content {
+    max-width: 800px;
+    width: 95%;
+}
+
+.part-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--neon-blue);
+}
+
+/* Responsive para inventario */
+@media (max-width: 768px) {
+    .inventory-filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-group label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--neon-blue);
+    }
+
+    .part-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .part-details {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .part-actions {
+        flex-direction: column;
+    }
+
+    .part-actions .btn {
+        width: 100%;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    .large-modal .modal-content {
+        max-width: 95%;
+        margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .inventory-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .part-card {
+        padding: 1rem;
+    }
+
+    .part-info h3 {
+        font-size: 1.1rem;
+    }
+
+    .part-description {
+        font-size: 0.85rem;
+        padding: 0.75rem;
+    }
+}
 }

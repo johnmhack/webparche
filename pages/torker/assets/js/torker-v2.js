@@ -927,4 +927,402 @@ async function handleCreateInvoice(event) {
         console.error('Error creating invoice:', error);
         showNotification('Error de conexión', 'error');
     }
+// ====================
+// FUNCIONES DE INVENTARIO
+// ====================
+
+// Variables para inventario
+let currentParts = [];
+let filteredParts = [];
+
+// Mostrar sección de inventario
+function showInventory() {
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('inventorySection').classList.remove('hidden');
+    document.getElementById('invoicesSection').classList.add('hidden');
+    loadParts();
+}
+
+// Ocultar sección de inventario y volver al dashboard
+function showDashboard() {
+    document.getElementById('inventorySection').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+}
+
+// Cargar lista de repuestos
+async function loadParts() {
+    try {
+        const response = await apiRequest('/spare-parts/');
+        if (response.ok) {
+            currentParts = await response.json();
+            filteredParts = [...currentParts];
+            renderParts(filteredParts);
+            updateInventoryStats();
+        } else {
+            showNotification('Error al cargar repuestos', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading parts:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Actualizar estadísticas del inventario
+function updateInventoryStats() {
+    const totalParts = currentParts.length;
+    const lowStockParts = currentParts.filter(part => part.is_low_stock).length;
+    const totalValue = currentParts.reduce((sum, part) => sum + (part.stock_quantity * part.unit_cost), 0);
+    const categories = new Set(currentParts.map(part => part.category)).size;
+
+    document.getElementById('totalParts').textContent = totalParts;
+    document.getElementById('lowStockParts').textContent = lowStockParts;
+    document.getElementById('totalValue').textContent = `$${totalValue.toLocaleString('es-CO')}`;
+    document.getElementById('totalCategories').textContent = categories;
+
+    // Cambiar color del stock bajo si hay alertas
+    const lowStockElement = document.getElementById('lowStockParts');
+    if (lowStockParts > 0) {
+        lowStockElement.style.color = 'var(--neon-pink)';
+        lowStockElement.style.textShadow = '0 0 8px var(--neon-pink)';
+    } else {
+        lowStockElement.style.color = 'var(--neon-green)';
+        lowStockElement.style.textShadow = '0 0 8px var(--neon-green)';
+    }
+}
+
+// Renderizar repuestos en la interfaz
+function renderParts(parts) {
+    const container = document.getElementById('partsList');
+
+    if (parts.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: var(--surface-variant);">
+                <i class='bx bx-package' style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p>No se encontraron repuestos</p>
+                <p>Agrega tu primer repuesto haciendo clic en "Agregar Repuesto"</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = parts.map(part => {
+        const stockStatus = getStockStatus(part);
+        const profitMargin = part.profit_margin ? `${part.profit_margin.toFixed(1)}%` : 'N/A';
+
+        return `
+            <div class="part-card" data-id="${part.id}">
+                <div class="part-header">
+                    <div class="part-info">
+                        <h3 class="part-name">${part.name}</h3>
+                        <p class="part-code">${part.internal_code || part.part_number || 'Sin código'}</p>
+                    </div>
+                    <div class="part-status ${stockStatus.class}">
+                        ${stockStatus.text}
+                    </div>
+                </div>
+
+                <div class="part-details">
+                    <div class="part-detail-item">
+                        <span class="detail-label">Categoría:</span>
+                        <span class="detail-value">${getCategoryDisplay(part.category)}</span>
+                    </div>
+                    <div class="part-detail-item">
+                        <span class="detail-label">Marca:</span>
+                        <span class="detail-value">${part.brand || 'N/A'}</span>
+                    </div>
+                    <div class="part-detail-item">
+                        <span class="detail-label">Stock:</span>
+                        <span class="detail-value ${part.is_low_stock ? 'low-stock' : ''}">${part.stock_quantity} unidades</span>
+                    </div>
+                    <div class="part-detail-item">
+                        <span class="detail-label">Precio:</span>
+                        <span class="detail-value">$${part.sale_price.toLocaleString('es-CO')}</span>
+                    </div>
+                    <div class="part-detail-item">
+                        <span class="detail-label">Margen:</span>
+                        <span class="detail-value">${profitMargin}</span>
+                    </div>
+                    <div class="part-detail-item">
+                        <span class="detail-label">Ubicación:</span>
+                        <span class="detail-value">${part.location || 'N/A'}</span>
+                    </div>
+                </div>
+
+                <div class="part-description">
+                    ${part.description || 'Sin descripción'}
+                </div>
+
+                <div class="part-actions">
+                    <button class="btn btn-outline btn-sm" onclick="viewPartDetails(${part.id})">
+                        <i class='bx bx-show'></i>
+                        Ver
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="editPart(${part.id})">
+                        <i class='bx bx-edit'></i>
+                        Editar
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="deletePart(${part.id})">
+                        <i class='bx bx-trash'></i>
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Obtener estado del stock
+function getStockStatus(part) {
+    if (part.stock_quantity <= part.min_stock_level) {
+        return { class: 'low-stock', text: 'Stock Bajo' };
+    } else if (part.stock_quantity > part.max_stock_level) {
+        return { class: 'over-stock', text: 'Sobre Stock' };
+    } else {
+        return { class: 'normal-stock', text: 'Stock Normal' };
+    }
+}
+
+// Obtener nombre de categoría
+function getCategoryDisplay(category) {
+    const categories = {
+        'motor': 'Motor',
+        'transmision': 'Transmisión',
+        'frenos': 'Frenos',
+        'suspension': 'Suspensión',
+        'electrico': 'Sistema Eléctrico',
+        'carroceria': 'Carrocería',
+        'accesorios': 'Accesorios',
+        'lubricantes': 'Lubricantes',
+        'filtros': 'Filtros',
+        'neumaticos': 'Neumáticos',
+        'other': 'Otro'
+    };
+    return categories[category] || category;
+}
+
+// Filtrar repuestos
+function filterParts() {
+    const searchTerm = document.getElementById('inventorySearch').value.toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const stockFilter = document.getElementById('stockFilter').value;
+
+    filteredParts = currentParts.filter(part => {
+        // Filtro de búsqueda
+        const matchesSearch = !searchTerm ||
+            part.name.toLowerCase().includes(searchTerm) ||
+            (part.internal_code && part.internal_code.toLowerCase().includes(searchTerm)) ||
+            (part.part_number && part.part_number.toLowerCase().includes(searchTerm)) ||
+            (part.brand && part.brand.toLowerCase().includes(searchTerm)) ||
+            (part.description && part.description.toLowerCase().includes(searchTerm));
+
+        // Filtro de categoría
+        const matchesCategory = !categoryFilter || part.category === categoryFilter;
+
+        // Filtro de stock
+        let matchesStock = true;
+        if (stockFilter) {
+            if (stockFilter === 'low') {
+                matchesStock = part.is_low_stock;
+            } else if (stockFilter === 'normal') {
+                matchesStock = !part.is_low_stock && part.stock_quantity <= part.max_stock_level;
+            } else if (stockFilter === 'over') {
+                matchesStock = part.stock_quantity > part.max_stock_level;
+            }
+        }
+
+        return matchesSearch && matchesCategory && matchesStock;
+    });
+
+    sortParts();
+}
+
+// Ordenar repuestos
+function sortParts() {
+    const sortBy = document.getElementById('sortBy').value;
+
+    filteredParts.sort((a, b) => {
+        switch (sortBy) {
+            case 'name':
+                return a.name.localeCompare(b.name);
+            case 'category':
+                return a.category.localeCompare(b.category);
+            case 'stock':
+                return b.stock_quantity - a.stock_quantity;
+            case 'price':
+                return b.sale_price - a.sale_price;
+            default:
+                return 0;
+        }
+    });
+
+    renderParts(filteredParts);
+}
+
+// Mostrar modal para agregar repuesto
+function showAddPartModal() {
+    document.getElementById('partModalTitle').innerHTML = "<i class='bx bx-plus'></i> Agregar Repuesto";
+    document.getElementById('submitBtnText').textContent = "Guardar Repuesto";
+    document.getElementById('partId').value = '';
+    document.getElementById('partModal').classList.remove('hidden');
+    document.querySelector('.part-form').reset();
+}
+
+// Mostrar modal para editar repuesto
+function editPart(partId) {
+    const part = currentParts.find(p => p.id === partId);
+    if (!part) return;
+
+    document.getElementById('partModalTitle').innerHTML = "<i class='bx bx-edit'></i> Editar Repuesto";
+    document.getElementById('submitBtnText').textContent = "Actualizar Repuesto";
+    document.getElementById('partId').value = part.id;
+
+    // Llenar formulario con datos del repuesto
+    document.getElementById('partName').value = part.name || '';
+    document.getElementById('partNumber').value = part.part_number || '';
+    document.getElementById('internalCode').value = part.internal_code || '';
+    document.getElementById('brand').value = part.brand || '';
+    document.getElementById('description').value = part.description || '';
+    document.getElementById('category').value = part.category || '';
+    document.getElementById('vehicleType').value = part.applicable_vehicle_types || 'motorcycle';
+    document.getElementById('stockQuantity').value = part.stock_quantity || 0;
+    document.getElementById('minStockLevel').value = part.min_stock_level || 5;
+    document.getElementById('unitCost').value = part.unit_cost || 0;
+    document.getElementById('salePrice').value = part.sale_price || 0;
+    document.getElementById('wholesalePrice').value = part.wholesale_price || 0;
+    document.getElementById('location').value = part.location || '';
+    document.getElementById('supplier').value = part.supplier || '';
+    document.getElementById('supplierCode').value = part.supplier_code || '';
+    document.getElementById('warrantyMonths').value = part.warranty_months || 0;
+    document.getElementById('weight').value = part.weight_kg || '';
+    document.getElementById('dimensions').value = part.dimensions || '';
+    document.getElementById('notes').value = part.notes || '';
+
+    document.getElementById('partModal').classList.remove('hidden');
+}
+
+// Ocultar modal de repuesto
+function hidePartModal() {
+    document.getElementById('partModal').classList.add('hidden');
+}
+
+// Manejar envío del formulario de repuesto
+async function handlePartSubmit(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const partId = formData.get('partId');
+
+    const partData = {
+        name: formData.get('name'),
+        part_number: formData.get('part_number') || null,
+        internal_code: formData.get('internal_code'),
+        brand: formData.get('brand') || null,
+        description: formData.get('description') || null,
+        category: formData.get('category'),
+        applicable_vehicle_types: formData.get('applicable_vehicle_types'),
+        stock_quantity: parseInt(formData.get('stock_quantity')),
+        min_stock_level: parseInt(formData.get('min_stock_level')) || 5,
+        unit_cost: parseFloat(formData.get('unit_cost')),
+        sale_price: parseFloat(formData.get('sale_price')),
+        wholesale_price: formData.get('wholesale_price') ? parseFloat(formData.get('wholesale_price')) : null,
+        location: formData.get('location') || null,
+        supplier: formData.get('supplier') || null,
+        supplier_code: formData.get('supplier_code') || null,
+        warranty_months: parseInt(formData.get('warranty_months')) || 0,
+        weight_kg: formData.get('weight_kg') ? parseFloat(formData.get('weight_kg')) : null,
+        dimensions: formData.get('dimensions') || null,
+        notes: formData.get('notes') || null
+    };
+
+    // Validaciones básicas
+    if (!partData.name || !partData.internal_code || !partData.category) {
+        showNotification('Por favor completa los campos obligatorios', 'error');
+        return;
+    }
+
+    if (partData.unit_cost < 0 || partData.sale_price < 0) {
+        showNotification('Los precios no pueden ser negativos', 'error');
+        return;
+    }
+
+    if (partData.stock_quantity < 0) {
+        showNotification('El stock no puede ser negativo', 'error');
+        return;
+    }
+
+    try {
+        let response;
+        if (partId) {
+            // Actualizar repuesto existente
+            response = await apiRequest(`/spare-parts/${partId}/`, {
+                method: 'PUT',
+                body: JSON.stringify(partData)
+            });
+        } else {
+            // Crear nuevo repuesto
+            response = await apiRequest('/spare-parts/', {
+                method: 'POST',
+                body: JSON.stringify(partData)
+            });
+        }
+
+        if (response.ok) {
+            const part = await response.json();
+            showNotification(
+                partId ? 'Repuesto actualizado exitosamente' : 'Repuesto creado exitosamente',
+                'success'
+            );
+            hidePartModal();
+            event.target.reset();
+            loadParts(); // Recargar lista
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al guardar repuesto', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving part:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Ver detalles del repuesto
+function viewPartDetails(partId) {
+    const part = currentParts.find(p => p.id === partId);
+    if (!part) return;
+
+    // Por ahora mostrar notificación con información básica
+    const details = `
+        ${part.name}
+        Código: ${part.internal_code || part.part_number || 'N/A'}
+        Stock: ${part.stock_quantity} unidades
+        Precio: $${part.sale_price.toLocaleString('es-CO')}
+        Ubicación: ${part.location || 'N/A'}
+    `;
+
+    showNotification(details, 'info');
+}
+
+// Eliminar repuesto
+async function deletePart(partId) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este repuesto? Esta acción no se puede deshacer.')) {
+        return;
+    }
+
+    try {
+        const response = await apiRequest(`/spare-parts/${partId}/`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            showNotification('Repuesto eliminado exitosamente', 'success');
+            loadParts(); // Recargar lista
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Error al eliminar repuesto', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting part:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
 }
