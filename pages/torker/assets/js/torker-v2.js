@@ -545,7 +545,12 @@ document.addEventListener('DOMContentLoaded', function() {
     moduleButtons.forEach(button => {
         button.addEventListener('click', function() {
             const moduleName = this.parentElement.querySelector('h3').textContent.replace(/[^\w\s]/g, '').trim();
-            openModule(moduleName);
+            // Verificar si es el módulo de Inventario
+            if (moduleName.includes('Inventario')) {
+                showInventory();
+            } else {
+                openModule(moduleName);
+            }
         });
     });
 });
