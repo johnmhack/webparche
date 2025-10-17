@@ -614,8 +614,8 @@
     <script src="../../assets/js/components.js"></script>
     <script src="assets/js/torker-v2.js"></script>
     <script>
-        // Debug adicional
-        console.log('🔍 HTML completamente cargado');
+        // Debug adicional - FORZADO PARA QUE APAREZCA
+        console.log('🔥🔥🔥 DEBUG FORZADO - HTML CARGADO 🔥🔥🔥');
         console.log('📍 URL actual:', window.location.href);
         console.log('🎯 Elemento dashboard existe:', !!document.getElementById('dashboard'));
         console.log('🎯 Elemento inventorySection existe:', !!document.getElementById('inventorySection'));
@@ -624,7 +624,15 @@
         if (window.location.href.includes('torker')) {
             console.log('✅ Estamos en la página de Torker');
         } else {
-            console.log('❌ NO estamos en la página de Torker');
+            console.log('❌ NO estamos en la página de Torker - POSIBLE ERROR DE URL');
+        }
+
+        // Verificar elementos críticos
+        const inventoryButton = document.querySelector('.module-card .btn[onclick*="showInventory"]');
+        console.log('🎯 Botón Inventario encontrado:', !!inventoryButton);
+        if (inventoryButton) {
+            console.log('🎯 Texto del botón:', inventoryButton.textContent.trim());
+            console.log('🎯 onclick del botón:', inventoryButton.getAttribute('onclick'));
         }
     </script>
 </body>
