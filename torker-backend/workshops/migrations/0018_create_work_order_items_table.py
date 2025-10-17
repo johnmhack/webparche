@@ -12,34 +12,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='WorkOrderItem',
-            fields=[
-                ('id', models.UUIDField(default=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True), editable=False, primary_key=True)),
-                ('item_type', models.CharField(choices=[('service', 'Servicio'), ('part', 'Repuesto'), ('labor', 'Mano de Obra'), ('other', 'Otro')], default='service', max_length=10)),
-                ('description', models.TextField(help_text='Descripción detallada del ítem')),
-                ('part_number', models.CharField(blank=True, help_text='Número de parte o código', max_length=100)),
-                ('service_quantity', models.DecimalField(decimal_places=2, default=1, help_text='Cantidad de servicios (horas)', max_digits=6)),
-                ('part_quantity', models.IntegerField(default=1, help_text='Cantidad de repuestos')),
-                ('service_unit_price', models.DecimalField(decimal_places=2, default=0, help_text='Precio por hora de servicio', max_digits=10)),
-                ('part_unit_price', models.DecimalField(decimal_places=2, default=0, help_text='Precio unitario del repuesto', max_digits=10)),
-                ('labor_cost', models.DecimalField(decimal_places=2, default=0, help_text='Costo total de mano de obra', max_digits=12)),
-                ('parts_cost', models.DecimalField(decimal_places=2, default=0, help_text='Costo total de repuestos', max_digits=12)),
-                ('total_cost', models.DecimalField(decimal_places=2, default=0, help_text='Costo total del ítem', max_digits=12)),
-                ('estimated_time_hours', models.DecimalField(decimal_places=2, default=0, help_text='Tiempo estimado en horas', max_digits=4)),
-                ('actual_time_hours', models.DecimalField(decimal_places=2, default=0, help_text='Tiempo real en horas', max_digits=4)),
-                ('status', models.CharField(choices=[('pending', 'Pendiente'), ('in_progress', 'En Progreso'), ('completed', 'Completado'), ('cancelled', 'Cancelado')], default='pending', max_length=15)),
-                ('notes', models.TextField(blank=True, help_text='Notas adicionales del ítem')),
-                ('inventory_updated', models.BooleanField(default=False, help_text='Si el inventario ya fue actualizado')),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('part', models.ForeignKey(blank=True, help_text='Repuesto utilizado', null=True, on_delete=models.SET_NULL, related_name='work_order_items', to='workshops.sparepart')),
-                ('service', models.ForeignKey(blank=True, help_text='Servicio realizado', null=True, on_delete=models.SET_NULL, related_name='work_order_items', to='workshops.service')),
-                ('work_order', models.ForeignKey(on_delete=models.CASCADE, related_name='details', to='workshops.workorder')),
-            ],
-            options={
-                'db_table': 'work_order_items',
-                'ordering': ['created_at'],
-            },
-        ),
+        # La tabla work_order_items ya fue creada en despliegues anteriores
+        # Esta migración se deja vacía para evitar conflictos
     ]
