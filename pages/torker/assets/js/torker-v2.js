@@ -1,6 +1,8 @@
 // Torker - Sistema de Gestión de Talleres
 // JavaScript para funcionalidad de login, registro y dashboard
 
+console.log('🚀 Torker JavaScript cargado correctamente');
+
 // Estado de la aplicación
 let currentUser = null;
 let isAuthenticated = false;
@@ -541,29 +543,36 @@ function openModule(moduleName) {
 
 // Agregar event listeners a los botones de módulos
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 DOM cargado, configurando event listeners de módulos');
+
     const moduleButtons = document.querySelectorAll('.module-card .btn');
-    moduleButtons.forEach(button => {
+    console.log('📊 Encontrados', moduleButtons.length, 'botones de módulo');
+
+    moduleButtons.forEach((button, index) => {
         button.addEventListener('click', function(event) {
+            const moduleCard = this.closest('.module-card');
+            const moduleTitle = moduleCard.querySelector('h3').textContent.trim();
+
+            console.log('🖱️ Botón #' + index + ' clickeado:', moduleTitle);
+
             // Si el botón ya tiene onclick, no interferir
             if (this.hasAttribute('onclick')) {
-                console.log('Botón con onclick directo, no interferir'); // Debug
+                console.log('✅ Botón con onclick directo, ejecutando acción directa');
                 return;
             }
 
-            const moduleCard = this.closest('.module-card');
-            const moduleTitle = moduleCard.querySelector('h3').textContent.trim();
-            console.log('Botón clickeado:', moduleTitle); // Debug
-
             // Verificar si es el módulo de Inventario
             if (moduleTitle.includes('Inventario')) {
-                console.log('Abriendo módulo Inventario'); // Debug
+                console.log('🎯 Detectado módulo Inventario, ejecutando showInventory()');
                 showInventory();
             } else {
-                console.log('Módulo en desarrollo:', moduleTitle); // Debug
+                console.log('⚠️ Módulo en desarrollo:', moduleTitle);
                 openModule(moduleTitle);
             }
         });
     });
+
+    console.log('✅ Event listeners de módulos configurados');
 });
 
 // Función para agregar efectos de partículas al fondo (opcional)
@@ -953,10 +962,17 @@ let filteredParts = [];
 
 // Mostrar sección de inventario
 function showInventory() {
-    console.log('Función showInventory ejecutada'); // Debug
+    console.log('🎯 Función showInventory ejecutada - Abriendo módulo Inventario');
+
+    // Ocultar otras secciones
     document.getElementById('dashboard').classList.add('hidden');
-    document.getElementById('inventorySection').classList.remove('hidden');
     document.getElementById('invoicesSection').classList.add('hidden');
+
+    // Mostrar sección de inventario
+    const inventorySection = document.getElementById('inventorySection');
+    inventorySection.classList.remove('hidden');
+
+    console.log('📦 Sección de inventario mostrada, cargando partes...');
     loadParts();
 }
 
