@@ -313,7 +313,6 @@ async function showAgenda() {
         ]);
 
         renderCalendar();
-        showNotification('Módulo de Agenda activado', 'info');
     } else {
         console.error('❌ Dashboard - Elemento agendaSection no encontrado');
         showNotification('Error: Sección de agenda no encontrada', 'error');
@@ -877,7 +876,7 @@ async function showInvoices() {
             loadCompletedWorkOrders()
         ]);
 
-        showNotification('Módulo de Facturación Electrónica DIAN activado', 'info');
+        // showNotification('Módulo de Facturación Electrónica DIAN activado', 'info');
     } catch (error) {
         console.error('Error al mostrar módulo de facturas:', error);
         // No mostrar notificación de error aquí para evitar popup
@@ -957,7 +956,7 @@ async function showInventory() {
             loadParts()
         ]);
 
-        showNotification('Módulo de Inventario activado', 'info');
+        // showNotification('Módulo de Inventario activado', 'info');
     } else {
         console.error('❌ Dashboard - Elemento inventorySection no encontrado');
         showNotification('Error: Sección de inventario no encontrada', 'error');
@@ -1361,7 +1360,7 @@ async function showWorkOrders() {
         loadMechanicsForFilter()
     ]);
 
-    showNotification('Módulo de Órdenes de Trabajo activado', 'info');
+    // showNotification('Módulo de Órdenes de Trabajo activado', 'info');
 }
 
 // Cargar lista de órdenes de trabajo
@@ -1795,7 +1794,7 @@ async function showCustomers() {
         loadCustomers()
     ]);
 
-    showNotification('Módulo de Clientes activado', 'info');
+    // showNotification('Módulo de Clientes activado', 'info');
 }
 
 // Cargar lista de clientes
