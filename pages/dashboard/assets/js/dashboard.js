@@ -858,13 +858,23 @@ function openModule(moduleName) {
 let currentInvoices = [];
 
 // Mostrar sección de facturas DIAN
-function showInvoices() {
-    document.getElementById('dashboard').classList.add('hidden');
-    document.getElementById('invoicesSection').classList.remove('hidden');
-    loadInvoices();
-    loadCustomersForInvoice();
-    loadCompletedWorkOrders();
-    showNotification('Módulo de Facturación Electrónica DIAN activado', 'info');
+async function showInvoices() {
+    try {
+        document.getElementById('dashboard').classList.add('hidden');
+        document.getElementById('invoicesSection').classList.remove('hidden');
+
+        // Cargar datos de forma asíncrona y silenciosa
+        await Promise.allSettled([
+            loadInvoices(),
+            loadCustomersForInvoice(),
+            loadCompletedWorkOrders()
+        ]);
+
+        showNotification('Módulo de Facturación Electrónica DIAN activado', 'info');
+    } catch (error) {
+        console.error('Error al mostrar módulo de facturas:', error);
+        // No mostrar notificación de error aquí para evitar popup
+    }
 }
 
 // Ocultar sección de facturas y volver al dashboard
@@ -891,11 +901,21 @@ async function loadInvoices() {
             currentInvoices = await response.json();
             renderInvoices(currentInvoices);
         } else {
-            showNotification('Error al cargar facturas electrónicas', 'error');
+            console.error('Error loading electronic invoices:', response.status, response.statusText);
+            if (response.status === 401) {
+                showNotification('Sesión expirada. Recargando página...', 'warning');
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                // Solo mostrar error si no es un error de red o conexión
+                if (response.status >= 500) {
+                    showNotification('Error al cargar facturas electrónicas', 'error');
+                }
+            }
         }
     } catch (error) {
         console.error('Error loading electronic invoices:', error);
-        showNotification('Error de conexión', 'error');
+        // No mostrar notificación de error de conexión al cargar inicialmente
+        // Solo mostrar si es un error crítico
     }
 }
 
@@ -2219,13 +2239,16 @@ async function loadCustomersForInvoice() {
         if (response.ok) {
             const customers = await response.json();
             const select = document.getElementById('invoiceCustomer');
-            select.innerHTML = '<option value="">Seleccionar cliente...</option>' +
-                customers.map(customer =>
-                    `<option value="${customer.id}">${customer.first_name} ${customer.last_name}</option>`
-                ).join('');
+            if (select) {
+                select.innerHTML = '<option value="">Seleccionar cliente...</option>' +
+                    customers.map(customer =>
+                        `<option value="${customer.id}">${customer.first_name} ${customer.last_name}</option>`
+                    ).join('');
+            }
         }
     } catch (error) {
         console.error('Error loading customers:', error);
+        // No mostrar notificación de error aquí
     }
 }
 
@@ -2237,13 +2260,16 @@ async function loadCompletedWorkOrders() {
             const workOrders = await response.json();
             const completedOrders = workOrders.filter(wo => wo.status === 'completed' && !wo.invoice);
             const select = document.getElementById('invoiceWorkOrder');
-            select.innerHTML = '<option value="">Sin orden de trabajo</option>' +
-                completedOrders.map(wo =>
-                    `<option value="${wo.id}">OT-${wo.order_number} - ${wo.customer_name}</option>`
-                ).join('');
+            if (select) {
+                select.innerHTML = '<option value="">Sin orden de trabajo</option>' +
+                    completedOrders.map(wo =>
+                        `<option value="${wo.id}">OT-${wo.order_number} - ${wo.customer_name}</option>`
+                    ).join('');
+            }
         }
     } catch (error) {
         console.error('Error loading work orders:', error);
+        // No mostrar notificación de error aquí
     }
 }
 
