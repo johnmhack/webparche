@@ -141,7 +141,8 @@ class Workshop(models.Model):
 
     @property
     def is_subscription_active(self):
-        return self.subscription_expires >= timezone.now() and self.is_active
+        """Verificar si la suscripción está activa"""
+        return self.subscription_expires >= timezone.now().date() and self.is_active
 
 
 class Mechanic(models.Model):
