@@ -313,6 +313,7 @@ async function showAgenda() {
         ]);
 
         renderCalendar();
+        showNotification('Módulo de Agenda activado', 'info');
     } else {
         console.error('❌ Dashboard - Elemento agendaSection no encontrado');
         showNotification('Error: Sección de agenda no encontrada', 'error');
