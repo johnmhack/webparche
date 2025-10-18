@@ -292,30 +292,41 @@ let calendarView = 'month'; // 'month', 'week', 'day'
 async function showAgenda() {
     console.log('🎯 Dashboard - Función showAgenda ejecutada - Abriendo módulo Agenda');
 
-    // Ocultar otras secciones
-    document.getElementById('dashboard').classList.add('hidden');
-    document.getElementById('invoicesSection').classList.add('hidden');
-    document.getElementById('customersSection').classList.add('hidden');
-    document.getElementById('inventorySection').classList.add('hidden');
-    document.getElementById('workOrdersSection').classList.add('hidden');
+    try {
+        // Ocultar otras secciones
+        document.getElementById('dashboard').classList.add('hidden');
+        document.getElementById('invoicesSection').classList.add('hidden');
+        document.getElementById('customersSection').classList.add('hidden');
+        document.getElementById('inventorySection').classList.add('hidden');
+        document.getElementById('workOrdersSection').classList.add('hidden');
 
-    // Mostrar sección de agenda
-    const agendaSection = document.getElementById('agendaSection');
-    if (agendaSection) {
-        agendaSection.classList.remove('hidden');
-        console.log('📅 Dashboard - Sección de agenda mostrada, cargando datos...');
+        // Mostrar sección de agenda
+        const agendaSection = document.getElementById('agendaSection');
+        console.log('🔍 Dashboard - Verificando elemento agendaSection:', agendaSection);
 
-        // Cargar datos de forma asíncrona y silenciosa
-        await Promise.allSettled([
-            loadServiceTypes(),
-            loadAppointments()
-        ]);
+        if (agendaSection) {
+            agendaSection.classList.remove('hidden');
+            console.log('📅 Dashboard - Sección de agenda mostrada, cargando datos...');
 
-        renderCalendar();
-        showNotification('Módulo de Agenda activado', 'info');
-    } else {
-        console.error('❌ Dashboard - Elemento agendaSection no encontrado');
-        showNotification('Error: Sección de agenda no encontrada', 'error');
+            // Cargar datos de forma asíncrona y silenciosa
+            await Promise.allSettled([
+                loadServiceTypes(),
+                loadAppointments()
+            ]);
+
+            console.log('📅 Dashboard - Datos cargados, renderizando calendario...');
+            renderCalendar();
+
+            console.log('📅 Dashboard - Calendario renderizado, mostrando notificación...');
+            showNotification('Módulo de Agenda activado', 'info');
+            console.log('✅ Dashboard - Notificación de Agenda mostrada exitosamente');
+        } else {
+            console.error('❌ Dashboard - Elemento agendaSection no encontrado');
+            showNotification('Error: Sección de agenda no encontrada', 'error');
+        }
+    } catch (error) {
+        console.error('❌ Dashboard - Error en showAgenda():', error);
+        showNotification('Error al abrir módulo de Agenda', 'error');
     }
 }
 
