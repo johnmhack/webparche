@@ -1060,14 +1060,35 @@ class DianResolution(models.Model):
             return 'ok'
 
     def get_next_number(self):
-        """Obtener siguiente número disponible"""
+        """
+        Obtener siguiente número disponible (thread-safe)
+        Usa select_for_update para prevenir race conditions
+        """
+        from django.db import transaction
+        from django.db.models import F
+        
         if not self.is_valid:
             raise ValueError("La resolución no está vigente")
         if self.current_number >= self.to_number:
             raise ValueError("No hay números disponibles en esta resolución")
 
-        self.current_number += 1
-        self.save()
+        # Usar transacción atómica con lock para prevenir race conditions
+        with transaction.atomic():
+            # Bloquear el registro para actualización
+            resolution = DianResolution.objects.select_for_update().get(id=self.id)
+            
+            # Verificar nuevamente después del lock
+            if resolution.current_number >= resolution.to_number:
+                raise ValueError("No hay números disponibles en esta resolución")
+            
+            # Incrementar usando F() para operación atómica en BD
+            DianResolution.objects.filter(id=self.id).update(
+                current_number=F('current_number') + 1
+            )
+            
+            # Refrescar instancia con nuevo valor
+            self.refresh_from_db()
+            
         return f"{self.prefix}{self.current_number:04d}"
 
     def validate_invoice_number(self, invoice_number: str) -> bool:

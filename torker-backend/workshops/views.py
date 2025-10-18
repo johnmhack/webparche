@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
+from django.db import transaction
 from .models import (
     User, Workshop, Customer, Vehicle, Mechanic,
     Service, SparePart, WorkOrder, WorkOrderItem, WorkOrderStatusLog,
@@ -196,7 +197,19 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
     queryset = WorkOrder.objects.all()
 
     def get_queryset(self):
-        return WorkOrder.objects.filter(workshop=self.request.user.workshop)
+        """Optimizar queries con select_related y prefetch_related"""
+        return WorkOrder.objects.filter(
+            workshop=self.request.user.workshop
+        ).select_related(
+            'customer',
+            'vehicle',
+            'assigned_mechanic',
+            'workshop'
+        ).prefetch_related(
+            'details__service',
+            'details__part',
+            'status_logs__changed_by'
+        )
 
     def perform_create(self, serializer):
         serializer.save(workshop=self.request.user.workshop)
@@ -253,19 +266,27 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def overdue(self, request):
-        """Obtener órdenes de trabajo atrasadas"""
+        """Obtener órdenes de trabajo atrasadas (con paginación)"""
         work_orders = self.get_queryset().filter(is_overdue=True)
+        page = self.paginate_queryset(work_orders)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(work_orders, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def by_status(self, request):
-        """Obtener órdenes de trabajo por estado"""
+        """Obtener órdenes de trabajo por estado (con paginación)"""
         status_filter = request.query_params.get('status')
         if status_filter:
             work_orders = self.get_queryset().filter(status=status_filter)
         else:
             work_orders = self.get_queryset()
+        page = self.paginate_queryset(work_orders)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(work_orders, many=True)
         return Response(serializer.data)
 
@@ -276,7 +297,18 @@ class QuotationViewSet(viewsets.ModelViewSet):
     queryset = Quotation.objects.all()
 
     def get_queryset(self):
-        return Quotation.objects.filter(workshop=self.request.user.workshop)
+        """Optimizar queries con select_related y prefetch_related"""
+        return Quotation.objects.filter(
+            workshop=self.request.user.workshop
+        ).select_related(
+            'customer',
+            'vehicle',
+            'workshop',
+            'converted_to_work_order'
+        ).prefetch_related(
+            'items__service',
+            'items__part'
+        )
 
     def perform_create(self, serializer):
         serializer.save(workshop=self.request.user.workshop)
@@ -362,7 +394,18 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     queryset = Appointment.objects.all()
 
     def get_queryset(self):
-        return Appointment.objects.filter(workshop=self.request.user.workshop)
+        """Optimizar queries con select_related"""
+        return Appointment.objects.filter(
+            workshop=self.request.user.workshop
+        ).select_related(
+            'customer',
+            'vehicle',
+            'assigned_mechanic',
+            'service_type',
+            'workshop',
+            'converted_to_work_order',
+            'created_by'
+        )
 
     def perform_create(self, serializer):
         serializer.save(workshop=self.request.user.workshop, created_by=self.request.user)
@@ -409,12 +452,16 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def today(self, request):
-        """Obtener citas de hoy"""
+        """Obtener citas de hoy (con paginación)"""
         today = timezone.now().date()
         appointments = self.get_queryset().filter(
             appointment_date=today
         ).order_by('start_time')
 
+        page = self.paginate_queryset(appointments)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(appointments, many=True)
         return Response(serializer.data)
 
@@ -554,6 +601,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         serializer.save(workshop=workshop)
 
     @action(detail=False, methods=['post'])
+    @transaction.atomic
     def create_from_work_order(self, request):
         """Crear factura desde una orden de trabajo completada"""
         work_order_id = request.data.get('work_order_id')
@@ -857,7 +905,17 @@ class ElectronicInvoiceViewSet(viewsets.ModelViewSet):
     queryset = ElectronicInvoice.objects.all()
 
     def get_queryset(self):
-        return ElectronicInvoice.objects.filter(workshop=self.request.user.workshop)
+        """Optimizar queries con select_related y prefetch_related"""
+        return ElectronicInvoice.objects.filter(
+            workshop=self.request.user.workshop
+        ).select_related(
+            'customer',
+            'workshop',
+            'work_order',
+            'dian_resolution'
+        ).prefetch_related(
+            'details__part'
+        )
 
     def perform_create(self, serializer):
         serializer.save(workshop=self.request.user.workshop)
@@ -922,6 +980,7 @@ class ElectronicInvoiceViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'])
+    @transaction.atomic
     def create_from_work_order(self, request):
         """Crear factura electrónica DIAN desde una orden de trabajo completada"""
         work_order_id = request.data.get('work_order_id')
