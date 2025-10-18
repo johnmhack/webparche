@@ -349,16 +349,26 @@ async function loadServiceTypes() {
 // Cargar citas
 async function loadAppointments() {
     try {
+        console.log('📅 Dashboard - Iniciando carga de citas...');
         const response = await apiRequest('/appointments/');
         if (response.ok) {
-            currentAppointments = await response.json();
+            const data = await response.json();
+            console.log('📅 Dashboard - Citas cargadas:', data);
+
+            // Asegurar que sea un array
+            currentAppointments = Array.isArray(data) ? data : [];
+            console.log('📅 Dashboard - currentAppointments establecido como array:', currentAppointments.length, 'elementos');
+
             renderTodayAppointments();
         } else if (response.status !== 401) { // No mostrar error para 401 (se maneja automáticamente)
             console.error('Error loading appointments:', response.status, response.statusText);
-            // No mostrar notificación de error al cargar inicialmente
+            // Inicializar como array vacío en caso de error
+            currentAppointments = [];
         }
     } catch (error) {
         console.error('Error loading appointments:', error);
+        // Inicializar como array vacío en caso de error
+        currentAppointments = [];
         // Error de conexión ya se maneja en apiRequest, no mostrar popup al cargar inicialmente
     }
 }
@@ -460,7 +470,7 @@ function isSameDate(date1, date2) {
 
 function getAppointmentsForDate(date) {
     const dateStr = date.toISOString().split('T')[0];
-    return currentAppointments.filter(apt => apt.appointment_date === dateStr);
+    return Array.isArray(currentAppointments) ? currentAppointments.filter(apt => apt.appointment_date === dateStr) : [];
 }
 
 function formatTime(timeStr) {
@@ -526,8 +536,10 @@ function selectDate(dateStr) {
 
 // Renderizar citas de hoy
 function renderTodayAppointments() {
+    console.log('📅 Dashboard - Renderizando citas de hoy, currentAppointments:', currentAppointments);
     const today = new Date().toISOString().split('T')[0];
-    const todayAppointments = currentAppointments.filter(apt => apt.appointment_date === today);
+    const todayAppointments = Array.isArray(currentAppointments) ? currentAppointments.filter(apt => apt.appointment_date === today) : [];
+    console.log('📅 Dashboard - Citas de hoy encontradas:', todayAppointments.length);
 
     const container = document.getElementById('todayAppointmentsList');
 
