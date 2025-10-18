@@ -1031,7 +1031,7 @@ async function showInventory() {
         loadParts()
     ]);
 
-    // showNotification('Módulo de Inventario activado', 'info');
+    showNotification('Módulo de Inventario activado', 'info');
 }
 
 // Ocultar sección de inventario y volver al dashboard
