@@ -103,6 +103,8 @@ celerybeat.pid
 
 # Environments
 .env
+.env.local
+.env.*.local
 .venv
 env/
 venv/
@@ -138,3 +140,50 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Django Media Files (archivos subidos por usuarios)
+media/
+!media/.gitkeep
+
+# Django Static Files (archivos estáticos compilados)
+staticfiles/
+static_root/
+!staticfiles/.gitkeep
+
+# Archivos de backup
+*.bak
+*.backup
+*.old
+
+# Archivos temporales del proyecto
+*.tmp
+temp/
+tmp/
+
+# PDFs generados (excepto ejemplos)
+*.pdf
+!docs/*.pdf
+
+# Certificados y claves
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Archivos de configuración local
+local_settings.py
+settings_local.py
+config_local.py
+
+# Logs específicos del proyecto
+logs/
+*.log.*
+
+# Archivos de sesión
+sessions/
+
+# Archivos de caché
+.cache/
+cache/
