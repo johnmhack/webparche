@@ -1013,7 +1013,7 @@ let currentParts = [];
 let filteredParts = [];
 
 // Mostrar sección de inventario
-function showInventory() {
+async function showInventory() {
     console.log('🎯 Función showInventory ejecutada - Abriendo módulo Inventario');
 
     // Ocultar otras secciones
@@ -1025,7 +1025,13 @@ function showInventory() {
     inventorySection.classList.remove('hidden');
 
     console.log('📦 Sección de inventario mostrada, cargando partes...');
-    loadParts();
+
+    // Cargar datos de forma asíncrona y silenciosa
+    await Promise.allSettled([
+        loadParts()
+    ]);
+
+    showNotification('Módulo de Inventario activado', 'info');
 }
 
 // Ocultar sección de inventario y volver al dashboard
@@ -1049,12 +1055,16 @@ async function loadParts() {
                 showNotification('Sesión expirada. Recargando página...', 'warning');
                 setTimeout(() => window.location.reload(), 2000);
             } else {
-                showNotification('Error al cargar repuestos', 'error');
+                // Solo mostrar error si no es un error de red o conexión
+                if (response.status >= 500) {
+                    showNotification('Error al cargar repuestos', 'error');
+                }
             }
         }
     } catch (error) {
         console.error('Error loading parts:', error);
-        showNotification('Error de conexión al cargar repuestos', 'error');
+        // No mostrar notificación de error de conexión al cargar inicialmente
+        // Solo mostrar si es un error crítico
     }
 }
 

@@ -289,7 +289,7 @@ let currentCalendarDate = new Date();
 let calendarView = 'month'; // 'month', 'week', 'day'
 
 // Mostrar sección de agenda
-function showAgenda() {
+async function showAgenda() {
     console.log('🎯 Dashboard - Función showAgenda ejecutada - Abriendo módulo Agenda');
 
     // Ocultar otras secciones
@@ -305,8 +305,13 @@ function showAgenda() {
     if (agendaSection) {
         agendaSection.classList.remove('hidden');
         console.log('📅 Dashboard - Sección de agenda mostrada, cargando datos...');
-        loadServiceTypes();
-        loadAppointments();
+
+        // Cargar datos de forma asíncrona y silenciosa
+        await Promise.allSettled([
+            loadServiceTypes(),
+            loadAppointments()
+        ]);
+
         renderCalendar();
         showNotification('Módulo de Agenda activado', 'info');
     } else {
@@ -322,11 +327,12 @@ async function loadServiceTypes() {
         if (response.ok) {
             currentServiceTypes = await response.json();
         } else {
-            showNotification('Error al cargar tipos de servicio', 'error');
+            console.error('Error loading service types:', response.status, response.statusText);
+            // No mostrar notificación de error al cargar inicialmente
         }
     } catch (error) {
         console.error('Error loading service types:', error);
-        showNotification('Error de conexión', 'error');
+        // No mostrar notificación de error de conexión al cargar inicialmente
     }
 }
 
@@ -338,11 +344,12 @@ async function loadAppointments() {
             currentAppointments = await response.json();
             renderTodayAppointments();
         } else if (response.status !== 401) { // No mostrar error para 401 (se maneja automáticamente)
-            showNotification('Error al cargar citas', 'error');
+            console.error('Error loading appointments:', response.status, response.statusText);
+            // No mostrar notificación de error al cargar inicialmente
         }
     } catch (error) {
         console.error('Error loading appointments:', error);
-        // Error de conexión ya se maneja en apiRequest
+        // Error de conexión ya se maneja en apiRequest, no mostrar popup al cargar inicialmente
     }
 }
 
@@ -928,7 +935,7 @@ let currentParts = [];
 let filteredParts = [];
 
 // Mostrar sección de inventario
-function showInventory() {
+async function showInventory() {
     console.log('🎯 Dashboard - Función showInventory ejecutada - Abriendo módulo Inventario');
 
     // Ocultar otras secciones
@@ -938,14 +945,19 @@ function showInventory() {
     document.getElementById('customersSection').classList.add('hidden');
     document.getElementById('workOrdersSection').classList.add('hidden');
     document.getElementById('agendaSection').classList.add('hidden');
-    document.getElementById('agendaSection').classList.add('hidden');
 
     // Mostrar sección de inventario
     const inventorySection = document.getElementById('inventorySection');
     if (inventorySection) {
         inventorySection.classList.remove('hidden');
         console.log('📦 Dashboard - Sección de inventario mostrada, cargando partes...');
-        loadParts();
+
+        // Cargar datos de forma asíncrona y silenciosa
+        await Promise.allSettled([
+            loadParts()
+        ]);
+
+        showNotification('Módulo de Inventario activado', 'info');
     } else {
         console.error('❌ Dashboard - Elemento inventorySection no encontrado');
         showNotification('Error: Sección de inventario no encontrada', 'error');
@@ -962,11 +974,12 @@ async function loadParts() {
             renderParts(filteredParts);
             updateInventoryStats();
         } else if (response.status !== 401) { // No mostrar error para 401 (se maneja automáticamente)
-            showNotification('Error al cargar repuestos', 'error');
+            console.error('Error loading parts:', response.status, response.statusText);
+            // No mostrar notificación de error al cargar inicialmente
         }
     } catch (error) {
         console.error('Error loading parts:', error);
-        // Error de conexión ya se maneja en apiRequest
+        // Error de conexión ya se maneja en apiRequest, no mostrar popup al cargar inicialmente
     }
 }
 
@@ -1338,11 +1351,16 @@ let currentWorkOrders = [];
 let currentMechanics = [];
 
 // Mostrar sección de órdenes de trabajo
-function showWorkOrders() {
+async function showWorkOrders() {
     document.getElementById('dashboard').classList.add('hidden');
     document.getElementById('workOrdersSection').classList.remove('hidden');
-    loadWorkOrders();
-    loadMechanicsForFilter();
+
+    // Cargar datos de forma asíncrona y silenciosa
+    await Promise.allSettled([
+        loadWorkOrders(),
+        loadMechanicsForFilter()
+    ]);
+
     showNotification('Módulo de Órdenes de Trabajo activado', 'info');
 }
 
@@ -1354,11 +1372,12 @@ async function loadWorkOrders() {
             currentWorkOrders = await response.json();
             renderWorkOrders(currentWorkOrders);
         } else if (response.status !== 401) { // No mostrar error para 401 (se maneja automáticamente)
-            showNotification('Error al cargar órdenes de trabajo', 'error');
+            console.error('Error loading work orders:', response.status, response.statusText);
+            // No mostrar notificación de error al cargar inicialmente
         }
     } catch (error) {
         console.error('Error loading work orders:', error);
-        // Error de conexión ya se maneja en apiRequest
+        // Error de conexión ya se maneja en apiRequest, no mostrar popup al cargar inicialmente
     }
 }
 
@@ -1516,13 +1535,16 @@ async function loadMechanicsForFilter() {
         if (response.ok) {
             currentMechanics = await response.json();
             const select = document.getElementById('workOrderMechanicFilter');
-            select.innerHTML = '<option value="">Todos</option>' +
-                currentMechanics.map(mechanic =>
-                    `<option value="${mechanic.id}">${mechanic.first_name} ${mechanic.last_name}</option>`
-                ).join('');
+            if (select) {
+                select.innerHTML = '<option value="">Todos</option>' +
+                    currentMechanics.map(mechanic =>
+                        `<option value="${mechanic.id}">${mechanic.first_name} ${mechanic.last_name}</option>`
+                    ).join('');
+            }
         }
     } catch (error) {
         console.error('Error loading mechanics:', error);
+        // No mostrar notificación de error al cargar inicialmente
     }
 }
 
@@ -1764,10 +1786,16 @@ let currentCustomers = [];
 let editingCustomer = null;
 
 // Mostrar sección de clientes
-function showCustomers() {
+async function showCustomers() {
     document.getElementById('dashboard').classList.add('hidden');
     document.getElementById('customersSection').classList.remove('hidden');
-    loadCustomers();
+
+    // Cargar datos de forma asíncrona y silenciosa
+    await Promise.allSettled([
+        loadCustomers()
+    ]);
+
+    showNotification('Módulo de Clientes activado', 'info');
 }
 
 // Cargar lista de clientes
@@ -1778,11 +1806,12 @@ async function loadCustomers() {
             currentCustomers = await response.json();
             renderCustomers(currentCustomers);
         } else if (response.status !== 401) { // No mostrar error para 401 (se maneja automáticamente)
-            showNotification('Error al cargar clientes', 'error');
+            console.error('Error loading customers:', response.status, response.statusText);
+            // No mostrar notificación de error al cargar inicialmente
         }
     } catch (error) {
         console.error('Error loading customers:', error);
-        // Error de conexión ya se maneja en apiRequest
+        // Error de conexión ya se maneja en apiRequest, no mostrar popup al cargar inicialmente
     }
 }
 
