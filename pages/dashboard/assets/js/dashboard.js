@@ -294,7 +294,6 @@ async function showAgenda() {
 
     // Ocultar otras secciones
     document.getElementById('dashboard').classList.add('hidden');
-    document.getElementById('agendaSection').classList.add('hidden');
     document.getElementById('invoicesSection').classList.add('hidden');
     document.getElementById('customersSection').classList.add('hidden');
     document.getElementById('inventorySection').classList.add('hidden');
