@@ -335,7 +335,14 @@ AUTH_USER_MODEL = 'workshops.User'
 # LOGGING
 # ==============================================================================
 
-LOG_LEVEL = config('LOG_LEVEL', default='INFO')
+# Parse LOG_LEVEL and handle Railway multiline issue
+LOG_LEVEL_RAW = config('LOG_LEVEL', default='INFO')
+LOG_LEVEL = LOG_LEVEL_RAW.split('\n')[0].strip() if LOG_LEVEL_RAW else 'INFO'
+
+# Validate LOG_LEVEL
+VALID_LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+if LOG_LEVEL not in VALID_LOG_LEVELS:
+    LOG_LEVEL = 'INFO'
 
 LOGGING = {
     'version': 1,
