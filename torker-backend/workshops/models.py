@@ -4,6 +4,12 @@ from django.utils import timezone
 import uuid
 import hashlib
 from decimal import Decimal
+from datetime import timedelta
+
+
+def get_default_subscription_expiry():
+    """Función para generar fecha de expiración dinámica (30 días desde hoy)"""
+    return timezone.now().date() + timedelta(days=30)
 
 
 class UserManager(BaseUserManager):
@@ -120,7 +126,7 @@ class Workshop(models.Model):
         default='trial'
     )
     subscription_expires = models.DateField(
-        default=timezone.now() + timezone.timedelta(days=30)
+        default=get_default_subscription_expiry
     )
 
     is_active = models.BooleanField(default=True)
@@ -342,6 +348,12 @@ class Customer(models.Model):
         db_table = 'customers'
         unique_together = ['workshop', 'document_type', 'document_number']  # Un cliente único por taller
         ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['workshop', 'document_type', 'document_number']),
+            models.Index(fields=['email']),
+            models.Index(fields=['phone']),
+            models.Index(fields=['is_active', 'workshop']),
+        ]
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.get_document_type_display()} {self.document_number}"
@@ -431,6 +443,12 @@ class Vehicle(models.Model):
         db_table = 'vehicles'
         unique_together = ['workshop', 'vin']  # VIN único por taller (si existe)
         ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['workshop', 'customer']),
+            models.Index(fields=['license_plate']),
+            models.Index(fields=['vin']),
+            models.Index(fields=['is_active', 'workshop']),
+        ]
 
     def __str__(self):
         plate_info = f" - {self.license_plate}" if self.license_plate else ""
@@ -764,7 +782,6 @@ class WorkOrder(models.Model):
     photos_before = models.JSONField(blank=True, default=dict, help_text="URLs de fotos antes del trabajo")
     photos_after = models.JSONField(blank=True, default=dict, help_text="URLs de fotos después del trabajo")
     documents = models.JSONField(blank=True, default=dict, help_text="URLs de documentos adjuntos")
-    description = models.TextField(blank=True, help_text="Descripción detallada del problema")
 
     # Notas y observaciones
     internal_notes = models.TextField(blank=True, help_text="Notas internas del taller")
@@ -1251,6 +1268,13 @@ class ElectronicInvoice(models.Model):
     class Meta:
         db_table = 'electronic_invoices'
         ordering = ['-issue_date']
+        indexes = [
+            models.Index(fields=['workshop', 'dian_status']),
+            models.Index(fields=['invoice_number']),
+            models.Index(fields=['cude']),
+            models.Index(fields=['customer', 'issue_date']),
+            models.Index(fields=['payment_status']),
+        ]
 
     def __str__(self):
         return f"FE {self.invoice_number} - {self.customer_name}"
