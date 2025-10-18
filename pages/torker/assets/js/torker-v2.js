@@ -49,6 +49,14 @@ async function apiRequest(endpoint, options = {}) {
 }
 
 async function refreshAccessToken() {
+    if (isRefreshingToken) {
+        // Si ya estamos refrescando, esperar un poco y retornar
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return { access: accessToken };
+    }
+
+    isRefreshingToken = true;
+
     try {
         const response = await fetch(`${API_BASE_URL}/auth/refresh/`, {
             method: 'POST',
@@ -72,6 +80,8 @@ async function refreshAccessToken() {
         console.error('Token refresh error:', error);
         logout();
         return null;
+    } finally {
+        isRefreshingToken = false;
     }
 }
 
@@ -242,6 +252,9 @@ async function handleLogin(event) {
         showNotification('Error de conexión. Inténtalo de nuevo.', 'error');
     }
 }
+
+// Variable para controlar si ya estamos refrescando el token
+let isRefreshingToken = false;
 
 // Función para manejar registro
 async function handleRegister(event) {
@@ -438,7 +451,15 @@ async function loadUserData() {
             isAuthenticated = true;
             return true;
         } else {
-            console.error('Error loading user data');
+            console.error('Error loading user data:', response.status, response.statusText);
+            // Si es error 401, intentar refresh token
+            if (response.status === 401) {
+                const refreshSuccess = await refreshAccessToken();
+                if (refreshSuccess) {
+                    // Reintentar la carga de datos
+                    return await loadUserData();
+                }
+            }
             return false;
         }
     } catch (error) {
@@ -737,11 +758,17 @@ async function loadInvoices() {
             currentInvoices = await response.json();
             renderInvoices(currentInvoices);
         } else {
-            showNotification('Error al cargar facturas', 'error');
+            console.error('Error loading invoices:', response.status, response.statusText);
+            if (response.status === 401) {
+                showNotification('Sesión expirada. Recargando página...', 'warning');
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showNotification('Error al cargar facturas', 'error');
+            }
         }
     } catch (error) {
         console.error('Error loading invoices:', error);
-        showNotification('Error de conexión', 'error');
+        showNotification('Error de conexión al cargar facturas', 'error');
     }
 }
 
@@ -945,12 +972,18 @@ async function handleCreateInvoice(event) {
             event.target.reset();
             loadInvoices(); // Recargar lista
         } else {
-            const error = await response.json();
-            showNotification(error.detail || 'Error al crear factura', 'error');
+            console.error('Error creating invoice:', response.status, response.statusText);
+            if (response.status === 401) {
+                showNotification('Sesión expirada. Recargando página...', 'warning');
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                const error = await response.json();
+                showNotification(error.detail || 'Error al crear factura', 'error');
+            }
         }
     } catch (error) {
         console.error('Error creating invoice:', error);
-        showNotification('Error de conexión', 'error');
+        showNotification('Error de conexión al crear factura', 'error');
     }
 // ====================
 // FUNCIONES DE INVENTARIO
@@ -992,11 +1025,17 @@ async function loadParts() {
             renderParts(filteredParts);
             updateInventoryStats();
         } else {
-            showNotification('Error al cargar repuestos', 'error');
+            console.error('Error loading parts:', response.status, response.statusText);
+            if (response.status === 401) {
+                showNotification('Sesión expirada. Recargando página...', 'warning');
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showNotification('Error al cargar repuestos', 'error');
+            }
         }
     } catch (error) {
         console.error('Error loading parts:', error);
-        showNotification('Error de conexión', 'error');
+        showNotification('Error de conexión al cargar repuestos', 'error');
     }
 }
 
@@ -1309,12 +1348,18 @@ async function handlePartSubmit(event) {
             event.target.reset();
             loadParts(); // Recargar lista
         } else {
-            const error = await response.json();
-            showNotification(error.detail || 'Error al guardar repuesto', 'error');
+            console.error('Error saving part:', response.status, response.statusText);
+            if (response.status === 401) {
+                showNotification('Sesión expirada. Recargando página...', 'warning');
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                const error = await response.json();
+                showNotification(error.detail || 'Error al guardar repuesto', 'error');
+            }
         }
     } catch (error) {
         console.error('Error saving part:', error);
-        showNotification('Error de conexión', 'error');
+        showNotification('Error de conexión al guardar repuesto', 'error');
     }
 }
 
