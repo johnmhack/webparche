@@ -373,7 +373,7 @@ def generate_electronic_invoice_pdf(invoice_id):
 
         # Datos del documento mejorados
         doc_table_data = [
-            [Paragraph("Número de Factura:", header_style), Paragraph(f"<b>{invoice.invoice_number}</b>", header_style), Paragraph("Forma de pago:", header_style), Paragraph(f"<b>{invoice.get_payment_method_display() if hasattr(invoice, 'get_payment_method_display') else 'Contado'}</b>", header_style)],
+            [Paragraph("Número de Factura:", header_style), Paragraph(f"<b>{invoice.invoice_number}</b>", header_style), Paragraph("Forma de pago:", header_style), Paragraph("<b>Contado</b>", header_style)],
             [Paragraph("Fecha de Emisión:", header_style), Paragraph(f"<b>{invoice.issue_date.strftime('%d/%m/%Y %H:%M')}</b>", header_style), Paragraph("Medio de Pago:", header_style), Paragraph(f"<b>{invoice.payment_method.title() if invoice.payment_method else 'Efectivo'}</b>", header_style)],
             [Paragraph("Fecha de Vencimiento:", header_style), Paragraph(f"<b>{invoice.due_date.strftime('%d/%m/%Y') if invoice.due_date else 'N/A'}</b>", header_style), Paragraph("Estado DIAN:", header_style), Paragraph(f"<b>{invoice.get_dian_status_display() if hasattr(invoice, 'get_dian_status_display') else invoice.dian_status.title()}</b>", header_style)],
             [Paragraph("Tipo de Operación:", header_style), Paragraph("<b>10 - Estándar</b>", header_style), Paragraph("Moneda:", header_style), Paragraph("<b>COP - Peso Colombiano</b>", header_style)]
@@ -418,8 +418,8 @@ def generate_electronic_invoice_pdf(invoice_id):
         story.append(workshop_table)
         story.append(Spacer(1, 4))
 
-        # Sección "Datos del Adquiriente / Comprador" mejorada
-        story.append(Paragraph("<b>DATOS DEL ADQUIRENTE / COMPRADOR</b>", section_style))
+        # Sección "Cliente" mejorada
+        story.append(Paragraph("<b>CLIENTE</b>", section_style))
 
         customer_table_data = [
             [Paragraph("Nombre o Razón Social:", header_style), Paragraph(f"<b>{invoice.customer_name}</b>", header_style), Paragraph("Tipo de Documento:", header_style), Paragraph(f"<b>{invoice.customer_document_type.upper()}</b>", header_style)],
