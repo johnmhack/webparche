@@ -1,671 +1,295 @@
+"""
+Generador de PDF estilo Siigo para facturas electrónicas DIAN
+Estructura profesional optimizada para una sola página
+"""
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
 from io import BytesIO
-from datetime import datetime
-import os
 import logging
 
-from .models import Invoice, InvoiceDetail, ElectronicInvoice, ElectronicInvoiceDetail
-
-# Configurar logging
 logger = logging.getLogger(__name__)
+
+
+def generate_electronic_invoice_pdf_siigo(invoice_id):
+    """
+    Genera PDF de factura electrónica con estructura estilo Siigo.
+    Optimizado para caber en una sola página.
+    
+    Estructura:
+    1. Encabezado con datos del taller + QR en esquina
+    2. Título "Factura electrónica de venta" + número
+    3. Datos transaccionales (fecha, mecánico, cliente, placa)
+    4. Tabla de productos/servicios
+    5. Resumen de impuestos
+    6. Forma de pago y total
+    7. Pie de página legal + CUFE
+    """
+    from .models import ElectronicInvoice
+    from .dian_utils import format_nit
+    
+    try:
+        # Obtener factura
+        invoice = ElectronicInvoice.objects.select_related(
+            'workshop', 'customer', 'work_order', 'dian_resolution'
+        ).prefetch_related('details').get(id=invoice_id)
+        
+        # Crear buffer
+        buffer = BytesIO()
+        
+        # Documento con márgenes ajustados
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+            rightMargin=40,
+            leftMargin=40,
+            topMargin=30,
+            bottomMargin=30
+        )
+        
+        styles = getSampleStyleSheet()
+        story = []
+        
+        # ================================================================
+        # ENCABEZADO CON QR CODE
+        # ================================================================
+        
+        # Formatear NIT
+        nit_display = format_nit(invoice.workshop_nit) if invoice.workshop_nit else 'N/A'
+        
+        # Crear tabla de encabezado con QR
+        header_content = Paragraph(f"""
+            <para align=center>
+            <b><font size=12>{invoice.workshop_name.upper()}</font></b><br/>
+            <font size=9>NIT: {nit_display}</font><br/>
+            <font size=8>{invoice.workshop_address}</font><br/>
+            <font size=8>{invoice.workshop_city} - Tel: {invoice.workshop_phone}</font><br/>
+            <font size=8>{invoice.workshop_email}</font><br/>
+            <font size=8>https://elestablocolombia.com</font>
+            </para>
+        """, styles['Normal'])
+        
+        # QR Code (si existe)
+        qr_cell = ""
+        if hasattr(invoice, 'qr_code_image') and invoice.qr_code_image:
+            try:
+                qr_img = RLImage(invoice.qr_code_image.path, width=1.2*inch, height=1.2*inch)
+                qr_cell = qr_img
+            except:
+                qr_cell = Paragraph("<font size=6>QR</font>", styles['Normal'])
+        else:
+            qr_cell = Paragraph("<font size=6>[QR]</font>", styles['Normal'])
+        
+        header_table = Table([[header_content, qr_cell]], colWidths=[5.5*inch, 1.7*inch])
+        header_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+        ]))
+        
+        story.append(header_table)
+        story.append(Spacer(1, 10))
+        
+        # ================================================================
+        # TÍTULO DEL DOCUMENTO
+        # ================================================================
+        
+        title = Paragraph(f"""
+            <para align=center>
+            <b><font size=11>Factura electrónica de venta</font></b><br/>
+            <font size=10>No. {invoice.invoice_number}</font>
+            </para>
+        """, styles['Normal'])
+        story.append(title)
+        story.append(Spacer(1, 8))
+        
+        # ================================================================
+        # DATOS TRANSACCIONALES
+        # ================================================================
+        
+        # Obtener mecánico y placa
+        mechanic_name = "N/A"
+        vehicle_plate = "N/A"
+        
+        if invoice.work_order:
+            if invoice.work_order.assigned_mechanic:
+                mechanic_name = invoice.work_order.assigned_mechanic.full_name
+            if invoice.work_order.vehicle:
+                vehicle_plate = invoice.work_order.vehicle.license_plate or "N/A"
+        
+        trans_data = [
+            ['Fecha', invoice.issue_date.strftime('%Y-%m-%d')],
+            ['Mecánico', mechanic_name],
+            ['Cliente', invoice.customer_name],
+            ['NIT / C.C.', f"{invoice.customer_document_type.upper()} {invoice.customer_document}"],
+            ['Dirección', invoice.customer_address or 'N/A'],
+            ['Vehículo', f"Placa: {vehicle_plate}"],
+        ]
+        
+        trans_table = Table(trans_data, colWidths=[1.2*inch, 6*inch])
+        trans_table.setStyle(TableStyle([
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('BACKGROUND', (0, 0), (0, -1), colors.Color(0.95, 0.95, 0.7)),  # Amarillo claro
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ]))
+        
+        story.append(trans_table)
+        story.append(Spacer(1, 8))
+        
+        # ================================================================
+        # TABLA DE PRODUCTOS/SERVICIOS
+        # ================================================================
+        
+        products_data = [['Código', 'Descripción', 'Cant.', 'Impto. cargo', 'Vr. Total']]
+        
+        for detail in invoice.details.all():
+            products_data.append([
+                detail.part_number or detail.unspsc_code or 'N/A',
+                detail.description[:60],
+                f"{detail.quantity:.2f}",
+                f"{detail.tax_rate:.0f}%",
+                f"${detail.total:,.0f}"
+            ])
+        
+        products_table = Table(products_data, colWidths=[1*inch, 3.5*inch, 0.7*inch, 0.9*inch, 1.1*inch])
+        products_table.setStyle(TableStyle([
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (2, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        story.append(products_table)
+        story.append(Spacer(1, 8))
+        
+        # ================================================================
+        # RESUMEN DE IMPUESTOS
+        # ================================================================
+        
+        tax_summary = Paragraph("<b>Resumen Impuestos</b>", ParagraphStyle(
+            'TaxTitle', parent=styles['Normal'], fontSize=9, alignment=1
+        ))
+        story.append(tax_summary)
+        story.append(Spacer(1, 4))
+        
+        tax_data = [[
+            'Tarifa',
+            'Vr. Base',
+            'Valor'
+        ], [
+            f"{invoice.tax_rate:.2f}%",
+            f"${invoice.subtotal - invoice.discount:,.0f}",
+            f"${invoice.tax_amount:,.0f}"
+        ]]
+        
+        tax_table = Table(tax_data, colWidths=[2.4*inch, 2.4*inch, 2.4*inch])
+        tax_table.setStyle(TableStyle([
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ]))
+        
+        story.append(tax_table)
+        story.append(Spacer(1, 8))
+        
+        # ================================================================
+        # FORMA DE PAGO Y TOTAL
+        # ================================================================
+        
+        payment_method_display = {
+            'cash': 'Efectivo - CONTADO',
+            'card': 'Tarjeta - CONTADO',
+            'transfer': 'Transferencia - CONTADO',
+        }.get(invoice.payment_method, 'Efectivo - CONTADO')
+        
+        payment_data = [[
+            'Forma de Pago',
+            payment_method_display,
+            '',
+            f"${invoice.total:,.0f}"
+        ]]
+        
+        payment_table = Table(payment_data, colWidths=[1.5*inch, 3*inch, 1*inch, 1.7*inch])
+        payment_table.setStyle(TableStyle([
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('ALIGN', (0, 0), (2, -1), 'LEFT'),
+            ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
+            ('FONTNAME', (3, 0), (3, -1), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        story.append(payment_table)
+        story.append(Spacer(1, 10))
+        
+        # ================================================================
+        # PIE DE PÁGINA LEGAL
+        # ================================================================
+        
+        legal_text = f"""
+        <para align=justify fontSize=6>
+        A esta factura de venta aplican las normas relativas a la letra de cambio (artículo 5 Ley 1231 de 2008). 
+        Con esta el Comprador declara haber recibido real y materialmente las mercancías o prestación de servicios 
+        descritos en este título - Valor. <b>Número Autorización Electrónica {invoice.dian_resolution.resolution_number if invoice.dian_resolution else 'N/A'}</b> 
+        aprobado en {invoice.dian_resolution.resolution_date.strftime('%Y%m%d') if invoice.dian_resolution else 'N/A'} 
+        prefijo {invoice.dian_resolution.prefix if invoice.dian_resolution else 'N/A'} desde el número 
+        {invoice.dian_resolution.from_number if invoice.dian_resolution else 'N/A'} al 
+        {invoice.dian_resolution.to_number if invoice.dian_resolution else 'N/A'} 
+        Vigencia: {invoice.dian_resolution.expires_date.strftime('%Y-%m-%d') if invoice.dian_resolution else 'N/A'}<br/>
+        Responsable de IVA - Actividad Económica 4631 Comercio al por mayor de productos alimenticios Tarifa 5/1000
+        </para>
+        """
+        
+        story.append(Paragraph(legal_text, styles['Normal']))
+        story.append(Spacer(1, 6))
+        
+        # CUFE
+        cufe_text = f"""
+        <para align=center fontSize=5>
+        <b>CUFE:</b> {invoice.cude}
+        </para>
+        """
+        
+        story.append(Paragraph(cufe_text, styles['Normal']))
+        
+        # Generar PDF
+        doc.build(story)
+        
+        pdf_data = buffer.getvalue()
+        buffer.close()
+        
+        logger.info(f"PDF Siigo style generado: {len(pdf_data)} bytes")
+        return pdf_data
+        
+    except Exception as e:
+        logger.error(f"Error generando PDF Siigo style: {str(e)}")
+        raise ValueError(f"Error generando PDF: {str(e)}")
+
+# Alias para compatibilidad con código existente
+def generate_electronic_invoice_pdf(invoice_id):
+    """
+    Alias de generate_electronic_invoice_pdf_siigo para compatibilidad.
+    """
+    return generate_electronic_invoice_pdf_siigo(invoice_id)
 
 
 def generate_invoice_pdf(invoice_id):
     """
-    Genera un PDF de factura con mejor layout y manejo de errores
+    Genera PDF para facturas regulares (no electrónicas).
+    Por ahora usa el mismo generador que las electrónicas.
     """
-    try:
-        logger.info(f"Generando PDF para factura ID: {invoice_id}")
-
-        # Validar entrada
-        if not invoice_id:
-            raise ValueError("ID de factura requerido")
-
-        # Obtener factura con validaciones
-        try:
-            invoice = Invoice.objects.select_related('workshop', 'customer').prefetch_related('details').get(id=invoice_id)
-        except Invoice.DoesNotExist:
-            logger.error(f"Factura con ID {invoice_id} no encontrada")
-            raise ValueError("Factura no encontrada")
-        except Exception as e:
-            logger.error(f"Error obteniendo factura {invoice_id}: {str(e)}")
-            raise ValueError(f"Error accediendo a la factura: {str(e)}")
-
-        logger.info(f"Factura encontrada: {invoice.invoice_number}, detalles: {invoice.details.count()}")
-
-        # Crear buffer para el PDF
-        buffer = BytesIO()
-
-        # Crear documento con mejor configuración
-        doc = SimpleDocTemplate(
-            buffer,
-            pagesize=letter,
-            rightMargin=72,
-            leftMargin=72,
-            topMargin=72,
-            bottomMargin=72
-        )
-
-        styles = getSampleStyleSheet()
-
-        # Estilos mejorados
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=24,
-            spaceAfter=20,
-            alignment=1,  # Centrado
-            textColor=colors.darkblue,
-            fontName='Helvetica-Bold'
-        )
-
-        header_style = ParagraphStyle(
-            'Header',
-            parent=styles['Normal'],
-            fontSize=10,
-            textColor=colors.black,
-            leading=12
-        )
-
-        company_style = ParagraphStyle(
-            'Company',
-            parent=styles['Normal'],
-            fontSize=12,
-            textColor=colors.black,
-            fontName='Helvetica-Bold',
-            leading=14
-        )
-
-        # Contenido del PDF
-        story = []
-
-        # Encabezado con logo y título
-        header_data = [
-            [
-                Paragraph(f"""
-                <b>{invoice.workshop_name or 'TALLER MECÁNICO'}</b><br/>
-                NIT: {invoice.workshop_nit or 'N/A'}<br/>
-                {invoice.workshop_address or 'Dirección no especificada'}<br/>
-                Tel: {invoice.workshop_phone or 'N/A'} | Email: {invoice.workshop_email or 'N/A'}
-                """, company_style),
-                Paragraph(f"""
-                <b>FACTURA DE VENTA</b><br/>
-                <br/>
-                <b>N° Factura:</b> {invoice.invoice_number}<br/>
-                <b>Fecha Emisión:</b> {invoice.issue_date.strftime('%d/%m/%Y %H:%M')}<br/>
-                <b>Fecha Vencimiento:</b> {invoice.due_date.strftime('%d/%m/%Y') if invoice.due_date else 'N/A'}
-                """, header_style)
-            ]
-        ]
-
-        header_table = Table(header_data, colWidths=[4*inch, 3*inch])
-        header_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BOX', (0, 0), (-1, -1), 1, colors.black),
-            ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('BACKGROUND', (0, 0), (0, 0), colors.lightgrey),
-        ]))
-
-        story.append(header_table)
-        story.append(Spacer(1, 20))
-
-        # Información del cliente en formato mejorado
-        customer_title = Paragraph("<b>INFORMACIÓN DEL CLIENTE</b>", styles['Heading2'])
-        story.append(customer_title)
-        story.append(Spacer(1, 10))
-
-        customer_data = [
-            [
-                Paragraph(f"""
-                <b>Nombre/Razón Social:</b><br/>
-                {invoice.customer_name or 'Cliente no especificado'}<br/>
-                <br/>
-                <b>Documento:</b><br/>
-                {invoice.customer_document or 'N/A'}<br/>
-                <br/>
-                <b>Dirección:</b><br/>
-                {invoice.customer_address or 'Dirección no especificada'}
-                """, header_style),
-                Paragraph(f"""
-                <b>Teléfono:</b><br/>
-                {invoice.customer_phone or 'N/A'}<br/>
-                <br/>
-                <b>Email:</b><br/>
-                {invoice.customer_email or 'N/A'}<br/>
-                <br/>
-                <b>Ciudad:</b><br/>
-                {getattr(invoice.customer, 'city', 'N/A') if hasattr(invoice, 'customer') and invoice.customer else 'N/A'}
-                """, header_style)
-            ]
-        ]
-
-        customer_table = Table(customer_data, colWidths=[3.5*inch, 3.5*inch])
-        customer_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BOX', (0, 0), (-1, -1), 1, colors.black),
-            ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-
-        story.append(customer_table)
-        story.append(Spacer(1, 20))
-
-        # Detalles de productos/servicios
-        details_title = Paragraph("<b>DETALLE DE PRODUCTOS/SERVICIOS</b>", styles['Heading2'])
-        story.append(details_title)
-        story.append(Spacer(1, 10))
-
-        # Tabla de productos mejorada
-        table_data = [
-            ['Código', 'Descripción', 'Cant.', 'V. Unitario', 'Descuento', 'IVA', 'Total']
-        ]
-
-        for detail in invoice.details.all():
-            try:
-                table_data.append([
-                    detail.part_number or detail.part.part_number if hasattr(detail, 'part') and detail.part else 'N/A',
-                    detail.description[:60] + '...' if len(detail.description) > 60 else detail.description,
-                    f"{detail.quantity:.2f}",
-                    f"${detail.unit_price:,.0f}",
-                    f"${detail.discount:,.0f}",
-                    f"${detail.tax_amount:,.0f}",
-                    f"${detail.total:,.0f}"
-                ])
-            except Exception as e:
-                logger.warning(f"Error procesando detalle de factura: {str(e)}")
-                continue
-
-        # Estilos de tabla mejorados
-        table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 9),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-            ('TOPPADDING', (0, 0), (-1, 0), 8),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
-            ('ALIGN', (0, 1), (1, -1), 'LEFT'),
-            ('TOPPADDING', (0, 1), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
-        ])
-
-        col_widths = [1*inch, 3*inch, 0.8*inch, 1*inch, 1*inch, 1*inch, 1*inch]
-        details_table = Table(table_data, colWidths=col_widths)
-        details_table.setStyle(table_style)
-
-        story.append(details_table)
-        story.append(Spacer(1, 15))
-
-        # Totales mejorados
-        totals_title = Paragraph("<b>TOTALES</b>", styles['Heading2'])
-        story.append(totals_title)
-        story.append(Spacer(1, 10))
-
-        totals_data = [
-            ['Subtotal:', f"${invoice.subtotal:,.0f}"],
-            [f'IVA ({invoice.tax_rate}%):', f"${invoice.tax_amount:,.0f}"],
-            ['Descuentos:', f"${invoice.discount:,.0f}"],
-            ['TOTAL A PAGAR:', f"${invoice.total:,.0f}"]
-        ]
-
-        totals_table = Table(totals_data, colWidths=[5*inch, 2*inch])
-        totals_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, -1), (-1, -1), 14),
-            ('TEXTCOLOR', (0, -1), (-1, -1), colors.darkblue),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
-        ]))
-
-        story.append(totals_table)
-        story.append(Spacer(1, 20))
-
-        # Información adicional y pie de página
-        footer_info = f"""
-        <b>Forma de Pago:</b> {invoice.get_payment_method_display() if hasattr(invoice, 'get_payment_method_display') else 'N/A'}<br/>
-        <b>Estado:</b> {invoice.get_payment_status_display() if hasattr(invoice, 'get_payment_status_display') else 'N/A'}<br/>
-        <br/>
-        <i>Esta factura se emite conforme a la legislación colombiana vigente.</i><br/>
-        <i>Factura generada electrónicamente - No requiere firma manuscrita.</i>
-        """
-
-        if hasattr(invoice, 'workshop') and invoice.workshop and invoice.workshop.invoice_footer:
-            footer_info += f"<br/><br/>{invoice.workshop.invoice_footer}"
-
-        if invoice.notes:
-            footer_info += f"<br/><br/><b>Notas:</b> {invoice.notes}"
-
-        story.append(Paragraph(footer_info, styles['Normal']))
-
-        # Generar PDF con manejo de errores
-        try:
-            logger.info(f"Construyendo PDF con {len(story)} elementos")
-            doc.build(story)
-
-            # Obtener el PDF del buffer
-            pdf_data = buffer.getvalue()
-            buffer.close()
-
-            logger.info(f"PDF generado exitosamente, tamaño: {len(pdf_data)} bytes")
-            return pdf_data
-
-        except Exception as e:
-            logger.error(f"Error construyendo PDF: {str(e)}")
-            buffer.close()
-            raise ValueError(f"Error generando el archivo PDF: {str(e)}")
-
-    except ValueError:
-        # Re-lanzar errores de validación
-        raise
-    except Exception as e:
-        logger.error(f"Error inesperado generando PDF para factura {invoice_id}: {str(e)}")
-        raise ValueError(f"Error generando PDF: {str(e)}")
-
-
-def generate_electronic_invoice_pdf(invoice_id):
-    """
-    Genera un PDF de factura electrónica DIAN con mejor layout y manejo de errores
-    """
-    try:
-        logger.info(f"Generando PDF electrónico para factura ID: {invoice_id}")
-
-        # Validar entrada
-        if not invoice_id:
-            raise ValueError("ID de factura electrónica requerido")
-
-        # Obtener factura con validaciones
-        try:
-            invoice = ElectronicInvoice.objects.select_related('workshop', 'customer', 'work_order').prefetch_related('details').get(id=invoice_id)
-        except ElectronicInvoice.DoesNotExist:
-            logger.error(f"Factura electrónica con ID {invoice_id} no encontrada")
-            raise ValueError("Factura electrónica no encontrada")
-        except Exception as e:
-            logger.error(f"Error obteniendo factura electrónica {invoice_id}: {str(e)}")
-            raise ValueError(f"Error accediendo a la factura electrónica: {str(e)}")
-
-        logger.info(f"Factura electrónica encontrada: {invoice.invoice_number}, detalles: {invoice.details.count()}")
-
-        # Crear buffer para el PDF
-        buffer = BytesIO()
-
-        # Crear documento optimizado para una sola página con márgenes reducidos
-        doc = SimpleDocTemplate(
-            buffer,
-            pagesize=letter,
-            rightMargin=28,
-            leftMargin=28,
-            topMargin=28,
-            bottomMargin=28
-        )
-
-        styles = getSampleStyleSheet()
-
-        # Estilos ultra-compactos para una sola página
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=11,
-            spaceAfter=6,
-            alignment=1,  # Centrado
-            textColor=colors.darkblue,
-            fontName='Helvetica-Bold'
-        )
-
-        header_style = ParagraphStyle(
-            'Header',
-            parent=styles['Normal'],
-            fontSize=6,
-            textColor=colors.black,
-            leading=7
-        )
-
-        section_style = ParagraphStyle(
-            'Section',
-            parent=styles['Heading2'],
-            fontSize=7,
-            spaceAfter=2,
-            textColor=colors.darkblue,
-            fontName='Helvetica-Bold'
-        )
-
-        # Contenido del PDF
-        story = []
-
-        # Título principal ultra-compacto
-        story.append(Paragraph("FACTURA ELECTRÓNICA DE VENTA", title_style))
-        story.append(Paragraph("Representación Gráfica", ParagraphStyle('CenterNormal', parent=styles['Normal'], alignment=1, fontSize=5, spaceAfter=4)))
-
-        # Sección "Datos del Documento" mejorada
-        story.append(Paragraph("<b>DATOS DEL DOCUMENTO</b>", section_style))
-
-        # CUFE ultra-compacto
-        if invoice.cude:
-            cufe_data = [[f"CUFE: {invoice.cude}"]]
-            cufe_table = Table(cufe_data, colWidths=[7.4*inch])
-            cufe_table.setStyle(TableStyle([
-                ('FONTSIZE', (0, 0), (-1, -1), 5),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
-                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-                ('TOPPADDING', (0, 0), (-1, -1), 2),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ]))
-            story.append(cufe_table)
-            story.append(Spacer(1, 2))
-
-        # Datos del documento ultra-compactos
-        doc_table_data = [
-            [Paragraph("Nro Factura:", header_style), Paragraph(f"<b>{invoice.invoice_number}</b>", header_style), Paragraph("Forma pago:", header_style), Paragraph("<b>Contado</b>", header_style)],
-            [Paragraph("F. Emisión:", header_style), Paragraph(f"<b>{invoice.issue_date.strftime('%d/%m/%Y %H:%M')}</b>", header_style), Paragraph("Medio Pago:", header_style), Paragraph(f"<b>{invoice.payment_method.title() if invoice.payment_method else 'Efectivo'}</b>", header_style)],
-            [Paragraph("F. Vencimiento:", header_style), Paragraph(f"<b>{invoice.due_date.strftime('%d/%m/%Y') if invoice.due_date else 'N/A'}</b>", header_style), Paragraph("Estado DIAN:", header_style), Paragraph(f"<b>{invoice.get_dian_status_display() if hasattr(invoice, 'get_dian_status_display') else invoice.dian_status.title()}</b>", header_style)]
-        ]
-
-        doc_table = Table(doc_table_data, colWidths=[1.1*inch, 1.75*inch, 1.1*inch, 1.75*inch])
-        doc_table.setStyle(TableStyle([
-            ('FONTSIZE', (0, 0), (-1, -1), 5.5),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-        ]))
-
-        story.append(doc_table)
-        story.append(Spacer(1, 2))
-
-        # Sección "Datos del Emisor / Vendedor" mejorada
-        story.append(Paragraph("<b>DATOS DEL EMISOR / VENDEDOR</b>", section_style))
-
-        # Formatear NIT con espacio-guion-espacio antes del último dígito
-        nit_formatted = invoice.workshop_nit
-        if nit_formatted and len(nit_formatted) > 1:
-            nit_formatted = nit_formatted[:-1] + ' - ' + nit_formatted[-1]
-
-        workshop_table_data = [
-            [Paragraph("Razón Social:", header_style), Paragraph(f"<b>{invoice.workshop_name}</b>", header_style), Paragraph("NIT:", header_style), Paragraph(f"<b>{nit_formatted}</b>", header_style)],
-            [Paragraph("Dirección:", header_style), Paragraph(f"<b>{invoice.workshop_address or 'N/A'}</b>", header_style), Paragraph("Ciudad:", header_style), Paragraph(f"<b>{invoice.workshop_city or 'N/A'}</b>", header_style)],
-            [Paragraph("Teléfono:", header_style), Paragraph(f"<b>{invoice.workshop_phone or 'N/A'}</b>", header_style), Paragraph("Email:", header_style), Paragraph(f"<b>{invoice.workshop_email or 'N/A'}</b>", header_style)]
-        ]
-
-        workshop_table = Table(workshop_table_data, colWidths=[1.1*inch, 2.75*inch, 0.9*inch, 1.95*inch])
-        workshop_table.setStyle(TableStyle([
-            ('FONTSIZE', (0, 0), (-1, -1), 5.5),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-        ]))
-
-        story.append(workshop_table)
-        story.append(Spacer(1, 2))
-
-        # Sección "Cliente" mejorada
-        story.append(Paragraph("<b>CLIENTE</b>", section_style))
-
-        customer_table_data = [
-            [Paragraph("Nombre:", header_style), Paragraph(f"<b>{invoice.customer_name}</b>", header_style), Paragraph("Doc:", header_style), Paragraph(f"<b>{invoice.customer_document_type.upper()} {invoice.customer_document}</b>", header_style)],
-            [Paragraph("Dirección:", header_style), Paragraph(f"<b>{invoice.customer_address or 'N/A'}</b>", header_style), Paragraph("Ciudad:", header_style), Paragraph(f"<b>{invoice.customer_city or 'N/A'}</b>", header_style)],
-            [Paragraph("Teléfono:", header_style), Paragraph(f"<b>{invoice.customer_phone or 'N/A'}</b>", header_style), Paragraph("Email:", header_style), Paragraph(f"<b>{invoice.customer_email or 'N/A'}</b>", header_style)]
-        ]
-
-        customer_table = Table(customer_table_data, colWidths=[1.1*inch, 2.75*inch, 0.9*inch, 1.95*inch])
-        customer_table.setStyle(TableStyle([
-            ('FONTSIZE', (0, 0), (-1, -1), 5.5),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-        ]))
-
-        story.append(customer_table)
-        story.append(Spacer(1, 2))
-
-        # Información de la orden de trabajo si existe (ultra-compacta)
-        if invoice.work_order:
-            work_order_info = f"OT: {invoice.work_order.order_number} - {invoice.work_order.description[:50]}..."
-            story.append(Paragraph(work_order_info, ParagraphStyle('WorkOrder', parent=styles['Normal'], fontSize=5)))
-            story.append(Spacer(1, 1))
-
-        # Sección "Detalles de Productos/Servicios" mejorada
-        story.append(Paragraph("<b>DETALLE DE PRODUCTOS/SERVICIOS</b>", section_style))
-
-        # Tabla de productos mejorada
-        table_data = [
-            ['Nro.', 'Código', 'Descripción', 'U/M', 'Cant.', 'Precio Unit.', 'Descuento', 'IVA', 'Total']
-        ]
-
-        for i, detail in enumerate(invoice.details.all(), 1):
-            try:
-                table_data.append([
-                    str(i),  # Nro.
-                    detail.unspsc_code or detail.part_number or 'N/A',  # Código
-                    detail.description[:50] + '...' if len(detail.description) > 50 else detail.description,  # Descripción
-                    detail.unit_code or 'EA',  # U/M
-                    f"{detail.quantity:.2f}",  # Cantidad
-                    f"${detail.unit_price:,.0f}",  # Precio unitario
-                    f"${detail.discount:,.0f}",  # Descuento
-                    f"${detail.tax_amount:,.0f}",  # IVA
-                    f"${detail.total:,.0f}"  # Total
-                ])
-            except Exception as e:
-                logger.warning(f"Error procesando detalle electrónico {i}: {str(e)}")
-                continue
-
-        # Crear tabla ultra-compacta
-        col_widths = [0.25*inch, 0.55*inch, 2.3*inch, 0.35*inch, 0.45*inch, 0.65*inch, 0.55*inch, 0.45*inch, 0.65*inch]
-        details_table = Table(table_data, colWidths=col_widths)
-        details_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 2),
-            ('TOPPADDING', (0, 0), (-1, 0), 2),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 5.5),
-            ('GRID', (0, 0), (-1, -1), 0.4, colors.black),
-            ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),
-            ('TOPPADDING', (0, 1), (-1, -1), 1.5),
-            ('BOTTOMPADDING', (0, 1), (-1, -1), 1.5),
-        ]))
-
-        story.append(details_table)
-        story.append(Spacer(1, 3))
-
-        # Sección "Datos Totales" mejorada
-        story.append(Paragraph("<b>DATOS TOTALES</b>", section_style))
-
-        # Código QR ultra-compacto si existe
-        if hasattr(invoice, 'qr_code_image') and invoice.qr_code_image:
-            try:
-                from reportlab.platypus import Image
-                qr_image = Image(invoice.qr_code_image.path, width=0.6*inch, height=0.6*inch)
-                qr_image.hAlign = 'LEFT'
-
-                qr_table_data = [[qr_image]]
-                qr_table = Table(qr_table_data, colWidths=[0.6*inch])
-                qr_table.setStyle(TableStyle([
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ]))
-                story.append(qr_table)
-                story.append(Spacer(1, 2))
-            except Exception as e:
-                logger.warning(f"Error cargando QR code: {str(e)}")
-
-        # Información de timestamps ultra-compacta
-        timestamp_table_data = [
-            [f"Generado: {invoice.issue_date.strftime('%d/%m/%Y %H:%M')} | Validado DIAN: {invoice.issue_date.strftime('%d/%m/%Y %H:%M')} | Software: {invoice.workshop_nit}"]
-        ]
-
-        timestamp_table = Table(timestamp_table_data, colWidths=[7.4*inch])
-        timestamp_table.setStyle(TableStyle([
-            ('FONTSIZE', (0, 0), (-1, -1), 4.5),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-        ]))
-
-        story.append(timestamp_table)
-        story.append(Spacer(1, 2))
-
-        # Tabla de subtotales ultra-compacta
-        totals_data1 = [
-            ['Subtotal bruto', f"${invoice.subtotal:,.0f}"],
-            ['Descuento', f"${invoice.discount:,.0f}"],
-            ['Subtotal neto', f"${invoice.subtotal - invoice.discount:,.0f}"]
-        ]
-
-        totals_table1 = Table(totals_data1, colWidths=[1.6*inch, 1.1*inch])
-        totals_table1.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 5.5),
-            ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
-            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-        ]))
-
-        story.append(totals_table1)
-        story.append(Spacer(1, 2))
-
-        # Tabla de desglose de impuestos ultra-compacta
-        tax_breakdown_data = [
-            ['Base IVA', f"${invoice.subtotal - invoice.discount:,.0f}"],
-            [f'IVA ({invoice.tax_rate}%)', f"${invoice.tax_amount:,.0f}"],
-            ['Total impuestos', f"${invoice.tax_amount:,.0f}"]
-        ]
-
-        tax_breakdown_table = Table(tax_breakdown_data, colWidths=[1.6*inch, 1.1*inch])
-        tax_breakdown_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 5.5),
-            ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
-            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-        ]))
-        story.append(tax_breakdown_table)
-        story.append(Spacer(1, 2))
-
-        # Tabla final: Total a pagar ultra-compacta
-        final_totals_data = [
-            ['Total neto', f"${invoice.subtotal - invoice.discount:,.0f}"],
-            ['Impuestos', f"${invoice.tax_amount:,.0f}"],
-            ['TOTAL COP', f"${invoice.total:,.0f}"]
-        ]
-
-        final_totals_table = Table(final_totals_data, colWidths=[1.6*inch, 1.1*inch])
-        final_totals_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 5.5),
-            ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ('BACKGROUND', (0, -1), (-1, -1), colors.darkblue),
-            ('TEXTCOLOR', (0, -1), (-1, -1), colors.white),
-            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, -1), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-        ]))
-        story.append(final_totals_table)
-        story.append(Spacer(1, 2))
-
-
-        # Combinar anticipos y retenciones en una tabla compacta
-        combined_data = [
-            ['Anticipos', '0,00', 'Retenciones', '0,00']
-        ]
-
-        combined_table = Table(combined_data, colWidths=[1.35*inch, 0.9*inch, 1.35*inch, 0.9*inch])
-        combined_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-            ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 5.5),
-            ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-        ]))
-        story.append(combined_table)
-        story.append(Spacer(1, 2))
-
-        # Información de autorización y cumplimiento ultra-compacta
-        footer_text = f"Res. DIAN: {getattr(invoice.dian_resolution, 'resolution_number', 'N/A')} | Vigencia: {getattr(invoice.dian_resolution, 'expires_date', 'N/A')} | Factura electrónica DIAN - Validar con CUFE"
-
-        story.append(Paragraph(footer_text, ParagraphStyle('Footer', parent=styles['Normal'], fontSize=4.5, spaceAfter=2, alignment=1)))
-
-        # Generar PDF con manejo de errores mejorado
-        try:
-            logger.info(f"Construyendo PDF electrónico con {len(story)} elementos")
-            doc.build(story)
-
-            # Obtener el PDF del buffer
-            pdf_data = buffer.getvalue()
-            buffer.close()
-
-            logger.info(f"PDF electrónico generado exitosamente, tamaño: {len(pdf_data)} bytes")
-            return pdf_data
-
-        except Exception as e:
-            logger.error(f"Error construyendo PDF electrónico: {str(e)}")
-            buffer.close()
-            raise ValueError(f"Error generando el archivo PDF electrónico: {str(e)}")
-
-    except ValueError:
-        # Re-lanzar errores de validación
-        raise
-    except Exception as e:
-        logger.error(f"Error inesperado generando PDF electrónico para factura {invoice_id}: {str(e)}")
-        raise ValueError(f"Error generando PDF electrónico: {str(e)}")
-
-
-def generate_credit_note_pdf(credit_note_id):
-    """
-    Genera un PDF de nota de crédito
-    """
-    # Implementación similar pero para notas de crédito
-    # Por ahora retorna un placeholder
-    raise NotImplementedError("Nota de crédito PDF no implementado aún")
-
-
-def generate_debit_note_pdf(debit_note_id):
-    """
-    Genera un PDF de nota de débito
-    """
-    # Implementación similar pero para notas de débito
-    # Por ahora retorna un placeholder
-    raise NotImplementedError("Nota de débito PDF no implementado aún")
+    # TODO: Implementar generador específico para facturas regulares si es necesario
+    return generate_electronic_invoice_pdf_siigo(invoice_id)
