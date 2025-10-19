@@ -57,16 +57,27 @@ async function loadWorkshopProfile() {
         
         if (!response.ok) {
             console.error('Error en respuesta:', response.status);
+            if (response.status === 401) {
+                showNotification('Sesión expirada. Recargando...', 'warning');
+                setTimeout(() => window.location.reload(), 1000);
+                return;
+            }
             throw new Error('Error cargando perfil');
         }
         
         const workshops = await response.json();
+        console.log('Workshops recibidos:', workshops);
         
         if (!workshops || workshops.length === 0) {
             throw new Error('No se encontró taller para este usuario');
         }
         
         const workshop = workshops[0]; // El usuario solo tiene un taller
+        console.log('Workshop seleccionado:', workshop);
+        
+        if (!workshop || !workshop.name) {
+            throw new Error('Datos del taller incompletos');
+        }
         
         // Llenar formulario de datos básicos
         document.getElementById('workshopName').value = workshop.name || '';
