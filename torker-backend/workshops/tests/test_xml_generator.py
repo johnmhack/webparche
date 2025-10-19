@@ -140,9 +140,10 @@ class XMLGeneratorTestCase(TestCase):
             payment_method='cash'
         )
         
-        # Agregar detalle
+        # Agregar detalle (sin part porque es opcional)
         ElectronicInvoiceDetail.objects.create(
             electronic_invoice=invoice,
+            part=None,  # No usar Part para evitar error de tabla
             description='Cambio de aceite',
             part_number='ACE001',
             unspsc_code='81111500',

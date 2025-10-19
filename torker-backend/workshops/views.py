@@ -998,15 +998,14 @@ class ElectronicInvoiceViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'Ya existe una factura electrónica para esta orden de trabajo'},
                               status=status.HTTP_400_BAD_REQUEST)
 
-            # Verificar que el taller tenga resolución DIAN activa
+            # Obtener resolución DIAN activa (usa el nuevo método que soporta múltiples resoluciones)
             try:
-                dian_resolution = DianResolution.objects.get(
+                dian_resolution = DianResolution.get_active_resolution(
                     workshop=work_order.workshop,
-                    document_type='invoice',
-                    is_active=True
+                    document_type='invoice'
                 )
-            except DianResolution.DoesNotExist:
-                return Response({'error': 'No hay resolución DIAN activa para facturas electrónicas'},
+            except ValueError as e:
+                return Response({'error': str(e)},
                               status=status.HTTP_400_BAD_REQUEST)
 
             # Validar estado de la resolución

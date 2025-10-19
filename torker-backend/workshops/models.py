@@ -97,6 +97,25 @@ class Workshop(models.Model):
         ('especial', 'Régimen Especial'),
     ]
     tax_regime = models.CharField(max_length=20, choices=TAX_REGIME_CHOICES, default='comun')
+    
+    # Responsabilidades fiscales DIAN (JSONField para múltiples responsabilidades)
+    tax_responsibilities = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Lista de códigos de responsabilidades fiscales DIAN (ej: ['O-13', 'O-15', 'O-47'])"
+    )
+    
+    # Tipo de organización según DIAN
+    ORGANIZATION_TYPE_CHOICES = [
+        ('1', 'Persona Jurídica'),
+        ('2', 'Persona Natural'),
+    ]
+    organization_type = models.CharField(
+        max_length=1,
+        choices=ORGANIZATION_TYPE_CHOICES,
+        default='1',
+        help_text="Tipo de organización para facturación electrónica"
+    )
 
     # Resolución DIAN
     dian_resolution_number = models.CharField(max_length=50, blank=True)
@@ -1018,6 +1037,17 @@ class DianResolution(models.Model):
     # Estado
     is_active = models.BooleanField(default=True)
     notes = models.TextField(blank=True)
+    
+    # Clave técnica (para validación DIAN)
+    technical_key = models.CharField(max_length=255, blank=True, help_text="Clave técnica asignada por DIAN")
+    
+    # Alertas de uso
+    alert_threshold_percentage = models.IntegerField(default=75, help_text="Porcentaje para alerta de uso")
+    alert_sent = models.BooleanField(default=False, help_text="Si ya se envió alerta de uso")
+    
+    # Auditoría
+    last_number_assigned_at = models.DateTimeField(null=True, blank=True, help_text="Última vez que se asignó un número")
+    total_numbers_assigned = models.IntegerField(default=0, help_text="Total de números asignados")
 
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1025,6 +1055,10 @@ class DianResolution(models.Model):
     class Meta:
         db_table = 'dian_resolutions'
         unique_together = ['workshop', 'resolution_number']
+        indexes = [
+            models.Index(fields=['workshop', 'document_type', 'is_active']),
+            models.Index(fields=['expires_date', 'is_active']),
+        ]
 
     def __str__(self):
         return f"Resolución {self.resolution_number} - {self.workshop.name}"
@@ -1064,6 +1098,7 @@ class DianResolution(models.Model):
         """
         Obtener siguiente número disponible (thread-safe)
         Usa select_for_update para prevenir race conditions
+        Incluye auditoría y alertas de uso
         """
         from django.db import transaction
         from django.db.models import F
@@ -1084,11 +1119,19 @@ class DianResolution(models.Model):
             
             # Incrementar usando F() para operación atómica en BD
             DianResolution.objects.filter(id=self.id).update(
-                current_number=F('current_number') + 1
+                current_number=F('current_number') + 1,
+                total_numbers_assigned=F('total_numbers_assigned') + 1,
+                last_number_assigned_at=timezone.now()
             )
             
             # Refrescar instancia con nuevo valor
             self.refresh_from_db()
+            
+            # Verificar si se debe enviar alerta
+            if self.usage_percentage >= self.alert_threshold_percentage and not self.alert_sent:
+                self.alert_sent = True
+                self.save(update_fields=['alert_sent'])
+                # TODO: Implementar envío de alerta por email/notificación
             
         return f"{self.prefix}{self.current_number:04d}"
 
@@ -1116,8 +1159,47 @@ class DianResolution(models.Model):
             'status': self.status,
             'is_valid': self.is_valid,
             'expires_date': self.expires_date,
-            'days_until_expiry': (self.expires_date - timezone.now().date()).days if self.is_valid else 0
+            'days_until_expiry': (self.expires_date - timezone.now().date()).days if self.is_valid else 0,
+            'total_assigned': self.total_numbers_assigned,
+            'last_assigned': self.last_number_assigned_at,
+            'alert_sent': self.alert_sent,
         }
+    
+    @classmethod
+    def get_active_resolution(cls, workshop, document_type='invoice'):
+        """
+        Obtiene la resolución activa para un taller y tipo de documento.
+        Prioriza la resolución con más números disponibles.
+        
+        Args:
+            workshop: Instancia de Workshop
+            document_type: Tipo de documento ('invoice', 'credit_note', 'debit_note')
+        
+        Returns:
+            DianResolution: Resolución activa o None
+        
+        Raises:
+            ValueError: Si no hay resoluciones activas disponibles
+        """
+        today = timezone.now().date()
+        
+        # Buscar resoluciones activas y vigentes
+        active_resolutions = cls.objects.filter(
+            workshop=workshop,
+            document_type=document_type,
+            is_active=True,
+            expires_date__gte=today
+        ).exclude(
+            current_number__gte=models.F('to_number')
+        ).order_by('-available_numbers')
+        
+        if not active_resolutions.exists():
+            raise ValueError(
+                f"No hay resoluciones DIAN activas para {document_type}. "
+                f"Por favor configure una resolución vigente."
+            )
+        
+        return active_resolutions.first()
 
 
 class DianConfiguration(models.Model):
@@ -1382,7 +1464,7 @@ class ElectronicInvoiceDetail(models.Model):
     """Detalles de facturas electrónicas"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     electronic_invoice = models.ForeignKey(ElectronicInvoice, on_delete=models.CASCADE, related_name='details')
-    part = models.ForeignKey(Part, on_delete=models.SET_NULL, null=True, blank=True, related_name='electronic_invoice_details')
+    part = models.ForeignKey(SparePart, on_delete=models.SET_NULL, null=True, blank=True, related_name='electronic_invoice_details')
 
     # Información del producto/servicio
     description = models.TextField()
@@ -2174,7 +2256,7 @@ class InvoiceDetail(models.Model):
     """Detalles de las facturas (productos/servicios)"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='details')
-    part = models.ForeignKey(Part, on_delete=models.SET_NULL, null=True, blank=True, related_name='invoice_details')
+    part = models.ForeignKey(SparePart, on_delete=models.SET_NULL, null=True, blank=True, related_name='invoice_details')
 
     # Descripción del producto/servicio
     description = models.TextField()
