@@ -76,8 +76,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'workshops.middleware.WorkshopIsolationMiddleware',  # Multi-tenancy: Aislamiento de talleres
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'workshops.middleware.WorkshopDataValidationMiddleware',  # Validación adicional de datos
 ]
 
 ROOT_URLCONF = 'torker_project.urls'
