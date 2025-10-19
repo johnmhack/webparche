@@ -1302,10 +1302,58 @@ class ElectronicInvoice(models.Model):
         return f"FE {self.invoice_number} - {self.customer_name}"
 
     def generate_cude(self):
-        """Generar CUDE según algoritmo DIAN"""
-        # Algoritmo simplificado - en producción usar algoritmo oficial DIAN
-        data = f"{self.invoice_number}{self.issue_date.strftime('%Y-%m-%d %H:%M:%S')}{self.total}{self.workshop_nit}"
-        return hashlib.sha384(data.encode()).hexdigest()
+        """
+        Generar CUDE según algoritmo oficial DIAN.
+        Usa el algoritmo correcto implementado en dian_utils.
+        """
+        from .dian_utils import generate_cufe
+        
+        # Obtener configuración DIAN del taller
+        try:
+            dian_config = self.workshop.dian_config
+            software_pin = dian_config.software_pin
+            environment_type = "1" if dian_config.environment == "production" else "2"
+        except:
+            # Valores por defecto si no hay configuración
+            software_pin = "12345"
+            environment_type = "2"
+        
+        # Preparar códigos y valores de impuestos
+        # IVA (código 01)
+        tax_code_1 = "01"
+        tax_value_1 = self.tax_amount
+        
+        # INC (código 04) - por ahora 0
+        tax_code_2 = "04"
+        tax_value_2 = Decimal("0.00")
+        
+        # ICA (código 03) - por ahora 0
+        tax_code_3 = "03"
+        tax_value_3 = Decimal("0.00")
+        
+        # Formatear hora según DIAN (HH:MM:SS-05:00)
+        issue_time = self.issue_date.strftime('%H:%M:%S-05:00')
+        
+        # Generar CUFE usando algoritmo oficial
+        cufe = generate_cufe(
+            invoice_number=self.invoice_number,
+            issue_date=self.issue_date,
+            issue_time=issue_time,
+            invoice_total=self.subtotal - self.discount,
+            tax_code_1=tax_code_1,
+            tax_value_1=tax_value_1,
+            tax_code_2=tax_code_2,
+            tax_value_2=tax_value_2,
+            tax_code_3=tax_code_3,
+            tax_value_3=tax_value_3,
+            total_with_tax=self.total,
+            supplier_nit=self.workshop_nit,
+            customer_document=self.customer_document,
+            software_pin=software_pin,
+            environment_type=environment_type
+        )
+        
+        return cufe
 
     def validate_invoice_number(self):
         """Validar que el número de factura es válido según la resolución"""
