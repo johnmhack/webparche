@@ -33,6 +33,10 @@ function showProfile() {
         console.log('✅ Clase hidden removida de profileSection');
         console.log('📊 Classes actuales:', profileSection.className);
         console.log('👁️ Display style:', window.getComputedStyle(profileSection).display);
+        console.log('📏 Visibility:', window.getComputedStyle(profileSection).visibility);
+        console.log('📐 Position:', window.getComputedStyle(profileSection).position);
+        console.log('🎨 Z-index:', window.getComputedStyle(profileSection).zIndex);
+        console.log('📦 Contenido HTML (primeros 500 chars):', profileSection.innerHTML.substring(0, 500));
     } else {
         console.error('❌ profileSection NO encontrado en el DOM');
         return;
