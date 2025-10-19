@@ -44,15 +44,28 @@ function showProfileTab(tabName) {
 // Cargar datos del perfil del taller
 async function loadWorkshopProfile() {
     try {
-        const response = await fetch(`${API_BASE_URL}/workshops/`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            }
-        });
+        // Verificar que haya token
+        if (!accessToken) {
+            console.error('No hay token de acceso');
+            showNotification('Sesión expirada. Recargando...', 'warning');
+            setTimeout(() => window.location.reload(), 1000);
+            return;
+        }
         
-        if (!response.ok) throw new Error('Error cargando perfil');
+        // Usar apiRequest del dashboard.js que maneja autenticación
+        const response = await apiRequest('/workshops/');
+        
+        if (!response.ok) {
+            console.error('Error en respuesta:', response.status);
+            throw new Error('Error cargando perfil');
+        }
         
         const workshops = await response.json();
+        
+        if (!workshops || workshops.length === 0) {
+            throw new Error('No se encontró taller para este usuario');
+        }
+        
         const workshop = workshops[0]; // El usuario solo tiene un taller
         
         // Llenar formulario de datos básicos
@@ -92,12 +105,15 @@ async function loadWorkshopProfile() {
 
 // Verificar estado de configuración DIAN
 async function checkDianConfigurationStatus() {
+    // Esperar a que se cargue el workshop ID
+    if (!window.currentWorkshopId) {
+        console.log('Esperando workshop ID...');
+        return;
+    }
+    
     try {
-        const response = await fetch(`${API_BASE_URL}/workshops/${window.currentWorkshopId}/dian_configuration_status/`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            }
-        });
+        // Usar apiRequest del dashboard.js
+        const response = await apiRequest(`/workshops/${window.currentWorkshopId}/dian_configuration_status/`);
         
         if (!response.ok) throw new Error('Error verificando configuración');
         
@@ -165,12 +181,8 @@ async function handleSaveBasicData(event) {
     const data = Object.fromEntries(formData);
     
     try {
-        const response = await fetch(`${API_BASE_URL}/workshops/${window.currentWorkshopId}/`, {
+        const response = await apiRequest(`/workshops/${window.currentWorkshopId}/`, {
             method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify(data)
         });
         
@@ -200,12 +212,8 @@ async function handleSaveDianConfig(event) {
     data.tax_responsibilities = responsibilities;
     
     try {
-        const response = await fetch(`${API_BASE_URL}/workshops/${window.currentWorkshopId}/`, {
+        const response = await apiRequest(`/workshops/${window.currentWorkshopId}/`, {
             method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify(data)
         });
         
@@ -242,12 +250,8 @@ async function saveResolution() {
     }
     
     try {
-        const response = await fetch(`${API_BASE_URL}/dian-resolutions/`, {
+        const response = await apiRequest('/dian-resolutions/', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify(resolutionData)
         });
         
@@ -279,11 +283,7 @@ async function saveResolution() {
 // Cargar lista de resoluciones
 async function loadResolutions() {
     try {
-        const response = await fetch(`${API_BASE_URL}/dian-resolutions/`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            }
-        });
+        const response = await apiRequest('/dian-resolutions/');
         
         if (!response.ok) throw new Error('Error cargando resoluciones');
         
@@ -334,12 +334,8 @@ async function loadResolutions() {
 // Activar/Desactivar resolución
 async function toggleResolutionStatus(resolutionId, activate) {
     try {
-        const response = await fetch(`${API_BASE_URL}/dian-resolutions/${resolutionId}/`, {
+        const response = await apiRequest(`/dian-resolutions/${resolutionId}/`, {
             method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({ is_active: activate })
         });
         
