@@ -162,6 +162,73 @@ class Workshop(models.Model):
     def is_subscription_active(self):
         """Verificar si la suscripción está activa"""
         return self.subscription_expires >= timezone.now().date() and self.is_active
+    
+    @property
+    def has_dian_configuration_complete(self):
+        """
+        Verifica si el taller tiene configuración DIAN completa.
+        Requerido para habilitar facturación electrónica.
+        """
+        # Validar datos fiscales básicos
+        if not self.nit or not self.legal_name:
+            return False
+        
+        if not self.address or not self.city or not self.department:
+            return False
+        
+        # Validar que tenga al menos una resolución DIAN activa
+        has_active_resolution = self.dian_resolutions.filter(
+            is_active=True,
+            expires_date__gte=timezone.now().date()
+        ).exists()
+        
+        if not has_active_resolution:
+            return False
+        
+        return True
+    
+    def get_dian_configuration_status(self):
+        """
+        Obtiene el estado detallado de la configuración DIAN.
+        
+        Returns:
+            dict: Estado de configuración con detalles
+        """
+        status = {
+            'is_complete': self.has_dian_configuration_complete,
+            'missing_fields': [],
+            'warnings': []
+        }
+        
+        # Validar campos requeridos
+        if not self.nit:
+            status['missing_fields'].append('NIT')
+        if not self.legal_name:
+            status['missing_fields'].append('Razón Social')
+        if not self.address:
+            status['missing_fields'].append('Dirección')
+        if not self.city:
+            status['missing_fields'].append('Ciudad')
+        if not self.department:
+            status['missing_fields'].append('Departamento')
+        
+        # Validar resoluciones
+        active_resolutions = self.dian_resolutions.filter(
+            is_active=True,
+            expires_date__gte=timezone.now().date()
+        )
+        
+        if not active_resolutions.exists():
+            status['missing_fields'].append('Resolución DIAN activa')
+        else:
+            # Verificar alertas de uso
+            for resolution in active_resolutions:
+                if resolution.usage_percentage >= 90:
+                    status['warnings'].append(
+                        f'Resolución {resolution.prefix} al {resolution.usage_percentage:.1f}% de uso'
+                    )
+        
+        return status
 
 
 class Mechanic(models.Model):

@@ -87,6 +87,19 @@ class WorkshopViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+    
+    @action(detail=True, methods=['get'])
+    def dian_configuration_status(self, request, pk=None):
+        """Obtener estado de configuración DIAN del taller"""
+        workshop = self.get_object()
+        status_data = workshop.get_dian_configuration_status()
+        
+        return Response({
+            'is_complete': status_data['is_complete'],
+            'missing_fields': status_data['missing_fields'],
+            'warnings': status_data['warnings'],
+            'can_generate_invoices': status_data['is_complete']
+        })
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
@@ -1028,6 +1041,15 @@ class ElectronicInvoiceViewSet(viewsets.ModelViewSet):
             if hasattr(work_order, 'electronic_invoice'):
                 return Response({'error': 'Ya existe una factura electrónica para esta orden de trabajo'},
                               status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validar configuración DIAN completa
+            if not work_order.workshop.has_dian_configuration_complete:
+                config_status = work_order.workshop.get_dian_configuration_status()
+                return Response({
+                    'error': 'Configuración DIAN incompleta. Complete su perfil de facturación electrónica.',
+                    'missing_fields': config_status['missing_fields'],
+                    'configuration_incomplete': True
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             # Obtener resolución DIAN activa (usa el nuevo método que soporta múltiples resoluciones)
             try:
