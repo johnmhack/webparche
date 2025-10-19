@@ -65,8 +65,11 @@ async function loadWorkshopProfile() {
             throw new Error('Error cargando perfil');
         }
         
-        const workshops = await response.json();
-        console.log('Workshops recibidos:', workshops);
+        const data = await response.json();
+        console.log('Workshops recibidos:', data);
+        
+        // La API retorna un objeto paginado: {count, next, previous, results}
+        const workshops = data.results || data;
         
         if (!workshops || workshops.length === 0) {
             throw new Error('No se encontró taller para este usuario');
