@@ -2,6 +2,22 @@
  * Gestión del Perfil del Taller y Configuración DIAN
  */
 
+// Función auxiliar para ocultar todas las secciones
+function hideAllSections() {
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('invoicesSection').classList.add('hidden');
+    document.getElementById('customersSection').classList.add('hidden');
+    document.getElementById('inventorySection').classList.add('hidden');
+    document.getElementById('workOrdersSection').classList.add('hidden');
+    document.getElementById('agendaSection').classList.add('hidden');
+    
+    // Ocultar perfil si existe
+    const profileSection = document.getElementById('profileSection');
+    if (profileSection) {
+        profileSection.classList.add('hidden');
+    }
+}
+
 // Mostrar sección de perfil
 function showProfile() {
     hideAllSections();
