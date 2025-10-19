@@ -36,6 +36,21 @@ function showProfile() {
         console.log('📏 Visibility:', window.getComputedStyle(profileSection).visibility);
         console.log('📐 Position:', window.getComputedStyle(profileSection).position);
         console.log('🎨 Z-index:', window.getComputedStyle(profileSection).zIndex);
+        
+        // Obtener posición del elemento
+        const rect = profileSection.getBoundingClientRect();
+        console.log('📍 Posición en viewport:', {
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            visible: rect.top < window.innerHeight && rect.bottom > 0
+        });
+        
+        // Scroll al elemento
+        console.log('🔄 Haciendo scroll al profileSection...');
+        profileSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
         console.log('📦 Contenido HTML (primeros 500 chars):', profileSection.innerHTML.substring(0, 500));
     } else {
         console.error('❌ profileSection NO encontrado en el DOM');
