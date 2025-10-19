@@ -8,6 +8,7 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../../assets/css/main.css">
     <link rel="stylesheet" href="../../../assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/profile.css">
     <link rel="stylesheet" href="../torker/assets/css/torker.css">
     <meta name="description" content="Dashboard de Torker - Gestión integral para talleres de motos. Controla tu taller desde Parche.">
     <style>
@@ -111,6 +112,14 @@
                     <h3><i class='bx bx-receipt'></i> Facturación DIAN</h3>
                     <p>Genera facturas electrónicas DIAN válidas</p>
                     <button class="btn btn-primary" onclick="showInvoices()">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-cog'></i> Perfil del Taller</h3>
+                    <p>Configura datos fiscales y facturación DIAN</p>
+                    <button class="btn btn-primary" onclick="showProfile()">
                         <i class='bx bx-right-arrow-alt'></i>
                         Acceder
                     </button>
@@ -1029,6 +1038,191 @@
                         </div>
                     </div>
                 </div>
+    <!-- Sección de Perfil del Taller (oculta por defecto) -->
+    <div id="profileSection" class="dashboard hidden">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-cog'></i> Perfil del Taller</h2>
+            <button class="btn btn-secondary" onclick="showDashboard()">
+                <i class='bx bx-arrow-back'></i>
+                Volver
+            </button>
+        </div>
+        <div class="dashboard-content">
+            <!-- Indicador de Estado DIAN -->
+            <div id="dianStatusIndicator" class="dian-status-card" style="margin-bottom: 2rem;">
+                <!-- Se llenará dinámicamente -->
+            </div>
+
+            <!-- Tabs de Configuración -->
+            <div class="profile-tabs">
+                <button class="tab-btn active" onclick="showProfileTab('basic')">
+                    <i class='bx bx-building'></i> Datos Básicos
+                </button>
+                <button class="tab-btn" onclick="showProfileTab('dian')">
+                    <i class='bx bx-receipt'></i> Facturación DIAN
+                </button>
+            </div>
+
+            <!-- Tab: Datos Básicos -->
+            <div id="basicTab" class="tab-content active">
+                <form id="basicDataForm" onsubmit="handleSaveBasicData(event)">
+                    <div class="form-section">
+                        <h4 style="color: var(--neon-blue);">🏢 Información del Taller</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="workshopName">Nombre del Taller *</label>
+                                <input type="text" id="workshopName" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="workshopLegalName">Razón Social *</label>
+                                <input type="text" id="workshopLegalName" name="legal_name" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="workshopNit">NIT *</label>
+                                <input type="text" id="workshopNit" name="nit" required placeholder="900123456">
+                            </div>
+                            <div class="form-group">
+                                <label for="workshopPhone">Teléfono *</label>
+                                <input type="tel" id="workshopPhone" name="phone" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="workshopEmail">Email *</label>
+                            <input type="email" id="workshopEmail" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="workshopAddress">Dirección *</label>
+                            <textarea id="workshopAddress" name="address" rows="2" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="workshopCity">Ciudad *</label>
+                                <input type="text" id="workshopCity" name="city" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="workshopDepartment">Departamento *</label>
+                                <input type="text" id="workshopDepartment" name="department" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class='bx bx-save'></i> Guardar Cambios
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tab: Facturación DIAN -->
+            <div id="dianTab" class="tab-content">
+                <form id="dianConfigForm" onsubmit="handleSaveDianConfig(event)">
+                    <!-- Datos Fiscales -->
+                    <div class="form-section">
+                        <h4 style="color: var(--neon-blue);">💼 Datos Fiscales</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="taxRegime">Régimen Fiscal *</label>
+                                <select id="taxRegime" name="tax_regime" required>
+                                    <option value="comun">Régimen Común</option>
+                                    <option value="simplificado">Régimen Simplificado</option>
+                                    <option value="especial">Régimen Especial</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="organizationType">Tipo de Organización *</label>
+                                <select id="organizationType" name="organization_type" required>
+                                    <option value="1">Persona Jurídica</option>
+                                    <option value="2">Persona Natural</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="defaultTaxRate">Tarifa IVA por Defecto *</label>
+                            <select id="defaultTaxRate" name="default_tax_rate" required>
+                                <option value="0">0% (Exento)</option>
+                                <option value="5">5%</option>
+                                <option value="19">19%</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Responsabilidades Fiscales</label>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" name="tax_responsibilities" value="O-08"> O-08 Régimen Común
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" name="tax_responsibilities" value="O-09"> O-09 Responsable IVA
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" name="tax_responsibilities" value="O-13"> O-13 Gran Contribuyente
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" name="tax_responsibilities" value="O-15"> O-15 Autorretenedor
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" name="tax_responsibilities" value="O-16"> O-16 Facturación Electrónica
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" name="tax_responsibilities" value="O-22"> O-22 Obligado Contabilidad
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resolución DIAN -->
+                    <div class="form-section">
+                        <h4 style="color: var(--neon-green);">📋 Resolución DIAN</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="resolutionNumber">Número de Resolución *</label>
+                                <input type="text" id="resolutionNumber" placeholder="18764000000001">
+                            </div>
+                            <div class="form-group">
+                                <label for="resolutionPrefix">Prefijo *</label>
+                                <input type="text" id="resolutionPrefix" placeholder="SMFE" maxlength="10">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="resolutionDate">Fecha de Expedición *</label>
+                                <input type="date" id="resolutionDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="resolutionExpires">Fecha de Vencimiento *</label>
+                                <input type="date" id="resolutionExpires">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="resolutionFrom">Rango Desde *</label>
+                                <input type="number" id="resolutionFrom" placeholder="1" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="resolutionTo">Rango Hasta *</label>
+                                <input type="number" id="resolutionTo" placeholder="5000" min="1">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline" onclick="saveResolution()">
+                            <i class='bx bx-save'></i> Guardar Resolución
+                        </button>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class='bx bx-save'></i> Guardar Configuración DIAN
+                    </button>
+                </form>
+
+                <!-- Lista de Resoluciones Activas -->
+                <div class="form-section" style="margin-top: 2rem;">
+                    <h4 style="color: var(--neon-orange);">📜 Resoluciones Activas</h4>
+                    <div id="resolutionsList">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
                 <button type="submit" class="btn btn-primary btn-full">
                     <i class='bx bx-save'></i>
@@ -1095,3 +1289,4 @@
     <script src="assets/js/dashboard.js"></script>
 </body>
 </html>
+    <script src="assets/js/profile.js"></script>
