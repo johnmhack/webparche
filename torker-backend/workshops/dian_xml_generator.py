@@ -1,759 +1,436 @@
 """
-Generador de XML para Facturación Electrónica DIAN
-Basado en estándares UBL 2.1 y especificaciones DIAN
+Generador de XML UBL 2.1 para Facturación Electrónica DIAN
+Basado en Anexo Técnico Documento Equivalente Electrónico V1.0
 """
-
-import xml.etree.ElementTree as ET
-from xml.dom import minidom
-from datetime import datetime, timezone
-import hashlib
-import uuid
 from decimal import Decimal
+from datetime import datetime, date
 from typing import Dict, List, Optional
-import qrcode
-from io import BytesIO
-from django.core.files.base import ContentFile
-from PIL import Image, ImageDraw
-from .models import ElectronicInvoice, ElectronicInvoiceDetail, DianConfiguration
-
-
-class DianXmlGenerator:
-    """Generador de XML para documentos electrónicos DIAN"""
-
-    # Namespaces UBL 2.1
-    NSMAP = {
-        'cac': "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
-        'cbc': "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
-        'ds': "http://www.w3.org/2000/09/xmldsig#",
-        'ext': "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
-        'sts': "dian:gov:co:facturaelectronica:Structures-2-1",
-        'xades': "http://uri.etsi.org/01903/v1.3.2#",
-        'xades141': "http://uri.etsi.org/01903/v1.4.1#",
-        'xsi': "http://www.w3.org/2001/XMLSchema-instance"
-    }
-
-    def __init__(self, electronic_invoice: ElectronicInvoice):
-        self.invoice = electronic_invoice
-        self.config = electronic_invoice.workshop.dian_config
-        self.root = None
-        self._build_xml()
-
-    def _build_xml(self):
-        """Construir la estructura XML completa"""
-        # Crear elemento raíz con namespace por defecto
-        self.root = ET.Element("{urn:oasis:names:specification:ubl:schema:xsd:Invoice-2}Invoice")
-
-        # Agregar atributos de namespace
-        self.root.set("{http://www.w3.org/2000/xmlns/}cac", "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2")
-        self.root.set("{http://www.w3.org/2000/xmlns/}cbc", "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2")
-        self.root.set("{http://www.w3.org/2000/xmlns/}ds", "http://www.w3.org/2000/09/xmldsig#")
-        self.root.set("{http://www.w3.org/2000/xmlns/}ext", "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2")
-        self.root.set("{http://www.w3.org/2000/xmlns/}sts", "dian:gov:co:facturaelectronica:Structures-2-1")
-        self.root.set("{http://www.w3.org/2000/xmlns/}xades", "http://uri.etsi.org/01903/v1.3.2#")
-        self.root.set("{http://www.w3.org/2000/xmlns/}xades141", "http://uri.etsi.org/01903/v1.4.1#")
-        self.root.set("{http://www.w3.org/2000/xmlns/}xsi", "http://www.w3.org/2001/XMLSchema-instance")
-        self.root.set("{http://www.w3.org/2001/XMLSchema-instance}schemaLocation",
-                     "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd")
-
-        # Agregar schema location
-        self.root.set("{http://www.w3.org/2001/XMLSchema-instance}schemaLocation",
-                     "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 "
-                     "http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd")
-
-        # Construir secciones
-        self._add_ubl_extensions()
-        self._add_ubl_version()
-        self._add_customization_id()
-        self._add_profile_info()
-        self._add_id_and_uuid()
-        self._add_issue_info()
-        self._add_invoice_type()
-        self._add_notes()
-        self._add_currency()
-        self._add_line_count()
-        self._add_supplier_party()
-        self._add_customer_party()
-        self._add_payment_means()
-        self._add_tax_totals()
-        self._add_legal_monetary_total()
-        self._add_invoice_lines()
-
-    def _add_ubl_extensions(self):
-        """Agregar extensiones UBL con información DIAN"""
-        extensions = ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2}UBLExtensions")
-
-        # Extensión DIAN
-        extension = ET.SubElement(extensions, "{urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2}UBLExtension")
-        content = ET.SubElement(extension, "{urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2}ExtensionContent")
-        dian_extensions = ET.SubElement(content, "{dian:gov:co:facturaelectronica:Structures-2-1}DianExtensions")
-
-        # Invoice Control
-        invoice_control = ET.SubElement(dian_extensions, "{dian:gov:co:facturaelectronica:Structures-2-1}InvoiceControl")
-        ET.SubElement(invoice_control, "{dian:gov:co:facturaelectronica:Structures-2-1}InvoiceAuthorization").text = str(self.invoice.dian_resolution.resolution_number)
-        ET.SubElement(invoice_control, "{dian:gov:co:facturaelectronica:Structures-2-1}AuthorizationPeriod")
-        ET.SubElement(invoice_control, "{dian:gov:co:facturaelectronica:Structures-2-1}AuthorizedInvoices")
-
-        # Invoice Source
-        invoice_source = ET.SubElement(dian_extensions, "{dian:gov:co:facturaelectronica:Structures-2-1}InvoiceSource")
-        ET.SubElement(invoice_source, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}IdentificationCode",
-                     listAgencyID="6",
-                     listAgencyName="United Nations Economic Commission for Europe",
-                     listSchemeURI="urn:oasis:names:specification:ubl:codelist:gc:CountryIdentificationCode-2.1").text = "CO"
-
-        # Software Provider
-        software_provider = ET.SubElement(dian_extensions, "{dian:gov:co:facturaelectronica:Structures-2-1}SoftwareProvider")
-        ET.SubElement(software_provider, "{dian:gov:co:facturaelectronica:Structures-2-1}ProviderID",
-                     schemeAgencyID="195",
-                     schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)",
-                     schemeID="1",
-                     schemeName="31").text = self.invoice.workshop.nit or "2022516216"
-        ET.SubElement(software_provider, "{dian:gov:co:facturaelectronica:Structures-2-1}SoftwareID",
-                     schemeAgencyID="195",
-                     schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)").text = self.config.software_id
-
-        # Software Security Code
-        ET.SubElement(dian_extensions, "{dian:gov:co:facturaelectronica:Structures-2-1}SoftwareSecurityCode",
-                     schemeAgencyID="195",
-                     schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)").text = self.config.software_security_code
-
-        # Authorization Provider
-        auth_provider = ET.SubElement(dian_extensions, "{dian:gov:co:facturaelectronica:Structures-2-1}AuthorizationProvider")
-        ET.SubElement(auth_provider, "{dian:gov:co:facturaelectronica:Structures-2-1}AuthorizationProviderID",
-                     schemeAgencyID="195",
-                     schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)",
-                     schemeID="4",
-                     schemeName="31").text = "800197268"
-
-        # QR Code (URL completa según DIAN)
-        ET.SubElement(dian_extensions, "{dian:gov:co:facturaelectronica:Structures-2-1}QRCode").text = self._generate_qr_url()
-
-    def _add_ubl_version(self):
-        """Versión UBL"""
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}UBLVersionID").text = "UBL 2.1"
-
-    def _add_customization_id(self):
-        """ID de personalización"""
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}CustomizationID").text = "10"
-
-    def _add_profile_info(self):
-        """Información de perfil DIAN"""
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}ProfileID").text = "DIAN 2.1: Documento Equivalente Electrónico"
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}ProfileExecutionID").text = "2"
-
-    def _add_id_and_uuid(self):
-        """ID de factura y UUID (CUDE)"""
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}ID").text = self.invoice.invoice_number
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}UUID",
-                     schemeAgencyID="195",
-                     schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)",
-                     schemeID="2",
-                     schemeName="CUDE-SHA384").text = self.invoice.cude
-
-    def _add_issue_info(self):
-        """Información de emisión"""
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}IssueDate").text = self.invoice.issue_date.strftime("%Y-%m-%d")
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}IssueTime").text = self.invoice.issue_time.strftime("%H:%M:%S-05:00")
-
-        if self.invoice.due_date:
-            ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}DueDate").text = self.invoice.due_date.strftime("%Y-%m-%d")
-
-    def _add_invoice_type(self):
-        """Tipo de documento"""
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}InvoiceTypeCode", name="Factura Electrónica").text = "01"
-
-    def _add_notes(self):
-        """Notas de la factura"""
-        # Nota técnica DIAN
-        note_text = f"DPE001{self.invoice.issue_date.strftime('%Y-%m-%d%H:%M:%S-05:00')}{self.invoice.total:.2f}{self.invoice.subtotal:.2f}{self.invoice.tax_amount:.2f}{self.invoice.discount:.2f}{self.invoice.total:.2f}00374637222222222222222123452"
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}Note").text = note_text
-
-    def _add_currency(self):
-        """Moneda del documento"""
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}DocumentCurrencyCode").text = self.config.default_currency
-
-    def _add_line_count(self):
-        """Número de líneas"""
-        ET.SubElement(self.root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}LineCountNumeric").text = str(self.invoice.details.count())
-
-    def _add_supplier_party(self):
-        """Información del proveedor (taller)"""
-        supplier_party = ET.SubElement(self.root, "cac:AccountingSupplierParty")
-        ET.SubElement(supplier_party, "cbc:AdditionalAccountID").text = "1"
-
-        party = ET.SubElement(supplier_party, "cac:Party")
-
-        # Industry Classification
-        ET.SubElement(party, "cbc:IndustryClassificationCode").text = "453000"  # Comercio de motocicletas
-
-        # Party Name
-        party_name = ET.SubElement(party, "cac:PartyName")
-        ET.SubElement(party_name, "cbc:Name").text = self.invoice.workshop_name
-
-        # Physical Location
-        physical_location = ET.SubElement(party, "cac:PhysicalLocation")
-        address = ET.SubElement(physical_location, "cac:Address")
-        ET.SubElement(address, "cbc:ID").text = "11001"  # Código postal Bogotá
-        ET.SubElement(address, "cbc:CityName").text = self.invoice.workshop_city
-        ET.SubElement(address, "cbc:PostalZone").text = "110111"
-        ET.SubElement(address, "cbc:CountrySubentity").text = self.invoice.workshop_department
-        ET.SubElement(address, "cbc:CountrySubentityCode").text = "11"  # Cundinamarca
-
-        address_line = ET.SubElement(address, "cac:AddressLine")
-        ET.SubElement(address_line, "cbc:Line").text = self.invoice.workshop_address
-
-        country = ET.SubElement(address, "cac:Country")
-        ET.SubElement(country, "cbc:IdentificationCode").text = "CO"
-        ET.SubElement(country, "cbc:Name", languageID="es").text = "Colombia"
-
-        # Party Tax Scheme
-        tax_scheme = ET.SubElement(party, "cac:PartyTaxScheme")
-        ET.SubElement(tax_scheme, "cbc:RegistrationName").text = self.invoice.workshop_name
-        ET.SubElement(tax_scheme, "cbc:CompanyID",
-                     schemeAgencyID="195",
-                     schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)",
-                     schemeID="1",
-                     schemeName="31").text = self.invoice.workshop_nit
-        ET.SubElement(tax_scheme, "cbc:TaxLevelCode", listName="48").text = "O-99"  # No responsable
-
-        registration_address = ET.SubElement(tax_scheme, "cac:RegistrationAddress")
-        ET.SubElement(registration_address, "cbc:ID").text = "11001"
-        ET.SubElement(registration_address, "cbc:CityName").text = self.invoice.workshop_city
-        ET.SubElement(registration_address, "cbc:PostalZone").text = "110111"
-        ET.SubElement(registration_address, "cbc:CountrySubentity").text = self.invoice.workshop_department
-        ET.SubElement(registration_address, "cbc:CountrySubentityCode").text = "11"
-
-        address_line_reg = ET.SubElement(registration_address, "cac:AddressLine")
-        ET.SubElement(address_line_reg, "cbc:Line").text = self.invoice.workshop_address
-
-        country_reg = ET.SubElement(registration_address, "cac:Country")
-        ET.SubElement(country_reg, "cbc:IdentificationCode").text = "CO"
-        ET.SubElement(country_reg, "cbc:Name", languageID="es").text = "Colombia"
-
-        tax_scheme_ref = ET.SubElement(tax_scheme, "cac:TaxScheme")
-        ET.SubElement(tax_scheme_ref, "cbc:ID").text = "01"
-        ET.SubElement(tax_scheme_ref, "cbc:Name").text = "IVA"
-
-        # Party Legal Entity
-        legal_entity = ET.SubElement(party, "cac:PartyLegalEntity")
-        ET.SubElement(legal_entity, "cbc:RegistrationName").text = self.invoice.workshop_name
-        ET.SubElement(legal_entity, "cbc:CompanyID",
-                     schemeAgencyID="195",
-                     schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)",
-                     schemeID="1",
-                     schemeName="31").text = self.invoice.workshop_nit
-
-        corporate_scheme = ET.SubElement(legal_entity, "cac:CorporateRegistrationScheme")
-        ET.SubElement(corporate_scheme, "cbc:ID").text = self.invoice.dian_resolution.prefix
-
-        # Contact
-        contact = ET.SubElement(party, "cac:Contact")
-        if self.invoice.workshop_phone:
-            ET.SubElement(contact, "cbc:Telephone").text = self.invoice.workshop_phone
-        if self.invoice.workshop_email:
-            ET.SubElement(contact, "cbc:ElectronicMail").text = self.invoice.workshop_email
-
-    def _add_customer_party(self):
-        """Información del cliente"""
-        customer_party = ET.SubElement(self.root, "cac:AccountingCustomerParty")
-        ET.SubElement(customer_party, "cbc:AdditionalAccountID").text = "2"
-
-        party = ET.SubElement(customer_party, "cac:Party")
-
-        # Party Identification
-        party_identification = ET.SubElement(party, "cac:PartyIdentification")
-        ET.SubElement(party_identification, "cbc:ID",
-                     schemeID=self.invoice.customer_document_type,
-                     schemeName="13",
-                     schemeAgencyID="195",
-                     schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)").text = self.invoice.customer_document
-
-        # Party Name
-        party_name = ET.SubElement(party, "cac:PartyName")
-        ET.SubElement(party_name, "cbc:Name").text = self.invoice.customer_name
-
-        # Physical Location (si hay dirección)
-        if self.invoice.customer_address:
-            physical_location = ET.SubElement(party, "cac:PhysicalLocation")
-            address = ET.SubElement(physical_location, "cac:Address")
-            ET.SubElement(address, "cbc:ID").text = "11001"
-            ET.SubElement(address, "cbc:CityName").text = self.invoice.customer_city or "Bogotá, D.C."
-            ET.SubElement(address, "cbc:CountrySubentity").text = self.invoice.customer_department or "Bogotá"
-            ET.SubElement(address, "cbc:CountrySubentityCode").text = "11"
-
-            address_line = ET.SubElement(address, "cac:AddressLine")
-            ET.SubElement(address_line, "cbc:Line").text = self.invoice.customer_address
-
-            country = ET.SubElement(address, "cac:Country")
-            ET.SubElement(country, "cbc:IdentificationCode").text = "CO"
-            ET.SubElement(country, "cbc:Name", languageID="es").text = "Colombia"
-
-        # Party Tax Scheme
-        tax_scheme = ET.SubElement(party, "cac:PartyTaxScheme")
-        ET.SubElement(tax_scheme, "cbc:RegistrationName").text = self.invoice.customer_name
-        ET.SubElement(tax_scheme, "cbc:CompanyID",
-                     schemeAgencyID="195",
-                     schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)",
-                     schemeName="13").text = self.invoice.customer_document
-
-        tax_scheme_ref = ET.SubElement(tax_scheme, "cac:TaxScheme")
-        ET.SubElement(tax_scheme_ref, "cbc:ID").text = "01"
-        ET.SubElement(tax_scheme_ref, "cbc:Name").text = "IVA"
-
-        # Party Legal Entity (solo si es empresa)
-        if self.invoice.customer_document_type in ['nit']:
-            legal_entity = ET.SubElement(party, "cac:PartyLegalEntity")
-            ET.SubElement(legal_entity, "cbc:RegistrationName").text = self.invoice.customer_name
-            ET.SubElement(legal_entity, "cbc:CompanyID",
-                         schemeAgencyID="195",
-                         schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)",
-                         schemeName="13").text = self.invoice.customer_document
-
-        # Contact (si hay información)
-        if self.invoice.customer_phone or self.invoice.customer_email:
-            contact = ET.SubElement(party, "cac:Contact")
-            if self.invoice.customer_phone:
-                ET.SubElement(contact, "cbc:Telephone").text = self.invoice.customer_phone
-            if self.invoice.customer_email:
-                ET.SubElement(contact, "cbc:ElectronicMail").text = self.invoice.customer_email
-
-    def _add_payment_means(self):
-        """Medios de pago"""
-        payment_means = ET.SubElement(self.root, "cac:PaymentMeans")
-        ET.SubElement(payment_means, "cbc:ID").text = "1"
-        ET.SubElement(payment_means, "cbc:PaymentMeansCode").text = "10"  # Efectivo
-
-        if self.invoice.due_date:
-            ET.SubElement(payment_means, "cbc:PaymentDueDate").text = self.invoice.due_date.strftime("%Y-%m-%d")
-
-    def _add_tax_totals(self):
-        """Totales de impuestos"""
-        # IVA
-        tax_total = ET.SubElement(self.root, "cac:TaxTotal")
-        ET.SubElement(tax_total, "cbc:TaxAmount", currencyID="COP").text = f"{self.invoice.tax_amount:.2f}"
-
-        tax_subtotal = ET.SubElement(tax_total, "cac:TaxSubtotal")
-        ET.SubElement(tax_subtotal, "cbc:TaxableAmount", currencyID="COP").text = f"{self.invoice.subtotal:.2f}"
-        ET.SubElement(tax_subtotal, "cbc:TaxAmount", currencyID="COP").text = f"{self.invoice.tax_amount:.2f}"
-
-        tax_category = ET.SubElement(tax_subtotal, "cac:TaxCategory")
-        ET.SubElement(tax_category, "cbc:Percent").text = "19.00"
-
-        tax_scheme = ET.SubElement(tax_category, "cac:TaxScheme")
-        ET.SubElement(tax_scheme, "cbc:ID").text = "01"
-        ET.SubElement(tax_scheme, "cbc:Name").text = "IVA"
-
-    def _add_legal_monetary_total(self):
-        """Totales monetarios"""
-        legal_total = ET.SubElement(self.root, "cac:LegalMonetaryTotal")
-        ET.SubElement(legal_total, "cbc:LineExtensionAmount", currencyID="COP").text = f"{self.invoice.subtotal:.2f}"
-        ET.SubElement(legal_total, "cbc:TaxExclusiveAmount", currencyID="COP").text = f"{self.invoice.subtotal:.2f}"
-        ET.SubElement(legal_total, "cbc:TaxInclusiveAmount", currencyID="COP").text = f"{self.invoice.total:.2f}"
-        ET.SubElement(legal_total, "cbc:PayableAmount", currencyID="COP").text = f"{self.invoice.total:.2f}"
-
-    def _add_invoice_lines(self):
-        """Líneas de la factura"""
-        for detail in self.invoice.details.all():
-            invoice_line = ET.SubElement(self.root, "cac:InvoiceLine")
-            ET.SubElement(invoice_line, "cbc:ID").text = str(detail.id)
-            ET.SubElement(invoice_line, "cbc:InvoicedQuantity", unitCode="NIU").text = f"{detail.quantity:.2f}"
-            ET.SubElement(invoice_line, "cbc:LineExtensionAmount", currencyID="COP").text = f"{detail.subtotal:.2f}"
-            ET.SubElement(invoice_line, "cbc:FreeOfChargeIndicator").text = "false"
-
-            # Tax Total
-            tax_total = ET.SubElement(invoice_line, "cac:TaxTotal")
-            ET.SubElement(tax_total, "cbc:TaxAmount", currencyID="COP").text = f"{detail.tax_amount:.2f}"
-
-            tax_subtotal = ET.SubElement(tax_total, "cac:TaxSubtotal")
-            ET.SubElement(tax_subtotal, "cbc:TaxableAmount", currencyID="COP").text = f"{detail.subtotal:.2f}"
-            ET.SubElement(tax_subtotal, "cbc:TaxAmount", currencyID="COP").text = f"{detail.tax_amount:.2f}"
-
-            tax_category = ET.SubElement(tax_subtotal, "cac:TaxCategory")
-            ET.SubElement(tax_category, "cbc:Percent").text = f"{detail.tax_rate:.2f}"
-
-            tax_scheme = ET.SubElement(tax_category, "cac:TaxScheme")
-            ET.SubElement(tax_scheme, "cbc:ID").text = "01"
-            ET.SubElement(tax_scheme, "cbc:Name").text = "IVA"
-
-            # Item
-            item = ET.SubElement(invoice_line, "cac:Item")
-            ET.SubElement(item, "cbc:Description").text = detail.description
-
-            if detail.brand_name:
-                ET.SubElement(item, "cbc:BrandName").text = detail.brand_name
-            if detail.model_name:
-                ET.SubElement(item, "cbc:ModelName").text = detail.model_name
-
-            # Standard Item Identification
-            if detail.part_number:
-                std_id = ET.SubElement(item, "cac:StandardItemIdentification")
-                ET.SubElement(std_id, "cbc:ID", schemeID="999", schemeName="EAN13").text = detail.part_number
-
-            # Price
-            price = ET.SubElement(invoice_line, "cac:Price")
-            ET.SubElement(price, "cbc:PriceAmount", currencyID="COP").text = f"{detail.unit_price:.2f}"
-            ET.SubElement(price, "cbc:BaseQuantity", unitCode="NIU").text = "1.00"
-
-    def _generate_qr_url(self) -> str:
-        """Generar URL completa del QR según especificaciones DIAN Resolución 000042"""
-        # URL base de validación DIAN (producción)
-        base_url = "https://catalogo-vpfe.dian.gov.co/document/searchqr"
-
-        # Construir parámetros obligatorios según DIAN
-        params = {
-            'documentKey': self.invoice.cude,  # CUDE (Código Único de Documento Electrónico)
-            'nit': self.invoice.workshop_nit,  # NIT del emisor
-            'documentType': '01',  # Tipo de documento: 01 = Factura Electrónica
-            'documentNumber': self.invoice.invoice_number,  # Número completo de factura
-            'issueDate': self.invoice.issue_date.strftime('%Y-%m-%d'),  # Fecha de emisión
-            'totalAmount': f"{self.invoice.total:.2f}"  # Valor total de la factura
-        }
-
-        # Construir URL con parámetros
-        param_string = "&".join([f"{k}={v}" for k, v in params.items()])
-        qr_url = f"{base_url}?{param_string}"
-
-        # Generar imagen QR y guardarla
-        self._generate_qr_image(qr_url)
-
-        return qr_url
-
-    def _generate_qr_image(self, qr_url: str):
-        """Generar imagen QR y guardarla en el modelo"""
-        try:
-            # Crear código QR
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=10,
-                border=4,
-            )
-            qr.add_data(qr_url)
-            qr.make(fit=True)
-
-            # Crear imagen
-            img = qr.make_image(fill_color="black", back_color="white")
-
-            # Convertir a RGB si es necesario
-            if img.mode != 'RGB':
-                img = img.convert('RGB')
-
-            # Guardar en memoria
-            buffer = BytesIO()
-            img.save(buffer, format='PNG')
-            buffer.seek(0)
-
-            # Crear nombre de archivo único
-            filename = f"qr_{self.invoice.invoice_number}_{self.invoice.cude[:8]}.png"
-
-            # Guardar en el modelo
-            self.invoice.qr_code_image.save(filename, ContentFile(buffer.getvalue()), save=False)
-            self.invoice.qr_code_url = qr_url
-            self.invoice.save(update_fields=['qr_code_image', 'qr_code_url'])
-
-        except Exception as e:
-            # Log error pero no fallar la generación del XML
-            print(f"Error generando QR: {e}")
-            self.invoice.qr_code_url = qr_url
-            self.invoice.save(update_fields=['qr_code_url'])
-
-    def get_xml_string(self, pretty_print: bool = True) -> str:
-        """Obtener XML como string"""
-        # Crear XML manualmente para tener control total sobre namespaces
-        xml_parts = []
-
-        # Declaración XML
-        xml_parts.append('<?xml version="1.0" encoding="utf-8" standalone="no"?>')
-
-        # Elemento raíz con namespaces
-        root_attrs = []
-        root_attrs.append('xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"')
-        root_attrs.append('xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"')
-        root_attrs.append('xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"')
-        root_attrs.append('xmlns:ds="http://www.w3.org/2000/09/xmldsig#"')
-        root_attrs.append('xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"')
-        root_attrs.append('xmlns:sts="dian:gov:co:facturaelectronica:Structures-2-1"')
-        root_attrs.append('xmlns:xades="http://uri.etsi.org/01903/v1.3.2#"')
-        root_attrs.append('xmlns:xades141="http://uri.etsi.org/01903/v1.4.1#"')
-        root_attrs.append('xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
-        root_attrs.append('xsi:schemaLocation="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd"')
-
-        xml_parts.append(f'<Invoice {" ".join(root_attrs)}>')
-
-        # Agregar extensiones UBL primero
-        xml_parts.append('  <ext:UBLExtensions>')
-        xml_parts.append('    <ext:UBLExtension>')
-        xml_parts.append('      <ext:ExtensionContent>')
-        xml_parts.append('        <sts:DianExtensions>')
-        xml_parts.append('          <sts:InvoiceSource>')
-        xml_parts.append('            <cbc:IdentificationCode listAgencyID="6" listAgencyName="United Nations Economic Commission for Europe" listSchemeURI="urn:oasis:names:specification:ubl:codelist:gc:CountryIdentificationCode-2.1">CO</cbc:IdentificationCode>')
-        xml_parts.append('          </sts:InvoiceSource>')
-        xml_parts.append('          <sts:SoftwareProvider>')
-        xml_parts.append(f'            <sts:ProviderID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="1" schemeName="31">{self.invoice.workshop.nit or "2022516216"}</sts:ProviderID>')
-        xml_parts.append(f'            <sts:SoftwareID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">{self.config.software_id}</sts:SoftwareID>')
-        xml_parts.append(f'            <sts:SoftwareSecurityCode schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">{self.config.software_security_code}</sts:SoftwareSecurityCode>')
-        xml_parts.append('            <sts:AuthorizationProvider>')
-        xml_parts.append('              <sts:AuthorizationProviderID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="4" schemeName="31">800197268</sts:AuthorizationProviderID>')
-        xml_parts.append('            </sts:AuthorizationProvider>')
-        xml_parts.append(f'            <sts:QRCode>{self._generate_qr_url()}</sts:QRCode>')
-        xml_parts.append('          </sts:SoftwareProvider>')
-        xml_parts.append('        </sts:DianExtensions>')
-        xml_parts.append('      </ext:ExtensionContent>')
-        xml_parts.append('    </ext:UBLExtension>')
-        xml_parts.append('  </ext:UBLExtensions>')
-
-        # Agregar elementos principales después de las extensiones
-        xml_parts.append('  <cbc:UBLVersionID>UBL 2.1</cbc:UBLVersionID>')
-        xml_parts.append('  <cbc:CustomizationID>10</cbc:CustomizationID>')
-        xml_parts.append('  <cbc:ProfileID>DIAN 2.1: Documento Equivalente Electrónico</cbc:ProfileID>')
-        xml_parts.append('  <cbc:ProfileExecutionID>2</cbc:ProfileExecutionID>')
-        xml_parts.append(f'  <cbc:ID>{self.invoice.invoice_number}</cbc:ID>')
-        xml_parts.append(f'  <cbc:UUID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="2" schemeName="CUDE-SHA384">{self.invoice.cude}</cbc:UUID>')
-        xml_parts.append(f'  <cbc:IssueDate>{self.invoice.issue_date.strftime("%Y-%m-%d")}</cbc:IssueDate>')
-        xml_parts.append(f'  <cbc:IssueTime>{self.invoice.issue_time.strftime("%H:%M:%S-05:00")}</cbc:IssueTime>')
-        xml_parts.append('  <cbc:InvoiceTypeCode name="Factura Electrónica">01</cbc:InvoiceTypeCode>')
-        xml_parts.append(f'  <cbc:Note>DPE001{self.invoice.issue_date.strftime("%Y-%m-%d%H:%M:%S-05:00")}{self.invoice.total:.2f}{self.invoice.subtotal:.2f}{self.invoice.tax_amount:.2f}{self.invoice.discount:.2f}{self.invoice.total:.2f}00374637222222222222222123452</cbc:Note>')
-        xml_parts.append('  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>')
-        xml_parts.append(f'  <cbc:LineCountNumeric>{self.invoice.details.count()}</cbc:LineCountNumeric>')
-
-        # Información del proveedor (taller)
-        xml_parts.append('  <cac:AccountingSupplierParty>')
-        xml_parts.append('    <cbc:AdditionalAccountID>1</cbc:AdditionalAccountID>')
-        xml_parts.append('    <cac:Party>')
-        xml_parts.append('      <cbc:IndustryClassificationCode>453000</cbc:IndustryClassificationCode>')
-        xml_parts.append(f'      <cac:PartyName><cbc:Name>{self.invoice.workshop_name}</cbc:Name></cac:PartyName>')
-        xml_parts.append('      <cac:PhysicalLocation>')
-        xml_parts.append('        <cac:Address>')
-        xml_parts.append('          <cbc:ID>11001</cbc:ID>')
-        xml_parts.append(f'          <cbc:CityName>{self.invoice.workshop_city}</cbc:CityName>')
-        xml_parts.append('          <cbc:PostalZone>110111</cbc:PostalZone>')
-        xml_parts.append(f'          <cbc:CountrySubentity>{self.invoice.workshop_department}</cbc:CountrySubentity>')
-        xml_parts.append('          <cbc:CountrySubentityCode>11</cbc:CountrySubentityCode>')
-        xml_parts.append(f'          <cac:AddressLine><cbc:Line>{self.invoice.workshop_address}</cbc:Line></cac:AddressLine>')
-        xml_parts.append('          <cac:Country>')
-        xml_parts.append('            <cbc:IdentificationCode>CO</cbc:IdentificationCode>')
-        xml_parts.append('            <cbc:Name languageID="es">Colombia</cbc:Name>')
-        xml_parts.append('          </cac:Country>')
-        xml_parts.append('        </cac:Address>')
-        xml_parts.append('      </cac:PhysicalLocation>')
-        xml_parts.append('      <cac:PartyTaxScheme>')
-        xml_parts.append(f'        <cbc:RegistrationName>{self.invoice.workshop_name}</cbc:RegistrationName>')
-        xml_parts.append(f'        <cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="1" schemeName="31">{self.invoice.workshop_nit}</cbc:CompanyID>')
-        xml_parts.append('        <cbc:TaxLevelCode listName="48">O-99</cbc:TaxLevelCode>')
-        xml_parts.append('        <cac:RegistrationAddress>')
-        xml_parts.append('          <cbc:ID>11001</cbc:ID>')
-        xml_parts.append(f'          <cbc:CityName>{self.invoice.workshop_city}</cbc:CityName>')
-        xml_parts.append('          <cbc:PostalZone>110111</cbc:PostalZone>')
-        xml_parts.append(f'          <cbc:CountrySubentity>{self.invoice.workshop_department}</cbc:CountrySubentity>')
-        xml_parts.append('          <cbc:CountrySubentityCode>11</cbc:CountrySubentityCode>')
-        xml_parts.append(f'          <cac:AddressLine><cbc:Line>{self.invoice.workshop_address}</cbc:Line></cac:AddressLine>')
-        xml_parts.append('          <cac:Country>')
-        xml_parts.append('            <cbc:IdentificationCode>CO</cbc:IdentificationCode>')
-        xml_parts.append('            <cbc:Name languageID="es">Colombia</cbc:Name>')
-        xml_parts.append('          </cac:Country>')
-        xml_parts.append('        </cac:RegistrationAddress>')
-        xml_parts.append('        <cac:TaxScheme>')
-        xml_parts.append('          <cbc:ID>01</cbc:ID>')
-        xml_parts.append('          <cbc:Name>IVA</cbc:Name>')
-        xml_parts.append('        </cac:TaxScheme>')
-        xml_parts.append('      </cac:PartyTaxScheme>')
-        xml_parts.append('      <cac:PartyLegalEntity>')
-        xml_parts.append(f'        <cbc:RegistrationName>{self.invoice.workshop_name}</cbc:RegistrationName>')
-        xml_parts.append(f'        <cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeID="1" schemeName="31">{self.invoice.workshop_nit}</cbc:CompanyID>')
-        xml_parts.append('        <cac:CorporateRegistrationScheme>')
-        xml_parts.append(f'          <cbc:ID>{self.invoice.dian_resolution.prefix}</cbc:ID>')
-        xml_parts.append('        </cac:CorporateRegistrationScheme>')
-        xml_parts.append('      </cac:PartyLegalEntity>')
-        if self.invoice.workshop_phone:
-            xml_parts.append(f'      <cac:Contact><cbc:Telephone>{self.invoice.workshop_phone}</cbc:Telephone></cac:Contact>')
-        xml_parts.append('    </cac:Party>')
-        xml_parts.append('  </cac:AccountingSupplierParty>')
-
-        # Información del cliente
-        xml_parts.append('  <cac:AccountingCustomerParty>')
-        xml_parts.append('    <cbc:AdditionalAccountID>2</cbc:AdditionalAccountID>')
-        xml_parts.append('    <cac:Party>')
-        xml_parts.append('      <cac:PartyIdentification>')
-        xml_parts.append(f'        <cbc:ID schemeID="{self.invoice.customer_document_type}" schemeName="13" schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)">{self.invoice.customer_document}</cbc:ID>')
-        xml_parts.append('      </cac:PartyIdentification>')
-        xml_parts.append(f'      <cac:PartyName><cbc:Name>{self.invoice.customer_name}</cbc:Name></cac:PartyName>')
-        xml_parts.append('      <cac:PartyTaxScheme>')
-        xml_parts.append(f'        <cbc:RegistrationName>{self.invoice.customer_name}</cbc:RegistrationName>')
-        xml_parts.append(f'        <cbc:CompanyID schemeAgencyID="195" schemeAgencyName="CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)" schemeName="13">{self.invoice.customer_document}</cbc:CompanyID>')
-        xml_parts.append('        <cac:TaxScheme>')
-        xml_parts.append('          <cbc:ID>01</cbc:ID>')
-        xml_parts.append('          <cbc:Name>IVA</cbc:Name>')
-        xml_parts.append('        </cac:TaxScheme>')
-        xml_parts.append('      </cac:PartyTaxScheme>')
-        xml_parts.append('    </cac:Party>')
-        xml_parts.append('  </cac:AccountingCustomerParty>')
-
-        # Medios de pago
-        xml_parts.append('  <cac:PaymentMeans>')
-        xml_parts.append('    <cbc:ID>1</cbc:ID>')
-        xml_parts.append('    <cbc:PaymentMeansCode>10</cbc:PaymentMeansCode>')
-        xml_parts.append('  </cac:PaymentMeans>')
-
-        # Impuestos
-        xml_parts.append('  <cac:TaxTotal>')
-        xml_parts.append(f'    <cbc:TaxAmount currencyID="COP">{self.invoice.tax_amount:.2f}</cbc:TaxAmount>')
-        xml_parts.append('    <cac:TaxSubtotal>')
-        xml_parts.append(f'      <cbc:TaxableAmount currencyID="COP">{self.invoice.subtotal:.2f}</cbc:TaxableAmount>')
-        xml_parts.append(f'      <cbc:TaxAmount currencyID="COP">{self.invoice.tax_amount:.2f}</cbc:TaxAmount>')
-        xml_parts.append('      <cac:TaxCategory>')
-        xml_parts.append('        <cbc:Percent>19.00</cbc:Percent>')
-        xml_parts.append('        <cac:TaxScheme>')
-        xml_parts.append('          <cbc:ID>01</cbc:ID>')
-        xml_parts.append('          <cbc:Name>IVA</cbc:Name>')
-        xml_parts.append('        </cac:TaxScheme>')
-        xml_parts.append('      </cac:TaxCategory>')
-        xml_parts.append('    </cac:TaxSubtotal>')
-        xml_parts.append('  </cac:TaxTotal>')
-
-        # Totales legales
-        xml_parts.append('  <cac:LegalMonetaryTotal>')
-        xml_parts.append(f'    <cbc:LineExtensionAmount currencyID="COP">{self.invoice.subtotal:.2f}</cbc:LineExtensionAmount>')
-        xml_parts.append(f'    <cbc:TaxExclusiveAmount currencyID="COP">{self.invoice.subtotal:.2f}</cbc:TaxExclusiveAmount>')
-        xml_parts.append(f'    <cbc:TaxInclusiveAmount currencyID="COP">{self.invoice.total:.2f}</cbc:TaxInclusiveAmount>')
-        xml_parts.append(f'    <cbc:PayableAmount currencyID="COP">{self.invoice.total:.2f}</cbc:PayableAmount>')
-        xml_parts.append('  </cac:LegalMonetaryTotal>')
-
-        # Líneas de factura
-        for detail in self.invoice.details.all():
-            xml_parts.append('  <cac:InvoiceLine>')
-            xml_parts.append(f'    <cbc:ID>{detail.id}</cbc:ID>')
-            xml_parts.append(f'    <cbc:InvoicedQuantity unitCode="NIU">{detail.quantity:.2f}</cbc:InvoicedQuantity>')
-            xml_parts.append(f'    <cbc:LineExtensionAmount currencyID="COP">{detail.subtotal:.2f}</cbc:LineExtensionAmount>')
-            xml_parts.append('    <cbc:FreeOfChargeIndicator>false</cbc:FreeOfChargeIndicator>')
-            xml_parts.append('    <cac:TaxTotal>')
-            xml_parts.append(f'      <cbc:TaxAmount currencyID="COP">{detail.tax_amount:.2f}</cbc:TaxAmount>')
-            xml_parts.append('      <cac:TaxSubtotal>')
-            xml_parts.append(f'        <cbc:TaxableAmount currencyID="COP">{detail.subtotal:.2f}</cbc:TaxableAmount>')
-            xml_parts.append(f'        <cbc:TaxAmount currencyID="COP">{detail.tax_amount:.2f}</cbc:TaxAmount>')
-            xml_parts.append('        <cac:TaxCategory>')
-            xml_parts.append(f'          <cbc:Percent>{detail.tax_rate:.2f}</cbc:Percent>')
-            xml_parts.append('          <cac:TaxScheme>')
-            xml_parts.append('            <cbc:ID>01</cbc:ID>')
-            xml_parts.append('            <cbc:Name>IVA</cbc:Name>')
-            xml_parts.append('          </cac:TaxScheme>')
-            xml_parts.append('        </cac:TaxCategory>')
-            xml_parts.append('      </cac:TaxSubtotal>')
-            xml_parts.append('    </cac:TaxTotal>')
-            xml_parts.append('    <cac:Item>')
-            xml_parts.append(f'      <cbc:Description>{detail.description}</cbc:Description>')
-            xml_parts.append('    </cac:Item>')
-            xml_parts.append('    <cac:Price>')
-            xml_parts.append(f'      <cbc:PriceAmount currencyID="COP">{detail.unit_price:.2f}</cbc:PriceAmount>')
-            xml_parts.append('      <cbc:BaseQuantity unitCode="NIU">1.00</cbc:BaseQuantity>')
-            xml_parts.append('    </cac:Price>')
-            xml_parts.append('  </cac:InvoiceLine>')
-
-        xml_parts.append('</Invoice>')
-
-        return '\n'.join(xml_parts)
-
-    def _element_to_string(self, element: ET.Element, indent: int = 1) -> str:
-        """Convertir elemento ET a string con formato correcto"""
-        indent_str = '  ' * indent
-        tag_name = element.tag.split('}')[-1]  # Obtener nombre sin namespace
-
-        # Si es elemento DIAN, usar prefijo sts
-        if 'dian:gov:co:facturaelectronica:Structures-2-1' in element.tag:
-            tag_name = f'sts:{tag_name}'
-        elif 'urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2' in element.tag:
-            tag_name = f'ext:{tag_name}'
-        elif 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2' in element.tag:
-            tag_name = f'cac:{tag_name}'
-        elif 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2' in element.tag:
-            tag_name = f'cbc:{tag_name}'
-
-        # Atributos
-        attrs = []
-        for key, value in element.attrib.items():
-            if '}' in key:
-                # Namespace attribute
-                prefix = key.split('}')[0].split('{')[-1]
-                attr_name = key.split('}')[-1]
-                if prefix == "http://www.w3.org/2001/XMLSchema-instance":
-                    attrs.append(f'xsi:{attr_name}="{value}"')
-                else:
-                    attrs.append(f'{key}="{value}"')
-            else:
-                attrs.append(f'{key}="{value}"')
-
-        attr_str = f' {" ".join(attrs)}' if attrs else ''
-
-        if element.text and element.text.strip():
-            if element:
-                # Tiene hijos
-                child_strs = []
-                for child in element:
-                    child_strs.append(self._element_to_string(child, indent + 1))
-                children = f'\n{"  " * (indent + 1)}'.join(child_strs)
-                return f'{indent_str}<{tag_name}{attr_str}>\n{children}\n{indent_str}</{tag_name}>'
-            else:
-                # Solo texto
-                return f'{indent_str}<{tag_name}{attr_str}>{element.text}</{tag_name}>'
+from xml.etree.ElementTree import Element, SubElement, tostring
+from xml.dom import minidom
+
+
+# Namespaces UBL 2.1 según especificación DIAN
+NAMESPACES = {
+    '': 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2',
+    'cac': 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2',
+    'cbc': 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2',
+    'ccts': 'urn:un:unece:uncefact:documentation:2',
+    'ds': 'http://www.w3.org/2000/09/xmldsig#',
+    'ext': 'urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2',
+    'qdt': 'urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2',
+    'sts': 'dian:gov:co:facturaelectronica:Structures-2-1',
+    'udt': 'urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2',
+    'xades': 'http://uri.etsi.org/01903/v1.3.2#',
+    'xades141': 'http://uri.etsi.org/01903/v1.4.1#',
+    'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+}
+
+
+def register_namespaces():
+    """Registra los namespaces XML para generación correcta"""
+    try:
+        from xml.etree.ElementTree import register_namespace
+        for prefix, uri in NAMESPACES.items():
+            if prefix:  # No registrar el namespace por defecto
+                register_namespace(prefix, uri)
+    except ImportError:
+        pass
+
+
+def create_element(tag: str, text: Optional[str] = None, attribs: Optional[Dict] = None) -> Element:
+    """
+    Crea un elemento XML con namespace correcto.
+    
+    Args:
+        tag: Nombre del tag (puede incluir prefijo namespace como 'cbc:ID')
+        text: Texto del elemento
+        attribs: Atributos del elemento
+    
+    Returns:
+        Element: Elemento XML creado
+    """
+    if ':' in tag:
+        prefix, local_name = tag.split(':', 1)
+        namespace = NAMESPACES.get(prefix, '')
+        full_tag = f"{{{namespace}}}{local_name}"
+    else:
+        namespace = NAMESPACES.get('', '')
+        full_tag = f"{{{namespace}}}{tag}"
+    
+    elem = Element(full_tag, attribs or {})
+    if text is not None:
+        elem.text = str(text)
+    
+    return elem
+
+
+def add_subelement(parent: Element, tag: str, text: Optional[str] = None, attribs: Optional[Dict] = None) -> Element:
+    """
+    Agrega un subelemento a un elemento padre.
+    
+    Args:
+        parent: Elemento padre
+        tag: Nombre del tag
+        text: Texto del elemento
+        attribs: Atributos del elemento
+    
+    Returns:
+        Element: Subelemento creado
+    """
+    if ':' in tag:
+        prefix, local_name = tag.split(':', 1)
+        namespace = NAMESPACES.get(prefix, '')
+        full_tag = f"{{{namespace}}}{local_name}"
+    else:
+        namespace = NAMESPACES.get('', '')
+        full_tag = f"{{{namespace}}}{tag}"
+    
+    elem = SubElement(parent, full_tag, attribs or {})
+    if text is not None:
+        elem.text = str(text)
+    
+    return elem
+
+
+def format_decimal(value: Decimal, decimals: int = 2) -> str:
+    """
+    Formatea un valor decimal para XML según DIAN.
+    
+    Args:
+        value: Valor a formatear
+        decimals: Cantidad de decimales
+    
+    Returns:
+        str: Valor formateado
+    """
+    return f"{value:.{decimals}f}"
+
+
+def format_date(date_obj: date) -> str:
+    """Formatea una fecha para XML según DIAN (YYYY-MM-DD)"""
+    return date_obj.strftime('%Y-%m-%d')
+
+
+def format_time(time_obj: datetime) -> str:
+    """Formatea una hora para XML según DIAN (HH:MM:SS-05:00)"""
+    return time_obj.strftime('%H:%M:%S-05:00')
+
+
+def generate_electronic_invoice_xml(invoice) -> str:
+    """
+    Genera XML UBL 2.1 completo para una factura electrónica DIAN.
+    
+    Args:
+        invoice: Instancia de ElectronicInvoice
+    
+    Returns:
+        str: XML formateado
+    """
+    register_namespaces()
+    
+    # Crear elemento raíz Invoice
+    root = create_element('Invoice', attribs={
+        f'{{{NAMESPACES["xsi"]}}}schemaLocation': 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd'
+    })
+    
+    # Agregar namespaces al elemento raíz
+    for prefix, uri in NAMESPACES.items():
+        if prefix:
+            root.set(f'xmlns:{prefix}', uri)
         else:
-            if element:
-                # Tiene hijos
-                child_strs = []
-                for child in element:
-                    child_strs.append(self._element_to_string(child, indent + 1))
-                children = f'\n'.join(child_strs)
-                return f'{indent_str}<{tag_name}{attr_str}>\n{children}\n{indent_str}</{tag_name}>'
-            else:
-                # Elemento vacío
-                return f'{indent_str}<{tag_name}{attr_str}/>'
+            root.set('xmlns', uri)
+    
+    # ========================================================================
+    # SECCIÓN 1: EXTENSIONES (para firma digital - se implementará después)
+    # ========================================================================
+    ext_root = add_subelement(root, 'ext:UBLExtensions')
+    ext_item = add_subelement(ext_root, 'ext:UBLExtension')
+    ext_content = add_subelement(ext_item, 'ext:ExtensionContent')
+    # Aquí irá la firma digital cuando se implemente Camerfirma
+    
+    # ========================================================================
+    # SECCIÓN 2: INFORMACIÓN GENERAL DEL DOCUMENTO
+    # ========================================================================
+    add_subelement(root, 'cbc:UBLVersionID', 'UBL 2.1')
+    add_subelement(root, 'cbc:CustomizationID', 'Documento Equivalente Electrónico')
+    add_subelement(root, 'cbc:ProfileID', 'DIAN 2.1: Documento Equivalente Electrónico')
+    add_subelement(root, 'cbc:ProfileExecutionID', '2' if hasattr(invoice.workshop, 'dian_config') and invoice.workshop.dian_config.environment == 'production' else '1')
+    add_subelement(root, 'cbc:ID', invoice.invoice_number)
+    add_subelement(root, 'cbc:UUID', invoice.cude, {
+        'schemeName': 'CUDE-SHA384',
+        'schemeID': invoice.invoice_number
+    })
+    add_subelement(root, 'cbc:IssueDate', format_date(invoice.issue_date.date()))
+    add_subelement(root, 'cbc:IssueTime', format_time(invoice.issue_date))
+    
+    # Tipo de documento (01 = Factura)
+    add_subelement(root, 'cbc:InvoiceTypeCode', '01')
+    
+    # Notas del documento
+    if invoice.notes:
+        add_subelement(root, 'cbc:Note', invoice.notes)
+    
+    # Moneda del documento
+    add_subelement(root, 'cbc:DocumentCurrencyCode', 'COP', {'listID': 'ISO 4217 Alpha', 'listName': 'Currency'})
+    
+    # Número de líneas
+    line_count = invoice.details.count()
+    add_subelement(root, 'cbc:LineCountNumeric', str(line_count))
+    
+    # ========================================================================
+    # SECCIÓN 3: PERÍODO DE FACTURACIÓN (opcional)
+    # ========================================================================
+    invoice_period = add_subelement(root, 'cac:InvoicePeriod')
+    add_subelement(invoice_period, 'cbc:StartDate', format_date(invoice.issue_date.date()))
+    add_subelement(invoice_period, 'cbc:EndDate', format_date(invoice.issue_date.date()))
+    
+    # ========================================================================
+    # SECCIÓN 4: REFERENCIA A RESOLUCIÓN DIAN
+    # ========================================================================
+    billing_reference = add_subelement(root, 'cac:BillingReference')
+    invoice_doc_ref = add_subelement(billing_reference, 'cac:InvoiceDocumentReference')
+    add_subelement(invoice_doc_ref, 'cbc:ID', invoice.dian_resolution.resolution_number)
+    add_subelement(invoice_doc_ref, 'cbc:UUID', invoice.dian_resolution.resolution_number, {'schemeName': 'CUDE-SHA384'})
+    add_subelement(invoice_doc_ref, 'cbc:IssueDate', format_date(invoice.dian_resolution.resolution_date))
+    
+    # ========================================================================
+    # SECCIÓN 5: INFORMACIÓN DEL PROVEEDOR (TALLER)
+    # ========================================================================
+    supplier_party = add_subelement(root, 'cac:AccountingSupplierParty')
+    supplier_additional_id = add_subelement(supplier_party, 'cbc:AdditionalAccountID', '1')  # 1 = Persona Jurídica, 2 = Persona Natural
+    
+    # Información de la parte (Party)
+    party = add_subelement(supplier_party, 'cac:Party')
+    
+    # Identificación del proveedor
+    party_identification = add_subelement(party, 'cac:PartyIdentification')
+    party_id = add_subelement(party_identification, 'cbc:ID', invoice.workshop_nit, {
+        'schemeName': '31',  # 31 = NIT
+        'schemeID': invoice.workshop_nit,
+        'schemeAgencyID': '195',
+        'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)'
+    })
+    
+    # Nombre comercial
+    party_name = add_subelement(party, 'cac:PartyName')
+    add_subelement(party_name, 'cbc:Name', invoice.workshop_name)
+    
+    # Dirección física
+    physical_location = add_subelement(party, 'cac:PhysicalLocation')
+    address = add_subelement(physical_location, 'cac:Address')
+    add_subelement(address, 'cbc:ID', '11001')  # Código de municipio (Bogotá por defecto)
+    add_subelement(address, 'cbc:CityName', invoice.workshop_city or 'Bogotá')
+    add_subelement(address, 'cbc:CountrySubentity', invoice.workshop_department or 'Cundinamarca')
+    add_subelement(address, 'cbc:CountrySubentityCode', '11')  # Código de departamento
+    
+    address_line = add_subelement(address, 'cac:AddressLine')
+    add_subelement(address_line, 'cbc:Line', invoice.workshop_address)
+    
+    country = add_subelement(address, 'cac:Country')
+    add_subelement(country, 'cbc:IdentificationCode', 'CO', {'listAgencyID': '6', 'listName': 'Country'})
+    add_subelement(country, 'cbc:Name', 'Colombia', {'languageID': 'es'})
+    
+    # Información legal del proveedor
+    party_tax_scheme = add_subelement(party, 'cac:PartyTaxScheme')
+    add_subelement(party_tax_scheme, 'cbc:RegistrationName', invoice.workshop_name)
+    add_subelement(party_tax_scheme, 'cbc:CompanyID', invoice.workshop_nit, {
+        'schemeName': '31',
+        'schemeID': invoice.workshop_nit,
+        'schemeAgencyID': '195',
+        'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)'
+    })
+    
+    # Régimen fiscal
+    tax_level_code = add_subelement(party_tax_scheme, 'cbc:TaxLevelCode', 'O-13', {'listName': 'Responsabilidad Fiscal'})
+    
+    # Esquema de impuestos
+    tax_scheme = add_subelement(party_tax_scheme, 'cac:TaxScheme')
+    add_subelement(tax_scheme, 'cbc:ID', '01')  # 01 = IVA
+    add_subelement(tax_scheme, 'cbc:Name', 'IVA')
+    
+    # Información legal
+    party_legal = add_subelement(party, 'cac:PartyLegalEntity')
+    add_subelement(party_legal, 'cbc:RegistrationName', invoice.workshop_name)
+    add_subelement(party_legal, 'cbc:CompanyID', invoice.workshop_nit, {
+        'schemeName': '31',
+        'schemeID': invoice.workshop_nit,
+        'schemeAgencyID': '195',
+        'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)'
+    })
+    
+    # Información de contacto
+    contact = add_subelement(party, 'cac:Contact')
+    if invoice.workshop_phone:
+        add_subelement(contact, 'cbc:Telephone', invoice.workshop_phone)
+    if invoice.workshop_email:
+        add_subelement(contact, 'cbc:ElectronicMail', invoice.workshop_email)
+    
+    # ========================================================================
+    # SECCIÓN 6: INFORMACIÓN DEL CLIENTE
+    # ========================================================================
+    customer_party = add_subelement(root, 'cac:AccountingCustomerParty')
+    add_subelement(customer_party, 'cbc:AdditionalAccountID', '1')  # 1 = Persona Jurídica, 2 = Persona Natural
+    
+    # Información de la parte (Party)
+    cust_party = add_subelement(customer_party, 'cac:Party')
+    
+    # Identificación del cliente
+    cust_party_identification = add_subelement(cust_party, 'cac:PartyIdentification')
+    from .catalogs.document_types import convert_internal_to_dian
+    doc_type_code = convert_internal_to_dian(invoice.customer_document_type)
+    
+    add_subelement(cust_party_identification, 'cbc:ID', invoice.customer_document, {
+        'schemeName': doc_type_code,
+        'schemeID': invoice.customer_document,
+        'schemeAgencyID': '195',
+        'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)'
+    })
+    
+    # Nombre del cliente
+    cust_party_name = add_subelement(cust_party, 'cac:PartyName')
+    add_subelement(cust_party_name, 'cbc:Name', invoice.customer_name)
+    
+    # Dirección física del cliente
+    if invoice.customer_address:
+        cust_physical_location = add_subelement(cust_party, 'cac:PhysicalLocation')
+        cust_address = add_subelement(cust_physical_location, 'cac:Address')
+        add_subelement(cust_address, 'cbc:ID', '11001')  # Código de municipio
+        add_subelement(cust_address, 'cbc:CityName', invoice.customer_city or 'Bogotá')
+        add_subelement(cust_address, 'cbc:CountrySubentity', invoice.customer_department or 'Cundinamarca')
+        add_subelement(cust_address, 'cbc:CountrySubentityCode', '11')
+        
+        cust_address_line = add_subelement(cust_address, 'cac:AddressLine')
+        add_subelement(cust_address_line, 'cbc:Line', invoice.customer_address)
+        
+        cust_country = add_subelement(cust_address, 'cac:Country')
+        add_subelement(cust_country, 'cbc:IdentificationCode', 'CO')
+        add_subelement(cust_country, 'cbc:Name', 'Colombia')
+    
+    # Información fiscal del cliente
+    cust_party_tax_scheme = add_subelement(cust_party, 'cac:PartyTaxScheme')
+    add_subelement(cust_party_tax_scheme, 'cbc:RegistrationName', invoice.customer_name)
+    add_subelement(cust_party_tax_scheme, 'cbc:CompanyID', invoice.customer_document, {
+        'schemeName': doc_type_code,
+        'schemeID': invoice.customer_document
+    })
+    
+    cust_tax_scheme = add_subelement(cust_party_tax_scheme, 'cac:TaxScheme')
+    add_subelement(cust_tax_scheme, 'cbc:ID', '01')
+    add_subelement(cust_tax_scheme, 'cbc:Name', 'IVA')
+    
+    # Información legal del cliente
+    cust_party_legal = add_subelement(cust_party, 'cac:PartyLegalEntity')
+    add_subelement(cust_party_legal, 'cbc:RegistrationName', invoice.customer_name)
+    add_subelement(cust_party_legal, 'cbc:CompanyID', invoice.customer_document, {
+        'schemeName': doc_type_code,
+        'schemeID': invoice.customer_document
+    })
+    
+    # Contacto del cliente
+    if invoice.customer_phone or invoice.customer_email:
+        cust_contact = add_subelement(cust_party, 'cac:Contact')
+        if invoice.customer_phone:
+            add_subelement(cust_contact, 'cbc:Telephone', invoice.customer_phone)
+        if invoice.customer_email:
+            add_subelement(cust_contact, 'cbc:ElectronicMail', invoice.customer_email)
+    
+    # ========================================================================
+    # SECCIÓN 7: CONDICIONES DE PAGO
+    # ========================================================================
+    from .catalogs.payment_methods import convert_internal_payment_to_dian
+    payment_means_code = convert_internal_payment_to_dian(invoice.payment_method or 'cash')
+    
+    payment_means = add_subelement(root, 'cac:PaymentMeans')
+    add_subelement(payment_means, 'cbc:ID', '1')
+    add_subelement(payment_means, 'cbc:PaymentMeansCode', payment_means_code)
+    if invoice.due_date:
+        add_subelement(payment_means, 'cbc:PaymentDueDate', format_date(invoice.due_date))
+    
+    # ========================================================================
+    # SECCIÓN 8: TOTALES DE IMPUESTOS
+    # ========================================================================
+    tax_total = add_subelement(root, 'cac:TaxTotal')
+    add_subelement(tax_total, 'cbc:TaxAmount', format_decimal(invoice.tax_amount), {'currencyID': 'COP'})
+    
+    # Subtotal de IVA
+    tax_subtotal = add_subelement(tax_total, 'cac:TaxSubtotal')
+    add_subelement(tax_subtotal, 'cbc:TaxableAmount', format_decimal(invoice.subtotal - invoice.discount), {'currencyID': 'COP'})
+    add_subelement(tax_subtotal, 'cbc:TaxAmount', format_decimal(invoice.tax_amount), {'currencyID': 'COP'})
+    
+    tax_category = add_subelement(tax_subtotal, 'cac:TaxCategory')
+    add_subelement(tax_category, 'cbc:Percent', format_decimal(invoice.tax_rate, 2))
+    
+    tax_scheme_iva = add_subelement(tax_category, 'cac:TaxScheme')
+    add_subelement(tax_scheme_iva, 'cbc:ID', '01')  # 01 = IVA
+    add_subelement(tax_scheme_iva, 'cbc:Name', 'IVA')
+    
+    # ========================================================================
+    # SECCIÓN 9: TOTALES LEGALES DEL DOCUMENTO
+    # ========================================================================
+    legal_monetary_total = add_subelement(root, 'cac:LegalMonetaryTotal')
+    add_subelement(legal_monetary_total, 'cbc:LineExtensionAmount', format_decimal(invoice.subtotal), {'currencyID': 'COP'})
+    add_subelement(legal_monetary_total, 'cbc:TaxExclusiveAmount', format_decimal(invoice.subtotal - invoice.discount), {'currencyID': 'COP'})
+    add_subelement(legal_monetary_total, 'cbc:TaxInclusiveAmount', format_decimal(invoice.total), {'currencyID': 'COP'})
+    add_subelement(legal_monetary_total, 'cbc:AllowanceTotalAmount', format_decimal(invoice.discount), {'currencyID': 'COP'})
+    add_subelement(legal_monetary_total, 'cbc:PayableAmount', format_decimal(invoice.total), {'currencyID': 'COP'})
+    
+    # ========================================================================
+    # SECCIÓN 10: LÍNEAS DE DETALLE DE LA FACTURA
+    # ========================================================================
+    for index, detail in enumerate(invoice.details.all(), start=1):
+        invoice_line = add_subelement(root, 'cac:InvoiceLine')
+        add_subelement(invoice_line, 'cbc:ID', str(index))
+        add_subelement(invoice_line, 'cbc:InvoicedQuantity', format_decimal(detail.quantity, 2), {'unitCode': detail.unit_code or 'NIU'})
+        add_subelement(invoice_line, 'cbc:LineExtensionAmount', format_decimal(detail.subtotal), {'currencyID': 'COP'})
+        
+        # Información del producto/servicio
+        item = add_subelement(invoice_line, 'cac:Item')
+        add_subelement(item, 'cbc:Description', detail.description)
+        
+        # Código del producto (UNSPSC si existe)
+        if detail.unspsc_code:
+            sellers_item_id = add_subelement(item, 'cac:SellersItemIdentification')
+            add_subelement(sellers_item_id, 'cbc:ID', detail.unspsc_code)
+        
+        # Código estándar del producto
+        if detail.part_number:
+            standard_item_id = add_subelement(item, 'cac:StandardItemIdentification')
+            add_subelement(standard_item_id, 'cbc:ID', detail.part_number, {'schemeID': '999', 'schemeName': 'Estándar de adopción del contribuyente'})
+        
+        # Marca y modelo
+        if detail.brand_name:
+            add_subelement(item, 'cbc:BrandName', detail.brand_name)
+        if detail.model_name:
+            add_subelement(item, 'cbc:ModelName', detail.model_name)
+        
+        # Precio unitario
+        price = add_subelement(invoice_line, 'cac:Price')
+        add_subelement(price, 'cbc:PriceAmount', format_decimal(detail.unit_price), {'currencyID': 'COP'})
+        add_subelement(price, 'cbc:BaseQuantity', format_decimal(Decimal('1.00'), 2), {'unitCode': detail.unit_code or 'NIU'})
+    
+    # Convertir a string XML
+    xml_string = tostring(root, encoding='utf-8', method='xml')
+    
+    # Formatear con indentación
+    dom = minidom.parseString(xml_string)
+    pretty_xml = dom.toprettyxml(indent='  ', encoding='UTF-8')
+    
+    return pretty_xml.decode('utf-8')
 
-    def save_xml_file(self, filepath: str):
-        """Guardar XML en archivo"""
-        xml_content = self.get_xml_string()
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(xml_content)
-        return filepath
 
-
-class DianXmlValidator:
-    """Validador básico de XML DIAN"""
-
-    def __init__(self, xml_content: str):
-        self.xml_content = xml_content
-        self.errors = []
-
-    def validate_basic_structure(self) -> bool:
-        """Validación básica de estructura XML"""
-        try:
-            root = ET.fromstring(self.xml_content)
-
-            # Verificar namespaces
-            if not root.tag.endswith('Invoice'):
-                self.errors.append("Elemento raíz debe ser 'Invoice'")
-                return False
-
-            # Verificar elementos obligatorios
-            required_elements = [
-                './/cbc:UBLVersionID',
-                './/cbc:CustomizationID',
-                './/cbc:ProfileID',
-                './/cbc:ID',
-                './/cbc:UUID',
-                './/cbc:IssueDate',
-                './/cbc:InvoiceTypeCode',
-                './/cac:AccountingSupplierParty',
-                './/cac:AccountingCustomerParty'
-            ]
-
-            for xpath in required_elements:
-                if not root.find(xpath, DianXmlGenerator.NSMAP):
-                    self.errors.append(f"Elemento requerido faltante: {xpath}")
-                    return False
-
-            return True
-
-        except ET.ParseError as e:
-            self.errors.append(f"Error de parsing XML: {str(e)}")
-            return False
-
-    def get_validation_errors(self) -> List[str]:
-        """Obtener lista de errores de validación"""
-        return self.errors.copy()
+def validate_xml_structure(xml_string: str) -> tuple:
+    """
+    Valida la estructura básica del XML generado.
+    
+    Args:
+        xml_string: XML a validar
+    
+    Returns:
+        tuple: (es_válido, mensaje)
+    """
+    try:
+        from xml.etree import ElementTree as ET
+        ET.fromstring(xml_string.encode('utf-8'))
+        return True, "XML válido"
+    except Exception as e:
+        return False, f"XML inválido: {str(e)}"
