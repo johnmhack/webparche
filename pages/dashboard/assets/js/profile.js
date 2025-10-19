@@ -299,10 +299,22 @@ async function loadResolutions() {
     try {
         const response = await apiRequest('/dian-resolutions/');
         
-        if (!response.ok) throw new Error('Error cargando resoluciones');
+        if (!response.ok) {
+            console.warn('No se pudieron cargar resoluciones:', response.status);
+            const container = document.getElementById('resolutionsList');
+            if (container) {
+                container.innerHTML = '<p style="color: var(--text-secondary);">No hay resoluciones registradas</p>';
+            }
+            return;
+        }
         
         const resolutions = await response.json();
         const container = document.getElementById('resolutionsList');
+        
+        if (!container) {
+            console.warn('Contenedor de resoluciones no encontrado');
+            return;
+        }
         
         if (resolutions.length === 0) {
             container.innerHTML = '<p style="color: var(--text-secondary);">No hay resoluciones registradas</p>';
