@@ -978,6 +978,37 @@ class ElectronicInvoiceViewSet(viewsets.ModelViewSet):
             return Response({
                 'error': f'Error enviando a DIAN: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['post'])
+    def send_email(self, request, pk=None):
+        """Enviar factura por email al cliente"""
+        electronic_invoice = self.get_object()
+        
+        # Obtener email del destinatario (opcional)
+        recipient_email = request.data.get('email', electronic_invoice.customer_email)
+        
+        if not recipient_email:
+            return Response({
+                'error': 'No hay email del cliente configurado'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            from .email_service import send_invoice_email
+            
+            # Enviar email
+            send_invoice_email(electronic_invoice, recipient_email)
+            
+            return Response({
+                'message': f'Factura enviada exitosamente a {recipient_email}',
+                'email': recipient_email,
+                'invoice_number': electronic_invoice.invoice_number
+            })
+            
+        except Exception as e:
+            logger.error(f"Error enviando email: {str(e)}")
+            return Response({
+                'error': f'Error enviando email: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'])
     @transaction.atomic
