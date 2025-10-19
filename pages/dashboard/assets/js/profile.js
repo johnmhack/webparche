@@ -20,10 +20,28 @@ function hideAllSections() {
 
 // Mostrar sección de perfil
 function showProfile() {
+    console.log('🎯 showProfile() - Iniciando...');
+    
     hideAllSections();
-    document.getElementById('profileSection').classList.remove('hidden');
+    console.log('✅ Secciones ocultadas');
+    
+    const profileSection = document.getElementById('profileSection');
+    console.log('📋 profileSection encontrado:', profileSection);
+    
+    if (profileSection) {
+        profileSection.classList.remove('hidden');
+        console.log('✅ Clase hidden removida de profileSection');
+        console.log('📊 Classes actuales:', profileSection.className);
+        console.log('👁️ Display style:', window.getComputedStyle(profileSection).display);
+    } else {
+        console.error('❌ profileSection NO encontrado en el DOM');
+        return;
+    }
+    
     loadWorkshopProfile();
     checkDianConfigurationStatus();
+    
+    console.log('✅ showProfile() - Completado');
 }
 
 // Mostrar tab específico del perfil
