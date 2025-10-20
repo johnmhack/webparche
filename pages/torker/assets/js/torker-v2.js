@@ -1,8 +1,6 @@
 // Torker - Sistema de Gestión de Talleres
 // JavaScript para funcionalidad de login, registro y dashboard
 
-console.log('🚀 Torker JavaScript cargado correctamente');
-
 // Estado de la aplicación
 let currentUser = null;
 let isAuthenticated = false;
@@ -564,36 +562,26 @@ function openModule(moduleName) {
 
 // Agregar event listeners a los botones de módulos
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 DOM cargado, configurando event listeners de módulos');
-
     const moduleButtons = document.querySelectorAll('.module-card .btn');
-    console.log('📊 Encontrados', moduleButtons.length, 'botones de módulo');
 
     moduleButtons.forEach((button, index) => {
         button.addEventListener('click', function(event) {
             const moduleCard = this.closest('.module-card');
             const moduleTitle = moduleCard.querySelector('h3').textContent.trim();
 
-            console.log('🖱️ Botón #' + index + ' clickeado:', moduleTitle);
-
             // Si el botón ya tiene onclick, no interferir
             if (this.hasAttribute('onclick')) {
-                console.log('✅ Botón con onclick directo, ejecutando acción directa');
                 return;
             }
 
             // Verificar si es el módulo de Inventario
             if (moduleTitle.includes('Inventario')) {
-                console.log('🎯 Detectado módulo Inventario, ejecutando showInventory()');
                 showInventory();
             } else {
-                console.log('⚠️ Módulo en desarrollo:', moduleTitle);
                 openModule(moduleTitle);
             }
         });
     });
-
-    console.log('✅ Event listeners de módulos configurados');
 });
 
 // Función para agregar efectos de partículas al fondo (opcional)
@@ -1014,8 +1002,6 @@ let filteredParts = [];
 
 // Mostrar sección de inventario
 async function showInventory() {
-    console.log('🎯 Función showInventory ejecutada - Abriendo módulo Inventario');
-
     // Ocultar otras secciones
     document.getElementById('dashboard').classList.add('hidden');
     document.getElementById('invoicesSection').classList.add('hidden');
@@ -1023,8 +1009,6 @@ async function showInventory() {
     // Mostrar sección de inventario
     const inventorySection = document.getElementById('inventorySection');
     inventorySection.classList.remove('hidden');
-
-    console.log('📦 Sección de inventario mostrada, cargando partes...');
 
     // Cargar datos de forma asíncrona y silenciosa
     await Promise.allSettled([

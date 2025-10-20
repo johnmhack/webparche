@@ -1,8 +1,6 @@
 // Dashboard - Sistema de Gestión de Talleres
 // JavaScript para funcionalidad del dashboard
 
-console.log('🚀 Dashboard JavaScript cargado correctamente');
-
 // Estado de la aplicación
 let currentUser = null;
 let isAuthenticated = false;
@@ -37,8 +35,6 @@ async function apiRequest(endpoint, options = {}) {
 
         // Si el token expiró, intentar refresh (solo una vez por sesión)
         if (response.status === 401 && refreshToken && !isRefreshingToken) {
-            console.log('🔄 Token expirado, intentando refresh...');
-
             isRefreshingToken = true;
 
             // Si ya hay un refresh en proceso, esperar
@@ -49,14 +45,11 @@ async function apiRequest(endpoint, options = {}) {
             const newTokens = await refreshPromise;
 
             if (newTokens) {
-                console.log('✅ Token refrescado exitosamente');
                 config.headers.Authorization = `Bearer ${newTokens.access}`;
 
                 // Reintentar la petición original
                 response = await fetch(url, config);
-                console.log('🔄 Reintento de petición completado');
             } else {
-                console.log('❌ Falló refresh de token, redirigiendo a login');
                 logout();
                 return response; // Retornar respuesta original con error
             }
@@ -290,8 +283,6 @@ let calendarView = 'month'; // 'month', 'week', 'day'
 
 // Mostrar sección de agenda
 async function showAgenda() {
-    console.log('🎯 Dashboard - Función showAgenda ejecutada - Abriendo módulo Agenda');
-
     try {
         // Ocultar otras secciones
         document.getElementById('dashboard').classList.add('hidden');
@@ -302,11 +293,9 @@ async function showAgenda() {
 
         // Mostrar sección de agenda
         const agendaSection = document.getElementById('agendaSection');
-        console.log('🔍 Dashboard - Verificando elemento agendaSection:', agendaSection);
 
         if (agendaSection) {
             agendaSection.classList.remove('hidden');
-            console.log('📅 Dashboard - Sección de agenda mostrada, cargando datos...');
 
             // Cargar datos de forma asíncrona y silenciosa
             await Promise.allSettled([
@@ -314,18 +303,12 @@ async function showAgenda() {
                 loadAppointments()
             ]);
 
-            console.log('📅 Dashboard - Datos cargados, renderizando calendario...');
             renderCalendar();
-
-            console.log('📅 Dashboard - Calendario renderizado, mostrando notificación...');
             showNotification('Módulo de Agenda activado', 'info');
-            console.log('✅ Dashboard - Notificación de Agenda mostrada exitosamente');
         } else {
-            console.error('❌ Dashboard - Elemento agendaSection no encontrado');
             showNotification('Error: Sección de agenda no encontrada', 'error');
         }
     } catch (error) {
-        console.error('❌ Dashboard - Error en showAgenda():', error);
         showNotification('Error al abrir módulo de Agenda', 'error');
     }
 }
@@ -349,24 +332,19 @@ async function loadServiceTypes() {
 // Cargar citas
 async function loadAppointments() {
     try {
-        console.log('📅 Dashboard - Iniciando carga de citas...');
         const response = await apiRequest('/appointments/');
         if (response.ok) {
             const data = await response.json();
-            console.log('📅 Dashboard - Citas cargadas:', data);
 
             // Asegurar que sea un array
             currentAppointments = Array.isArray(data) ? data : [];
-            console.log('📅 Dashboard - currentAppointments establecido como array:', currentAppointments.length, 'elementos');
 
             renderTodayAppointments();
         } else if (response.status !== 401) { // No mostrar error para 401 (se maneja automáticamente)
-            console.error('Error loading appointments:', response.status, response.statusText);
             // Inicializar como array vacío en caso de error
             currentAppointments = [];
         }
     } catch (error) {
-        console.error('Error loading appointments:', error);
         // Inicializar como array vacío en caso de error
         currentAppointments = [];
         // Error de conexión ya se maneja en apiRequest, no mostrar popup al cargar inicialmente
@@ -536,10 +514,8 @@ function selectDate(dateStr) {
 
 // Renderizar citas de hoy
 function renderTodayAppointments() {
-    console.log('📅 Dashboard - Renderizando citas de hoy, currentAppointments:', currentAppointments);
     const today = new Date().toISOString().split('T')[0];
     const todayAppointments = Array.isArray(currentAppointments) ? currentAppointments.filter(apt => apt.appointment_date === today) : [];
-    console.log('📅 Dashboard - Citas de hoy encontradas:', todayAppointments.length);
 
     const container = document.getElementById('todayAppointmentsList');
 
@@ -846,33 +822,27 @@ document.addEventListener('DOMContentLoaded', async function() {
     addCardEffects();
 
     // Agregar event listeners a los botones de módulos
-        const moduleButtons = document.querySelectorAll('.module-card .btn');
-        moduleButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const moduleCard = this.closest('.module-card');
-                const moduleTitle = moduleCard.querySelector('h3').textContent.trim();
-
-                console.log('🖱️ Dashboard - Botón clickeado:', moduleTitle);
-
-                // Si el botón ya tiene onclick, no interferir
-                if (this.hasAttribute('onclick')) {
-                    console.log('✅ Dashboard - Botón con onclick directo, ejecutando acción directa');
-                    return;
-                }
-
-                // Verificar módulos disponibles
-                if (moduleTitle.includes('Inventario')) {
-                    console.log('🎯 Dashboard - Detectado módulo Inventario, ejecutando showInventory()');
-                    showInventory();
-                } else if (moduleTitle.includes('Agenda')) {
-                    console.log('📅 Dashboard - Detectado módulo Agenda, ejecutando showAgenda()');
-                    showAgenda();
-                } else {
-                    console.log('⚠️ Dashboard - Módulo en desarrollo:', moduleTitle);
-                    openModule(moduleTitle);
-                }
+            const moduleButtons = document.querySelectorAll('.module-card .btn');
+            moduleButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const moduleCard = this.closest('.module-card');
+                    const moduleTitle = moduleCard.querySelector('h3').textContent.trim();
+    
+                    // Si el botón ya tiene onclick, no interferir
+                    if (this.hasAttribute('onclick')) {
+                        return;
+                    }
+    
+                    // Verificar módulos disponibles
+                    if (moduleTitle.includes('Inventario')) {
+                        showInventory();
+                    } else if (moduleTitle.includes('Agenda')) {
+                        showAgenda();
+                    } else {
+                        openModule(moduleTitle);
+                    }
+                });
             });
-        });
 });
 
 // Funciones para los módulos del dashboard
@@ -959,8 +929,6 @@ let filteredParts = [];
 
 // Mostrar sección de inventario
 async function showInventory() {
-    console.log('🎯 Dashboard - Función showInventory ejecutada - Abriendo módulo Inventario');
-
     // Ocultar otras secciones
     document.getElementById('dashboard').classList.add('hidden');
     document.getElementById('inventorySection').classList.add('hidden');
@@ -973,7 +941,6 @@ async function showInventory() {
     const inventorySection = document.getElementById('inventorySection');
     if (inventorySection) {
         inventorySection.classList.remove('hidden');
-        console.log('📦 Dashboard - Sección de inventario mostrada, cargando partes...');
 
         // Cargar datos de forma asíncrona y silenciosa
         await Promise.allSettled([
@@ -982,7 +949,6 @@ async function showInventory() {
 
         showNotification('Módulo de Inventario activado', 'info');
     } else {
-        console.error('❌ Dashboard - Elemento inventorySection no encontrado');
         showNotification('Error: Sección de inventario no encontrada', 'error');
     }
 }

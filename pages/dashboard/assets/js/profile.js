@@ -20,47 +20,21 @@ function hideAllSections() {
 
 // Mostrar sección de perfil
 function showProfile() {
-    console.log('🎯 showProfile() - Iniciando...');
-    
     hideAllSections();
-    console.log('✅ Secciones ocultadas');
-    
+
     const profileSection = document.getElementById('profileSection');
-    console.log('📋 profileSection encontrado:', profileSection);
-    
+
     if (profileSection) {
         profileSection.classList.remove('hidden');
-        console.log('✅ Clase hidden removida de profileSection');
-        console.log('📊 Classes actuales:', profileSection.className);
-        console.log('👁️ Display style:', window.getComputedStyle(profileSection).display);
-        console.log('📏 Visibility:', window.getComputedStyle(profileSection).visibility);
-        console.log('📐 Position:', window.getComputedStyle(profileSection).position);
-        console.log('🎨 Z-index:', window.getComputedStyle(profileSection).zIndex);
-        
-        // Obtener posición del elemento
-        const rect = profileSection.getBoundingClientRect();
-        console.log('📍 Posición en viewport:', {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
-            visible: rect.top < window.innerHeight && rect.bottom > 0
-        });
-        
+
         // Scroll al elemento
-        console.log('🔄 Haciendo scroll al profileSection...');
         profileSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        
-        console.log('📦 Contenido HTML (primeros 500 chars):', profileSection.innerHTML.substring(0, 500));
     } else {
-        console.error('❌ profileSection NO encontrado en el DOM');
         return;
     }
-    
+
     loadWorkshopProfile();
     checkDianConfigurationStatus();
-    
-    console.log('✅ showProfile() - Completado');
 }
 
 // Mostrar tab específico del perfil
@@ -83,17 +57,15 @@ async function loadWorkshopProfile() {
     try {
         // Verificar que haya token
         if (!accessToken) {
-            console.error('No hay token de acceso');
             showNotification('Sesión expirada. Recargando...', 'warning');
             setTimeout(() => window.location.reload(), 1000);
             return;
         }
-        
+
         // Usar apiRequest del dashboard.js que maneja autenticación
         const response = await apiRequest('/workshops/');
-        
+
         if (!response.ok) {
-            console.error('Error en respuesta:', response.status);
             if (response.status === 401) {
                 showNotification('Sesión expirada. Recargando...', 'warning');
                 setTimeout(() => window.location.reload(), 1000);
@@ -101,9 +73,8 @@ async function loadWorkshopProfile() {
             }
             throw new Error('Error cargando perfil');
         }
-        
+
         const data = await response.json();
-        console.log('Workshops recibidos:', data);
         
         // La API retorna un objeto paginado: {count, next, previous, results}
         const workshops = data.results || data;
@@ -113,7 +84,6 @@ async function loadWorkshopProfile() {
         }
         
         const workshop = workshops[0]; // El usuario solo tiene un taller
-        console.log('Workshop seleccionado:', workshop);
         
         if (!workshop || !workshop.name) {
             throw new Error('Datos del taller incompletos');
@@ -149,7 +119,6 @@ async function loadWorkshopProfile() {
         loadResolutions();
         
     } catch (error) {
-        console.error('Error cargando perfil:', error);
         showNotification('Error cargando perfil del taller', 'error');
     }
 }
@@ -158,7 +127,6 @@ async function loadWorkshopProfile() {
 async function checkDianConfigurationStatus() {
     // Esperar a que se cargue el workshop ID
     if (!window.currentWorkshopId) {
-        console.log('Esperando workshop ID...');
         return;
     }
     
@@ -220,7 +188,7 @@ async function checkDianConfigurationStatus() {
         }
         
     } catch (error) {
-        console.error('Error verificando configuración DIAN:', error);
+        // Error silencioso para configuración DIAN
     }
 }
 
@@ -243,7 +211,6 @@ async function handleSaveBasicData(event) {
         checkDianConfigurationStatus();
         
     } catch (error) {
-        console.error('Error guardando datos básicos:', error);
         showNotification('Error guardando datos básicos', 'error');
     }
 }
@@ -274,7 +241,6 @@ async function handleSaveDianConfig(event) {
         checkDianConfigurationStatus();
         
     } catch (error) {
-        console.error('Error guardando configuración DIAN:', error);
         showNotification('Error guardando configuración DIAN', 'error');
     }
 }
@@ -326,7 +292,6 @@ async function saveResolution() {
         checkDianConfigurationStatus();
         
     } catch (error) {
-        console.error('Error guardando resolución:', error);
         showNotification(error.message, 'error');
     }
 }
@@ -337,19 +302,17 @@ async function loadResolutions() {
         const response = await apiRequest('/dian-resolutions/');
         
         if (!response.ok) {
-            console.warn('No se pudieron cargar resoluciones:', response.status);
             const container = document.getElementById('resolutionsList');
             if (container) {
                 container.innerHTML = '<p style="color: var(--text-secondary);">No hay resoluciones registradas</p>';
             }
             return;
         }
-        
+
         const resolutions = await response.json();
         const container = document.getElementById('resolutionsList');
-        
+
         if (!container) {
-            console.warn('Contenedor de resoluciones no encontrado');
             return;
         }
         
@@ -390,7 +353,7 @@ async function loadResolutions() {
         `).join('');
         
     } catch (error) {
-        console.error('Error cargando resoluciones:', error);
+        // Error silencioso al cargar resoluciones
     }
 }
 
@@ -409,7 +372,6 @@ async function toggleResolutionStatus(resolutionId, activate) {
         checkDianConfigurationStatus();
         
     } catch (error) {
-        console.error('Error actualizando resolución:', error);
         showNotification('Error actualizando resolución', 'error');
     }
 }

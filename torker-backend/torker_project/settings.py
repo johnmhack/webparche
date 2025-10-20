@@ -261,25 +261,25 @@ if ENVIRONMENT == 'production':
     SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
     SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=True, cast=bool)
     CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
-    
+
     # HSTS
     SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int)  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True, cast=bool)
     SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=True, cast=bool)
-    
+
     # Other security headers
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = 'DENY'
-    
+
     # Proxy headers
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 else:
-    # Development settings
-    SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
+    # Development settings - Configurar HTTPS básico para desarrollo local
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+    SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+    CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
     SECURE_HSTS_SECONDS = 0
 
 
@@ -497,3 +497,30 @@ if DEBUG:
     print(f"CORS Origins: {CORS_ALLOWED_ORIGINS if not CORS_ALLOW_ALL_ORIGINS else 'ALL (Development)'}")
     print(f"Log Level: {LOG_LEVEL}")
     print("="*80 + "\n")
+
+
+# ==============================================================================
+# DIAN FACTURACIÓN ELECTRÓNICA
+# ==============================================================================
+
+# Certificado Digital Camerfirma
+DIAN_CERTIFICATE_PATH = config('DIAN_CERTIFICATE_PATH', default='')
+DIAN_CERTIFICATE_PASSWORD = config('DIAN_CERTIFICATE_PASSWORD', default='')
+
+# Ambiente DIAN
+DIAN_ENVIRONMENT = config('DIAN_ENVIRONMENT', default='test')
+
+# URLs Webservices DIAN
+DIAN_TEST_WEBSERVICE_URL = config(
+    'DIAN_TEST_WEBSERVICE_URL',
+    default='https://vpfe-hab.dian.gov.co/WcfDianCustomerServices.svc'
+)
+DIAN_PRODUCTION_WEBSERVICE_URL = config(
+    'DIAN_PRODUCTION_WEBSERVICE_URL',
+    default='https://vpfe.dian.gov.co/WcfDianCustomerServices.svc'
+)
+
+# Software ID y PIN
+DIAN_SOFTWARE_ID = config('DIAN_SOFTWARE_ID', default='')
+DIAN_SOFTWARE_PIN = config('DIAN_SOFTWARE_PIN', default='')
+DIAN_SOFTWARE_SECURITY_CODE = config('DIAN_SOFTWARE_SECURITY_CODE', default='')
