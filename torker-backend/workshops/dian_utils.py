@@ -1,3 +1,4 @@
+
 """
 Utilidades para cumplimiento DIAN - Facturación Electrónica Colombia
 Implementa algoritmos y validaciones según Resolución 000042 de 2020
@@ -40,13 +41,17 @@ def generate_cufe(
         ValTot + NitOFE + NumAdq + Software-PIN + TipoAmbiente
     )
     """
+    # Formatear fecha en formato DIAN: YYYY-MM-DD
     fecha_factura = issue_date.strftime('%Y-%m-%d')
+    
+    # Formatear valores monetarios con 2 decimales, sin separadores de miles
     val_fac = f"{invoice_total:.2f}"
     val_imp1 = f"{tax_value_1:.2f}"
     val_imp2 = f"{tax_value_2:.2f}"
     val_imp3 = f"{tax_value_3:.2f}"
     val_tot = f"{total_with_tax:.2f}"
     
+    # Construir cadena según especificación DIAN
     cufe_string = (
         f"{invoice_number}"
         f"{fecha_factura}"
@@ -65,7 +70,9 @@ def generate_cufe(
         f"{environment_type}"
     )
     
+    # Calcular SHA-384
     cufe_hash = hashlib.sha384(cufe_string.encode('utf-8')).hexdigest()
+    
     return cufe_hash
 
 
@@ -87,14 +94,29 @@ def generate_cude(
     environment_type: str,
     document_type: str = "01"
 ) -> str:
-    """Genera CUDE para documentos equivalentes."""
+    """Genera CUDE (Código Único de Documento Electrónico) para documentos equivalentes."""
     return generate_cufe(
-        document_number, issue_date, issue_time, document_total,
-        tax_code_1, tax_value_1, tax_code_2, tax_value_2,
-        tax_code_3, tax_value_3, total_with_tax, supplier_nit,
-        customer_document, software_pin, environment_type
+        document_number,
+        issue_date,
+        issue_time,
+        document_total,
+        tax_code_1,
+        tax_value_1,
+        tax_code_2,
+        tax_value_2,
+        tax_code_3,
+        tax_value_3,
+        total_with_tax,
+        supplier_nit,
+        customer_document,
+        software_pin,
+        environment_type
     )
 
+
+# ============================================================================
+# VALIDACIÓN DE NIT Y DÍGITO DE VERIFICACIÓN
+# ============================================================================
 
 def calculate_nit_verification_digit(nit: str) -> str:
     """Calcula el dígito de verificación de un NIT colombiano según algoritmo DIAN."""
@@ -156,6 +178,10 @@ def format_nit(nit: str, include_dv: bool = True) -> str:
     else:
         return nit_clean
 
+
+# ============================================================================
+# CÁLCULO DE IMPUESTOS SEGÚN DIAN
+# ============================================================================
 
 class TaxCalculator:
     """Calculadora de impuestos según normativa DIAN colombiana"""
@@ -229,6 +255,10 @@ class TaxCalculator:
         }
 
 
+# ============================================================================
+# VALIDACIÓN DE NUMERACIÓN DE FACTURAS
+# ============================================================================
+
 def validate_invoice_number_format(
     invoice_number: str,
     prefix: str,
@@ -263,6 +293,10 @@ def generate_invoice_number(prefix: str, consecutive: int, padding: int = 4) -> 
     return f"{prefix}{str(consecutive).zfill(padding)}"
 
 
+# ============================================================================
+# GENERACIÓN DE QR CODE SEGÚN FORMATO DIAN
+# ============================================================================
+
 def generate_qr_data(
     invoice_number: str,
     issue_date: date,
@@ -290,6 +324,7 @@ def generate_qr_data(
         f"CUFE={cufe}\n"
         f"URL={validation_url}?documentkey={cufe}"
     )
+    
     return qr_string
 
 

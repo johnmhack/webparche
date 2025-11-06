@@ -81,21 +81,32 @@ class DianApiClient:
             return self._simulate_send_invoice(xml_content)
 
         try:
-            # Endpoint real de DIAN
-            endpoint = f"{self.base_url}/VpfeReceptorWs/VpfeReceptorSvc.svc"
+            # Endpoint oficial DIAN para pruebas
+            if self.environment == DianEnvironment.TESTING:
+                endpoint = f"{self.base_url}/WcfDianCustomerServices.svc"
+            else:
+                endpoint = f"{self.base_url}/VpfeReceptorWs/VpfeReceptorSvc.svc"
 
-            # Headers para SOAP
+            # Crear envelope SOAP para SendTestSetAsync
+            soap_envelope = self._create_test_set_soap_envelope(xml_content, test_set_id)
+
+            # Headers para SOAP según especificaciones DIAN
             headers = {
                 'Content-Type': 'application/soap+xml; charset=utf-8',
-                'SOAPAction': 'http://tempuri.org/IVpfeReceptorSvc/EnviarFacturaElectronica'
+                'SOAPAction': 'http://wcf.dian.colombia/IWcfDianCustomerServices/SendTestSetAsync',
+                'Host': 'vpfe-hab.dian.gov.co',
+                'Accept': 'application/soap+xml, text/xml, multipart/related',
+                'Accept-Encoding': 'gzip, deflate',
+                'Connection': 'Keep-Alive',
+                'User-Agent': 'Apache-HttpClient/4.5.2 (Java/1.8.0_181)',
+                'Content-Length': str(len(soap_envelope))
             }
 
-            # Crear envelope SOAP
-            soap_envelope = self._create_soap_envelope(xml_content, test_set_id)
-
             self.logger.info(f"Enviando factura a DIAN - Ambiente: {self.environment.value}")
+            self.logger.info(f"Endpoint: {endpoint}")
+            self.logger.info(f"TestSetId: {test_set_id}")
 
-            response = requests.post(endpoint, data=soap_envelope, headers=headers, timeout=30)
+            response = requests.post(endpoint, data=soap_envelope, headers=headers, timeout=30, verify=False)
 
             return self._parse_dian_response(response)
 
@@ -135,9 +146,37 @@ class DianApiClient:
 
         return envelope
 
+    def _create_test_set_soap_envelope(self, xml_content: str, test_set_id: str = None) -> str:
+        """Crea envelope SOAP para SendTestSetAsync según especificaciones DIAN"""
+        import base64
+
+        # Convertir XML a base64 (sin saltos de línea)
+        xml_base64 = base64.b64encode(xml_content.encode('utf-8')).decode('utf-8')
+
+        # Nombre del archivo
+        file_name = f"SETP990000000.xml"  # Usar el número de la resolución
+
+        envelope = f"""<?xml version="1.0" encoding="utf-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wcf="http://wcf.dian.colombia">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <wcf:SendTestSetAsync>
+         <wcf:fileName>{file_name}</wcf:fileName>
+         <wcf:contentFile>{xml_base64}</wcf:contentFile>
+         <wcf:testSetId>{test_set_id or 'dfdef22b-f7d4-4dde-a342-0c76524c9a05'}</wcf:testSetId>
+      </wcf:SendTestSetAsync>
+   </soapenv:Body>
+</soapenv:Envelope>"""
+
+        return envelope
+
     def _parse_dian_response(self, response: requests.Response) -> DianApiResponse:
         """Parsea respuesta SOAP de DIAN"""
         try:
+            self.logger.info(f"Respuesta DIAN - Status: {response.status_code}")
+            self.logger.info(f"Respuesta DIAN - Headers: {dict(response.headers)}")
+            self.logger.info(f"Respuesta DIAN - Content: {response.text[:2000]}...")
+
             if response.status_code == 200:
                 # Parsear respuesta SOAP exitosa
                 # Aquí iría el parsing real del XML de respuesta
@@ -148,10 +187,13 @@ class DianApiClient:
                     status_code=200
                 )
             else:
+                # Log completo del error para debugging
+                self.logger.error(f"Error completo DIAN: {response.text}")
+                print(f"Error completo DIAN: {response.text}")
                 return DianApiResponse(
                     success=False,
                     message="Error en respuesta DIAN",
-                    errors=[f"Status code: {response.status_code}"],
+                    errors=[f"Status code: {response.status_code}", response.text[:1000]],
                     status_code=response.status_code
                 )
 

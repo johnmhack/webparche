@@ -521,6 +521,9 @@ DIAN_PRODUCTION_WEBSERVICE_URL = config(
 )
 
 # Software ID y PIN
-DIAN_SOFTWARE_ID = config('DIAN_SOFTWARE_ID', default='')
-DIAN_SOFTWARE_PIN = config('DIAN_SOFTWARE_PIN', default='')
-DIAN_SOFTWARE_SECURITY_CODE = config('DIAN_SOFTWARE_SECURITY_CODE', default='')
+DIAN_SOFTWARE_ID = config('DIAN_SOFTWARE_ID', default='f4fa290c-5b6a-4bce')
+DIAN_SOFTWARE_PIN = config('DIAN_SOFTWARE_PIN', default='23062')
+DIAN_SOFTWARE_SECURITY_CODE = config('DIAN_SOFTWARE_SECURITY_CODE', default='fc8eac422eba16e22')
+
+# NIT del emisor (para pruebas)
+DIAN_NIT = config('DIAN_NIT', default='21114493')

@@ -5,8 +5,16 @@ Basado en Anexo Técnico Documento Equivalente Electrónico V1.0
 from decimal import Decimal
 from datetime import datetime, date
 from typing import Dict, List, Optional
-from xml.etree.ElementTree import Element, SubElement, tostring
-from xml.dom import minidom
+
+try:
+    from lxml import etree as ET
+    Element = ET.Element
+    SubElement = ET.SubElement
+    USING_LXML = True
+except ImportError:
+    from xml.etree.ElementTree import Element, SubElement, tostring
+    from xml.dom import minidom
+    USING_LXML = False
 
 
 # Namespaces UBL 2.1 según especificación DIAN
@@ -30,8 +38,9 @@ def register_namespaces():
     """Registra los namespaces XML para generación correcta"""
     try:
         from xml.etree.ElementTree import register_namespace
+        # Solo registrar namespaces con prefijo
         for prefix, uri in NAMESPACES.items():
-            if prefix:  # No registrar el namespace por defecto
+            if prefix:
                 register_namespace(prefix, uri)
     except ImportError:
         pass
@@ -128,25 +137,94 @@ def generate_electronic_invoice_xml(invoice) -> str:
     """
     register_namespaces()
     
-    # Crear elemento raíz Invoice
-    root = create_element('Invoice', attribs={
-        f'{{{NAMESPACES["xsi"]}}}schemaLocation': 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd'
+    # Crear elemento raíz con namespaces
+    if USING_LXML:
+        # lxml usa nsmap
+        nsmap = {k if k else None: v for k, v in NAMESPACES.items()}
+        root = ET.Element(f"{{{NAMESPACES['']}}}Invoice", nsmap=nsmap)
+        root.set(f'{{{NAMESPACES["xsi"]}}}schemaLocation',
+                 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd')
+    else:
+        # ElementTree estándar
+        root = Element('Invoice')
+        for prefix, uri in NAMESPACES.items():
+            if prefix:
+                root.set(f'xmlns:{prefix}', uri)
+            else:
+                root.set('xmlns', uri)
+        root.set(f'{{{NAMESPACES["xsi"]}}}schemaLocation',
+                 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 http://docs.oasis-open.org/ubl/os-UBL-2.1/xsd/maindoc/UBL-Invoice-2.1.xsd')
+    
+    # ========================================================================
+    # SECCIÓN 1: EXTENSIONES DIAN
+    # ========================================================================
+    from django.conf import settings
+    
+    ext_root = add_subelement(root, 'ext:UBLExtensions')
+    
+    # Extensión 1: Información DIAN
+    ext_item1 = add_subelement(ext_root, 'ext:UBLExtension')
+    ext_content1 = add_subelement(ext_item1, 'ext:ExtensionContent')
+    
+    dian_ext = add_subelement(ext_content1, 'sts:DianExtensions')
+    
+    # Control de factura
+    invoice_control = add_subelement(dian_ext, 'sts:InvoiceControl')
+    add_subelement(invoice_control, 'sts:InvoiceAuthorization', invoice.dian_resolution.resolution_number)
+    
+    auth_period = add_subelement(invoice_control, 'sts:AuthorizationPeriod')
+    add_subelement(auth_period, 'cbc:StartDate', format_date(invoice.dian_resolution.resolution_date))
+    add_subelement(auth_period, 'cbc:EndDate', format_date(invoice.dian_resolution.expires_date))
+    
+    auth_invoices = add_subelement(invoice_control, 'sts:AuthorizedInvoices')
+    add_subelement(auth_invoices, 'sts:Prefix', invoice.dian_resolution.prefix)
+    add_subelement(auth_invoices, 'sts:From', str(invoice.dian_resolution.from_number))
+    add_subelement(auth_invoices, 'sts:To', str(invoice.dian_resolution.to_number))
+    
+    # Fuente de la factura
+    invoice_source = add_subelement(dian_ext, 'sts:InvoiceSource')
+    add_subelement(invoice_source, 'cbc:IdentificationCode', 'CO', {
+        'listAgencyID': '6',
+        'listAgencyName': 'United Nations Economic Commission for Europe',
+        'listSchemeURI': 'urn:oasis:names:specification:ubl:codelist:gc:CountryIdentificationCode-2.1'
     })
     
-    # Agregar namespaces al elemento raíz
-    for prefix, uri in NAMESPACES.items():
-        if prefix:
-            root.set(f'xmlns:{prefix}', uri)
-        else:
-            root.set('xmlns', uri)
+    # Proveedor de software
+    software_provider = add_subelement(dian_ext, 'sts:SoftwareProvider')
+    add_subelement(software_provider, 'sts:ProviderID', invoice.workshop_nit, {
+        'schemeAgencyID': '195',
+        'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)',
+        'schemeID': '4',
+        'schemeName': '31'
+    })
+    add_subelement(software_provider, 'sts:SoftwareID', settings.DIAN_SOFTWARE_ID, {
+        'schemeAgencyID': '195',
+        'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)'
+    })
     
-    # ========================================================================
-    # SECCIÓN 1: EXTENSIONES (para firma digital - se implementará después)
-    # ========================================================================
-    ext_root = add_subelement(root, 'ext:UBLExtensions')
-    ext_item = add_subelement(ext_root, 'ext:UBLExtension')
-    ext_content = add_subelement(ext_item, 'ext:ExtensionContent')
-    # Aquí irá la firma digital cuando se implemente Camerfirma
+    # Código de seguridad del software
+    add_subelement(dian_ext, 'sts:SoftwareSecurityCode', settings.DIAN_SOFTWARE_SECURITY_CODE, {
+        'schemeAgencyID': '195',
+        'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)'
+    })
+    
+    # Proveedor de autorización
+    auth_provider = add_subelement(dian_ext, 'sts:AuthorizationProvider')
+    add_subelement(auth_provider, 'sts:AuthorizationProviderID', '800197268', {
+        'schemeAgencyID': '195',
+        'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)',
+        'schemeID': '4',
+        'schemeName': '31'
+    })
+    
+    # QR Code
+    if hasattr(invoice, 'qr_code_data') and invoice.qr_code_data:
+        add_subelement(dian_ext, 'sts:QRCode', invoice.qr_code_data)
+    
+    # Extensión 2: Firma digital (placeholder)
+    ext_item2 = add_subelement(ext_root, 'ext:UBLExtension')
+    ext_content2 = add_subelement(ext_item2, 'ext:ExtensionContent')
+    # La firma se agregará después con dian_signature.py
     
     # ========================================================================
     # SECCIÓN 2: INFORMACIÓN GENERAL DEL DOCUMENTO
@@ -206,7 +284,6 @@ def generate_electronic_invoice_xml(invoice) -> str:
     party_identification = add_subelement(party, 'cac:PartyIdentification')
     party_id = add_subelement(party_identification, 'cbc:ID', invoice.workshop_nit, {
         'schemeName': '31',  # 31 = NIT
-        'schemeID': invoice.workshop_nit,
         'schemeAgencyID': '195',
         'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)'
     })
@@ -235,7 +312,6 @@ def generate_electronic_invoice_xml(invoice) -> str:
     add_subelement(party_tax_scheme, 'cbc:RegistrationName', invoice.workshop_name)
     add_subelement(party_tax_scheme, 'cbc:CompanyID', invoice.workshop_nit, {
         'schemeName': '31',
-        'schemeID': invoice.workshop_nit,
         'schemeAgencyID': '195',
         'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)'
     })
@@ -253,7 +329,6 @@ def generate_electronic_invoice_xml(invoice) -> str:
     add_subelement(party_legal, 'cbc:RegistrationName', invoice.workshop_name)
     add_subelement(party_legal, 'cbc:CompanyID', invoice.workshop_nit, {
         'schemeName': '31',
-        'schemeID': invoice.workshop_nit,
         'schemeAgencyID': '195',
         'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)'
     })
@@ -281,7 +356,6 @@ def generate_electronic_invoice_xml(invoice) -> str:
     
     add_subelement(cust_party_identification, 'cbc:ID', invoice.customer_document, {
         'schemeName': doc_type_code,
-        'schemeID': invoice.customer_document,
         'schemeAgencyID': '195',
         'schemeAgencyName': 'CO, DIAN (Dirección de Impuestos y Aduanas Nacionales)'
     })
@@ -310,8 +384,7 @@ def generate_electronic_invoice_xml(invoice) -> str:
     cust_party_tax_scheme = add_subelement(cust_party, 'cac:PartyTaxScheme')
     add_subelement(cust_party_tax_scheme, 'cbc:RegistrationName', invoice.customer_name)
     add_subelement(cust_party_tax_scheme, 'cbc:CompanyID', invoice.customer_document, {
-        'schemeName': doc_type_code,
-        'schemeID': invoice.customer_document
+        'schemeName': doc_type_code
     })
     
     cust_tax_scheme = add_subelement(cust_party_tax_scheme, 'cac:TaxScheme')
@@ -322,8 +395,7 @@ def generate_electronic_invoice_xml(invoice) -> str:
     cust_party_legal = add_subelement(cust_party, 'cac:PartyLegalEntity')
     add_subelement(cust_party_legal, 'cbc:RegistrationName', invoice.customer_name)
     add_subelement(cust_party_legal, 'cbc:CompanyID', invoice.customer_document, {
-        'schemeName': doc_type_code,
-        'schemeID': invoice.customer_document
+        'schemeName': doc_type_code
     })
     
     # Contacto del cliente
@@ -409,13 +481,21 @@ def generate_electronic_invoice_xml(invoice) -> str:
         add_subelement(price, 'cbc:BaseQuantity', format_decimal(Decimal('1.00'), 2), {'unitCode': detail.unit_code or 'NIU'})
     
     # Convertir a string XML
-    xml_string = tostring(root, encoding='utf-8', method='xml')
-    
-    # Formatear con indentación
-    dom = minidom.parseString(xml_string)
-    pretty_xml = dom.toprettyxml(indent='  ', encoding='UTF-8')
-    
-    return pretty_xml.decode('utf-8')
+    if USING_LXML:
+        # Usar lxml para mejor manejo de namespaces
+        xml_string = ET.tostring(
+            root,
+            encoding='UTF-8',
+            xml_declaration=True,
+            pretty_print=True
+        )
+        return xml_string.decode('utf-8')
+    else:
+        # Fallback a minidom
+        xml_string = tostring(root, encoding='utf-8', method='xml')
+        dom = minidom.parseString(xml_string)
+        pretty_xml = dom.toprettyxml(indent='  ', encoding='UTF-8')
+        return pretty_xml.decode('utf-8')
 
 
 def validate_xml_structure(xml_string: str) -> tuple:
