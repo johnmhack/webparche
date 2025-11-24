@@ -1,197 +1,441 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>En Construcción - Parche</title>
     <link rel="icon" href="../assets/images/fotos/logo.svg" type="image/svg+xml">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="../assets/css/main.css">
-    <link rel="stylesheet" href="../assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/coming-soon.css">
-    <meta name="description" content="Estamos trabajando en nuevas funcionalidades para Parche. Muy pronto tendrás acceso a todas las herramientas.">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" media="screen">
+    <link rel="stylesheet" href="../assets/css/components.css" media="screen">
+    <link rel="preload" as="image" href="../assets/images/fotos/servicio_1.jpeg">
+    <meta name="description" content="Estamos trabajando en nuevas funcionalidades para Parche. Muy pronto tendrás acceso a todas las herramientas y servicios para motociclistas.">
+    <meta name="keywords" content="en construcción, próximo lanzamiento, parche app, motociclistas, talleres, mantenimiento moto">
+    <meta name="author" content="Parche">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Spanish">
+    <meta name="revisit-after" content="7 days">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://appparche.com/pages/coming-soon.html">
+    
+    <!-- Etiquetas Open Graph para redes sociales -->
+    <meta property="og:title" content="En Construcción - Parche">
+    <meta property="og:description" content="Estamos trabajando en nuevas funcionalidades para Parche. Muy pronto tendrás acceso a todas las herramientas.">
+    <meta property="og:image" content="https://appparche.com/assets/images/fotos/logo.svg">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://appparche.com/pages/coming-soon.html">
+    <meta property="og:site_name" content="Parche">
+    <meta property="og:locale" content="es_ES">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="En Construcción - Parche">
+    <meta name="twitter:description" content="Estamos trabajando en nuevas funcionalidades para Parche. Muy pronto tendrás acceso a todas las herramientas.">
+    <meta name="twitter:image" content="https://appparche.com/assets/images/fotos/logo.svg">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ETCMFQ6206"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-ETCMFQ6206');
+    </script>
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Página en Construcción - Parche",
+      "description": "Página que indica que estamos trabajando en nuevas funcionalidades para Parche",
+      "url": "https://appparche.com/pages/coming-soon.html",
+      "mainEntity": {
+        "@type": "Organization",
+        "name": "Parche",
+        "url": "https://appparche.com"
+      }
+    }
+    </script>
+
+    <!-- Estilos adicionales para la página de construcción -->
+    <style>
+        .construction-page {
+            background: var(--dark-blue);
+            min-height: 100vh;
+            color: var(--surface);
+        }
+        
+        .construction-main {
+            padding: 60px 0;
+            text-align: center;
+        }
+        
+        .construction-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .mechanic-section {
+            position: relative;
+            margin-bottom: 40px;
+        }
+        
+        .mechanic-image {
+            position: relative;
+            display: inline-block;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 194, 255, 0.3);
+        }
+        
+        .mechanic-img {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            display: block;
+        }
+        
+        .mechanic-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 194, 255, 0.9);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        .mechanic-icon {
+            font-size: 2.5rem;
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        .construction-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .construction-subtitle {
+            font-size: 1.3rem;
+            color: var(--surface);
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .progress-section {
+            margin: 40px 0;
+        }
+        
+        .progress-text {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--neon-blue);
+        }
+        
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            height: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-blue));
+            height: 100%;
+            width: 75%;
+            border-radius: 25px;
+            animation: fillProgress 3s ease-in-out infinite;
+        }
+        
+        @keyframes fillProgress {
+            0%, 100% { width: 75%; }
+            50% { width: 85%; }
+        }
+        
+        .construction-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px solid rgba(0, 194, 255, 0.2);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .info-item {
+            text-align: center;
+        }
+        
+        .info-icon {
+            font-size: 3rem;
+            color: var(--neon-blue);
+            margin-bottom: 15px;
+        }
+        
+        .info-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--surface);
+        }
+        
+        .info-description {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+        
+        .notification-form {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 40px;
+            margin: 40px 0;
+            border: 1px solid rgba(0, 194, 255, 0.2);
+        }
+        
+        .form-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+            color: var(--surface);
+        }
+        
+        .form-subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid rgba(0, 194, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--surface);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .notification-btn {
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-blue));
+            color: var(--deeper-dark-blue);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+            width: 100%;
+        }
+        
+        .notification-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .construction-title {
+                font-size: 2.5rem;
+            }
+            
+            .construction-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .construction-container {
+                padding: 0 15px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
 </head>
-<body>
-    <!-- Header con navegación a Parche -->
-    <header class="header">
-        <nav class="nav">
-            <div class="nav-brand">
-                <a href="../index.html" class="logo">
-                    <img loading="lazy" src="../assets/images/fotos/logo.svg" alt="Parche" class="logo-img">
-                    <span class="logo-text">Parche</span>
-                </a>
-            </div>
-            <div class="nav-menu">
-                <a href="../index.html" class="nav-link">Inicio</a>
-                <a href="#" class="nav-link disabled">Torker</a>
-                <a href="#" class="nav-link disabled">Revista</a>
-                <a href="../index.html#contact" class="nav-link">Contacto</a>
-            </div>
-            <button class="menu-icon" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-list">
-                <span class="hamburger-line"></span>
-                <span class="hamburger-line"></span>
-                <span class="hamburger-line"></span>
-            </button>
-        </nav>
-    </header>
 
-    <!-- Línea decorativa debajo del header -->
-    <div class="header__divider"></div>
+<body class="construction-page">
+    <!-- NAVBAR COHERENTE CON INDEX.HTML -->
+    <nav class="navbar" role="navigation">
+        <div class="navbar__logo">
+            <img src="../assets/images/fotos/logo.svg" alt="Logo Parche" height="90" style="vertical-align:middle;">
+        </div>
+        <div class="navbar__menu-container">
+            <ul class="menu" id="menu-list">
+                <li><a href="../index.html">Inicio</a></li>
+                <li><a href="#construction">Torker</a></li>
+                <li><a href="#construction">Revista</a></li>
+                <li><a href="../index.html#services">Nuestros servicios</a></li>
+                <li><a href="../index.html#testimonios">Testimonios</a></li>
+                <li><a href="../index.html#faq">Preguntas frecuentes</a></li>
+                <li><a href="../index.html#contact">Contacto</a></li>
+            </ul>
+        </div>
+        <a href="../index.html#download" class="hire-btn" role="button" aria-label="Descargar nuestra aplicación">Descarga nuestra app</a>
+        <button class="menu-icon" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-list">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+    </nav>
+    <div class="navbar__divider"></div>
 
-    <!-- Sección Principal de Construcción -->
-    <main class="construction-main">
+    <!-- CONTENIDO PRINCIPAL DE CONSTRUCCIÓN -->
+    <main class="construction-main" role="main">
         <div class="construction-container">
-            <!-- Imagen del Mecánico -->
-            <div class="mechanic-section">
+            <!-- Sección del Mecánico -->
+            <section class="mechanic-section" id="construction">
                 <div class="mechanic-image">
                     <img loading="lazy" src="../assets/images/fotos/servicio_1.jpeg" alt="Mecánico trabajando" class="mechanic-img">
                     <div class="mechanic-overlay">
                         <i class='bx bx-wrench mechanic-icon'></i>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Contenido Principal -->
-            <div class="construction-content">
-                <h1 class="construction-title">
-                    <span class="title-main">¡Estamos Trabajando en Ello!</span>
-                </h1>
-                
-                <div class="construction-message">
-                    <p class="main-message">
-                        🚧 Nuestro equipo de expertos está desarrollando nuevas funcionalidades increíbles para mejorar tu experiencia.
-                    </p>
-                    
-                    <div class="features-preview">
-                        <h3>Próximamente:</h3>
-                        <div class="features-grid">
-                            <div class="feature-item">
-                                <i class='bx bx-calendar-check'></i>
-                                <span>Sistema de Gestión de Talleres</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class='bx bx-receipt'></i>
-                                <span>Facturación Electrónica DIAN</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class='bx bx-group'></i>
-                                <span>Gestión de Clientes</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class='bx bx-package'></i>
-                                <span>Control de Inventario</span>
-                            </div>
+            <!-- Título Principal -->
+            <header>
+                <h1 class="construction-title">Trabajando para Ti</h1>
+                <p class="construction-subtitle">
+                    Estamos desarrollando nuevas funcionalidades increíbles para la comunidad motociclista
+                </p>
+            </header>
+
+            <!-- Barra de Progreso -->
+            <section class="progress-section">
+                <p class="progress-text">Progreso de desarrollo: 75% completado</p>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </section>
+
+            <!-- Información del Proyecto -->
+            <section class="construction-info">
+                <h2 style="margin-bottom: 30px; color: var(--neon-blue); font-size: 2rem;">¿Qué viene pronto?</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class='bx bx-cog'></i>
                         </div>
+                        <h3 class="info-title">Torker</h3>
+                        <p class="info-description">
+                            Plataforma integral para talleres mecánicos con gestión completa de órdenes de trabajo, inventario y facturación.
+                        </p>
                     </div>
-
-                    <div class="progress-section">
-                        <h3>Progreso del Desarrollo</h3>
-                        <div class="progress-bar">
-                            <div class="progress-fill" data-progress="75"></div>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class='bx bx-book-open'></i>
                         </div>
-                        <p class="progress-text">75% completado</p>
+                        <h3 class="info-title">Revista Digital</h3>
+                        <p class="info-description">
+                            Contenido exclusivo sobre motocicletas, mantenimiento, eventos y noticias del mundo motociclista.
+                        </p>
                     </div>
-
-                    <div class="cta-section">
-                        <p>¿Tienes preguntas o quieres estar al tanto de las novedades?</p>
-                        <a href="../index.html#contact" class="btn btn-primary">
-                            <i class='bx bx-phone'></i>
-                            Contáctanos
-                        </a>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class='bx bx-mobile-alt'></i>
+                        </div>
+                        <h3 class="info-title">App Móvil</h3>
+                        <p class="info-description">
+                            Aplicación móvil nativa con todas las funcionalidades de Parche en la palma de tu mano.
+                        </p>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Animación de herramientas -->
-        <div class="tools-animation">
-            <div class="tool tool-1"><i class='bx bx-wrench'></i></div>
-            <div class="tool tool-2"><i class='bx bx-cog'></i></div>
-            <div class="tool tool-3"><i class='bx bx-hammer'></i></div>
+            <!-- Formulario de Notificación -->
+            <section class="notification-form">
+                <h2 class="form-title">¡Sé el primero en saber!</h2>
+                <p class="form-subtitle">
+                    Déjanos tu email y te notificaremos cuando lancemos estas nuevas funcionalidades
+                </p>
+                <form id="notification-form">
+                    <div class="form-group">
+                        <input type="email" class="form-input" placeholder="Tu correo electrónico" required>
+                    </div>
+                    <button type="submit" class="notification-btn">
+                        <i class='bx bx-bell'></i> Notificarme cuando esté listo
+                    </button>
+                </form>
+            </section>
+
+
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer" role="region" aria-labelledby="footer-titulo">
-        <div class="footer__container">
-            <div class="footer__section">
-                <h2 class="footer__logo" id="footer-titulo">Parche</h2>
-                <p class="footer__description">
-                    Transformando la experiencia de los talleres mecánicos<br>
-                    con tecnología de vanguardia y soluciones innovadoras.
-                </p>
-            </div>
-
-            <div class="footer__section">
-                <h3>Enlaces Rápidos</h3>
-                <ul class="footer__links">
-                    <li><a href="../index.html">Inicio</a></li>
-                    <li><a href="#" class="disabled">Torker (Próximamente)</a></li>
-                    <li><a href="#" class="disabled">Revista (Próximamente)</a></li>
-                    <li><a href="../index.html#contact">Contacto</a></li>
-                </ul>
-            </div>
-
-            <div class="footer__section">
-                <h3>Contacto</h3>
-                <ul class="footer__contact">
-                    <li><i class='bx bxs-phone' aria-hidden="true"></i> <a href="tel:+573194274416">+57 319 427 4416</a></li>
-                    <li><i class='bx bxs-envelope' aria-hidden="true"></i> <a href="mailto:info@appparche.com">info@appparche.com</a></li>
-                    <li><i class='bx bxs-map' aria-hidden="true"></i> Villeta, Cundinamarca</li>
-                </ul>
-            </div>
-
-            <div class="footer__section">
-                <h3>Síguenos</h3>
-                <div class="footer__socials">
-                    <a href="https://web.facebook.com/profile.php?id=61576711569346" target="_blank" aria-label="Facebook de Parche"><i class='bx bxl-facebook-circle'></i></a>
-                    <a href="https://www.instagram.com/parcheapp33/" target="_blank" aria-label="Instagram de Parche"><i class='bx bxl-instagram-alt'></i></a>
-                    <a href="https://www.tiktok.com/@parche_app" target="_blank" aria-label="TikTok de Parche"><i class='bx bxl-tiktok'></i></a>
-                    <a href="https://whatsapp.com/channel/0029VbB9YBECxoAs3gUAtA2r" target="_blank" aria-label="WhatsApp de Parche"><i class='bx bxl-whatsapp'></i></a>
-                </div>
-            </div>
-
-            <div class="footer__bottom">
-                <p><small>by <strong>Parche</strong> - &copy; 2024. Todos los derechos reservados.</small></p>
-            </div>
-        </div>
-    </footer>
-
-    <script src="../assets/js/main.js"></script>
-    <script src="../assets/js/components.js"></script>
+    <!-- Script para el formulario -->
     <script>
-        // Animación de progreso
-        document.addEventListener('DOMContentLoaded', function() {
-            const progressFill = document.querySelector('.progress-fill');
-            if (progressFill) {
-                const progress = progressFill.getAttribute('data-progress');
-                setTimeout(() => {
-                    progressFill.style.width = progress + '%';
-                }, 500);
-            }
-
-            // Animación de herramientas flotantes
-            const tools = document.querySelectorAll('.tool');
-            tools.forEach((tool, index) => {
-                tool.style.animationDelay = (index * 0.5) + 's';
-            });
-
-            // Efecto de escritura para el título
-            const title = document.querySelector('.title-main');
-            if (title) {
-                const text = title.textContent;
-                title.textContent = '';
-                let i = 0;
-                const typeWriter = () => {
-                    if (i < text.length) {
-                        title.textContent += text.charAt(i);
-                        i++;
-                        setTimeout(typeWriter, 100);
-                    }
-                };
-                setTimeout(typeWriter, 1000);
-            }
+        document.getElementById('notification-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Simular envío del formulario
+            const email = this.querySelector('input[type="email"]').value;
+            const btn = this.querySelector('.notification-btn');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="bx bx-check"></i> ¡Te notificaremos pronto!';
+            btn.style.background = 'var(--neon-green)';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+                this.reset();
+            }, 3000);
         });
+
+        // Menú móvil funcional
+        const menuIcon = document.querySelector('.menu-icon');
+        const menuList = document.querySelector('.menu');
+        
+        if (menuIcon && menuList) {
+            menuIcon.addEventListener('click', function() {
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                this.setAttribute('aria-expanded', !isExpanded);
+                menuList.classList.toggle('active');
+            });
+        }
     </script>
 </body>
 </html>
