@@ -154,18 +154,18 @@ body {
 }
 
 .hamburger-line {
-    width: 30px;
+    width: 28px;
     height: 3px;
     background: var(--neon-green);
     border-radius: 2px;
     transition: all 0.3s ease;
     transform-origin: center;
     display: block;
-    margin: 4px 0; /* Espacio entre líneas */
+    margin: 5px auto; /* Centrar las líneas horizontalmente */
 }
 
 .menu-icon.active .hamburger-line:nth-child(1) {
-    transform: rotate(45deg) translate(6px, 6px);
+    transform: rotate(45deg) translate(5px, 5px);
 }
 
 .menu-icon.active .hamburger-line:nth-child(2) {
@@ -173,7 +173,7 @@ body {
 }
 
 .menu-icon.active .hamburger-line:nth-child(3) {
-    transform: rotate(-45deg) translate(6px, -6px);
+    transform: rotate(-45deg) translate(5px, -5px);
 }
 
 @media (max-width: 900px) {
@@ -186,22 +186,22 @@ body {
         position: absolute;
         top: 100%;
         left: 0;
-        right: 0;
+        width: calc(100vw - 24px);
         background: rgba(27, 33, 64, 0.98);
         backdrop-filter: blur(15px);
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
         gap: 0;
-        width: 100%;
-        padding: 20px 0;
-        border-radius: 0 0 15px 15px;
-        box-shadow: 0 12px 40px 0 rgba(0,0,0,0.4);
+        padding: 0;
+        box-shadow: 0 8px 32px 0 rgba(0,0,0,0.4);
         z-index: 101;
         border: 1px solid rgba(0, 194, 255, 0.3);
-        border-top: none;
         opacity: 0;
         transform: translateY(-10px);
         transition: all 0.3s ease;
+        border-radius: 0 0 12px 12px;
+        margin-left: 12px;
+        margin-right: 12px;
     }
     .menu.active {
         display: flex;
@@ -217,14 +217,30 @@ body {
     .menu li:last-child {
         border-bottom: none;
     }
+    .menu li:first-child {
+        border-top: 1px solid rgba(0, 194, 255, 0.3);
+    }
+    
+    .menu li a {
+        padding: 16px 16px;
+        font-size: 1rem;
+    }
+    
+    .hire-btn {
+        margin: 8px 8px 0 8px;
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        min-width: 180px;
+    }
     .menu li a {
         display: block;
-        padding: 16px 20px;
+        padding: 18px 20px;
         width: 100%;
         transition: all 0.3s ease;
         font-size: 1.1rem;
         position: relative;
         overflow: hidden;
+        text-align: center;
     }
     .menu li a:hover {
         background: rgba(0, 194, 255, 0.15);
@@ -247,20 +263,27 @@ body {
     }
     .menu-icon {
         display: block;
-        padding: 12px;
-        border-radius: 8px;
+        padding: 0;
+        border-radius: 4px;
         transition: all 0.3s ease;
-        background: rgba(0, 194, 255, 0.1);
+        background: transparent;
+        width: 36px;
+        height: 36px;
+        align-items: center;
+        justify-content: center;
     }
     .menu-icon:hover {
-        background: rgba(0, 194, 255, 0.2);
+        background: rgba(0, 194, 255, 0.1);
         transform: scale(1.05);
     }
     .hire-btn {
         margin-left: 0;
         padding: 12px 20px;
         font-size: 1rem;
-        margin-top: 10px;
+        margin: 10px 12px 0 12px;
+        align-self: center;
+        min-width: 200px;
+        text-align: center;
     }
     .navbar__logo img {
         height: 60px;
