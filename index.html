@@ -360,7 +360,7 @@
     <div class="navbar__divider"></div>
 
     <!-- LUCES NAVIDEÑAS COLGANTES -->
-    <div class="christmas-lights" id="christmasLights">
+    <div class="christmas-lights" id="christmasLights" style="transition: transform 0.25s ease-in-out;">
         <div class="light-string">
             <!-- Luz 1 - Rojo -->
             <div class="light red-light" data-color="red">
@@ -1074,45 +1074,33 @@
                 });
             }
             
-            // 6. EFECTO DE NAVBAR HIDE ON SCROLL - COMPORTAMIENTO ORIGINAL
+            // 6. EFECTO DE NAVBAR HIDE ON SCROLL - VERSIÓN FINAL CON LUCES
             function initNavbarScrollHide() {
                 let lastScrollTop = 0;
                 let isHidden = false;
-                let isAnimating = false;
                 const navbar = document.querySelector('.navbar');
-                const navbarDivider = document.querySelector('.navbar__divider');
                 const christmasLights = document.querySelector('#christmasLights');
+                
+                if (!navbar) return;
                 
                 window.addEventListener('scroll', () => {
                     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                     
-                    if (isAnimating) return; // Prevenir animaciones múltiples
-                    
-                    // Scroll hacia abajo - OCULTAR header Y LUCES NAVIDEÑAS
+                    // Scroll hacia abajo - OCULTAR header Y LUCES
                     if (scrollTop > lastScrollTop && scrollTop > 100 && !isHidden) {
-                        isAnimating = true;
                         isHidden = true;
-                        gsap.to([navbar, navbarDivider, christmasLights], {
-                            y: -100,
-                            duration: 0.25,
-                            ease: "power2.inOut",
-                            onComplete: () => {
-                                isAnimating = false;
-                            }
-                        });
+                        navbar.style.transform = 'translateY(-100%)';
+                        if (christmasLights) {
+                            christmasLights.style.transform = 'translateY(-100%)';
+                        }
                     }
-                    // Scroll hacia arriba - MOSTRAR header Y LUCES NAVIDEÑAS
+                    // Scroll hacia arriba - MOSTRAR header Y LUCES
                     else if (scrollTop < lastScrollTop && isHidden) {
-                        isAnimating = true;
                         isHidden = false;
-                        gsap.to([navbar, navbarDivider, christmasLights], {
-                            y: 0,
-                            duration: 0.25,
-                            ease: "power2.inOut",
-                            onComplete: () => {
-                                isAnimating = false;
-                            }
-                        });
+                        navbar.style.transform = 'translateY(0)';
+                        if (christmasLights) {
+                            christmasLights.style.transform = 'translateY(0)';
+                        }
                     }
                     
                     lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
