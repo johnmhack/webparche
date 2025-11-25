@@ -187,48 +187,80 @@ body {
         top: 100%;
         left: 0;
         right: 0;
-        background: rgba(27, 33, 64, 0.95);
-        backdrop-filter: blur(10px);
+        background: rgba(27, 33, 64, 0.98);
+        backdrop-filter: blur(15px);
         flex-direction: column;
         align-items: center;
         gap: 0;
         width: 100%;
         padding: 20px 0;
         border-radius: 0 0 15px 15px;
-        box-shadow: 0 8px 32px 0 rgba(0,0,0,0.3);
+        box-shadow: 0 12px 40px 0 rgba(0,0,0,0.4);
         z-index: 101;
-        border: 1px solid rgba(0, 194, 255, 0.2);
+        border: 1px solid rgba(0, 194, 255, 0.3);
         border-top: none;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
     }
     .menu.active {
         display: flex;
+        opacity: 1;
+        transform: translateY(0);
     }
     .menu li {
         width: 100%;
         text-align: center;
-        border-bottom: 1px solid rgba(0, 194, 255, 0.1);
+        border-bottom: 1px solid rgba(0, 194, 255, 0.15);
+        transition: all 0.2s ease;
     }
     .menu li:last-child {
         border-bottom: none;
     }
     .menu li a {
         display: block;
-        padding: 15px 20px;
+        padding: 16px 20px;
         width: 100%;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+        position: relative;
+        overflow: hidden;
     }
     .menu li a:hover {
-        background: rgba(0, 194, 255, 0.1);
+        background: rgba(0, 194, 255, 0.15);
         color: var(--neon-pink);
+        transform: translateX(5px);
+    }
+    .menu li a::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
+        transition: width 0.3s ease;
+        z-index: -1;
+    }
+    .menu li a:hover::before {
+        width: 100%;
     }
     .menu-icon {
         display: block;
-        padding: 8px; /* Aumenta el área táctil */
+        padding: 12px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        background: rgba(0, 194, 255, 0.1);
+    }
+    .menu-icon:hover {
+        background: rgba(0, 194, 255, 0.2);
+        transform: scale(1.05);
     }
     .hire-btn {
         margin-left: 0;
-        padding: 10px 18px;
+        padding: 12px 20px;
         font-size: 1rem;
+        margin-top: 10px;
     }
     .navbar__logo img {
         height: 60px;
@@ -380,10 +412,6 @@ section {
 }
 
 @media (max-width: 768px) {
-    .navbar > .navbar__menu-container .menu {
-        display: none; /* Oculta los enlaces del menú principal */
-    }
-
     .menu-icon {
         display: block;
         padding: 8px; /* Aumenta el área táctil */

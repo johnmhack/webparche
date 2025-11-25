@@ -1047,57 +1047,7 @@
                 }
             }
             
-            // 4. MENÚ MÓVIL ANIMADO
-            function initMobileMenuAnimation() {
-                const menuIcon = document.querySelector('.menu-icon');
-                const menuList = document.querySelector('.menu');
-                
-                if (menuIcon && menuList) {
-                    menuIcon.addEventListener('click', () => {
-                        const isExpanded = menuIcon.getAttribute('aria-expanded') === 'true';
-                        
-                        if (!isExpanded) {
-                            // Abrir menú
-                            gsap.to(menuList, {
-                                opacity: 1,
-                                visibility: 'visible',
-                                height: 'auto',
-                                duration: 0.3,
-                                ease: "power2.out"
-                            });
-                            
-                            // Animar líneas del hamburger
-                            const lines = menuIcon.querySelectorAll('.hamburger-line');
-                            lines.forEach((line, index) => {
-                                gsap.to(line, {
-                                    rotation: index === 1 ? 45 : index === 2 ? -45 : 0,
-                                    duration: 0.3,
-                                    ease: "power2.out"
-                                });
-                            });
-                        } else {
-                            // Cerrar menú
-                            gsap.to(menuList, {
-                                opacity: 0,
-                                visibility: 'hidden',
-                                height: 0,
-                                duration: 0.3,
-                                ease: "power2.out"
-                            });
-                            
-                            // Resetear líneas del hamburger
-                            const lines = menuIcon.querySelectorAll('.hamburger-line');
-                            lines.forEach(line => {
-                                gsap.to(line, {
-                                    rotation: 0,
-                                    duration: 0.3,
-                                    ease: "power2.out"
-                                });
-                            });
-                        }
-                    });
-                }
-            }
+
             
             // 5. EFECTO DE ESCRITURA PARA TEXTOS
             function initTypeWriterEffect() {
@@ -1174,7 +1124,7 @@
             initModernAnimations();
             initChristmasLights(); // ← FUNCIÓN CRÍTICA PARA LOS BOMBILLOS
             initChristmasEffects();
-            initMobileMenuAnimation();
+
             initTypeWriterEffect();
             initNavbarScrollHide();
             

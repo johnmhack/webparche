@@ -44,27 +44,65 @@ document.querySelectorAll('.faq-item h6').forEach(faqItemHeading => {
     });
 });
 
-        // Menú hamburguesa
+        // Menú hamburguesa mejorado
     const menuIcon = document.querySelector('.menu-icon');
     const menu = document.querySelector('.menu');
     if (!menuIcon || !menu) {
         // Error: No se encuentran los elementos .menu-icon o .menu en el DOM.
         return;
     }
-    menuIcon.addEventListener('click', () => {
-            const isActive = menu.classList.toggle('active');
-            menuIcon.classList.toggle('active', isActive);
-            menuIcon.setAttribute('aria-expanded', isActive);
+    
+    // Función para cerrar menú
+    function closeMenu() {
+        menu.classList.remove('active');
+        menuIcon.classList.remove('active');
+        menuIcon.setAttribute('aria-expanded', 'false');
+    }
+    
+    // Función para abrir menú
+    function openMenu() {
+        menu.classList.add('active');
+        menuIcon.classList.add('active');
+        menuIcon.setAttribute('aria-expanded', 'true');
+    }
+    
+    // Toggle del menú hamburguesa
+    menuIcon.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isActive = menu.classList.contains('active');
+        
+        if (isActive) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
     });
 
     // Cerrar menú al hacer clic en un enlace
     const menuLinks = document.querySelectorAll('.menu li a');
     menuLinks.forEach(link => {
         link.addEventListener('click', () => {
-            menu.classList.remove('active');
-            menuIcon.classList.remove('active');
-            menuIcon.setAttribute('aria-expanded', 'false');
+            closeMenu();
         });
+    });
+    
+    // Cerrar menú al hacer clic fuera de él
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && !menuIcon.contains(e.target)) {
+            closeMenu();
+        }
+    });
+    
+    // Cerrar menú con la tecla Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menu.classList.contains('active')) {
+            closeMenu();
+        }
+    });
+    
+    // Prevenir que el clic en el menú se propague al documento
+    menu.addEventListener('click', (e) => {
+        e.stopPropagation();
     });
 });
 
