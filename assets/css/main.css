@@ -380,8 +380,8 @@ section {
 }
 
 @media (max-width: 768px) {
-    .navbar ul {
-        display: none; /* Oculta los enlaces */
+    .navbar > .navbar__menu-container .menu {
+        display: none; /* Oculta los enlaces del menú principal */
     }
 
     .menu-icon {

@@ -987,7 +987,7 @@
             // 3. EFECTOS ADICIONALES NAVIDEÑOS OPTIMIZADOS
             function initChristmasEffects() {
                 let snowflakeCount = 0;
-                const maxSnowflakes = 25; // Límite más alto de copos
+                const maxSnowflakes = 75; // Límite MUCHO más alto de copos
                 
                 // Animación de partículas flotantes OPTIMIZADA
                 function createSnowflake() {
@@ -1029,8 +1029,8 @@
                     });
                 }
                 
-                // Crear copos de nieve cada 4 segundos (más frecuentes)
-                setInterval(createSnowflake, 4000);
+                // Crear copos de nieve cada 800ms (MUCHÍSIMO más frecuentes)
+                setInterval(createSnowflake, 800);
                 
                 // Efecto de resplandor en el logo
                 const logo = document.querySelector('.navbar__logo img');
