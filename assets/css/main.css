@@ -52,13 +52,13 @@ body {
 }
 @media (max-width: 768px) {
     body {
-        padding: 0 30px;
+        padding: 0 20px;
     }
 }
 
 @media (max-width: 480px) { /* Más espacio en pantallas muy pequeñas */
     body {
-        padding: 0 15px;
+        padding: 0 16px;
     }
 }
 
@@ -160,7 +160,7 @@ body {
     border: none;
     cursor: pointer;
     padding: 0;
-    margin-left: 24px;
+    margin-left: 8px;
     z-index: 1001;
     font-size: 0; /* Elimina cualquier texto residual */
 }
@@ -190,7 +190,7 @@ body {
 
 @media (max-width: 900px) {
     .navbar {
-        padding: 0 16px;
+        padding: 0 20px;
         height: 90px;
         width: 100%;
         box-sizing: border-box;
@@ -304,9 +304,10 @@ body {
         text-align: center;
     }
     .navbar__logo img {
-        height: 60px;
-        margin-right: 12px;
-        margin-top: 12px;
+        height: 50px;
+        margin-right: 8px;
+        margin-top: 0;
+        align-self: center;
     }
     .navbar__underline {
         width: 50px;
@@ -317,12 +318,14 @@ body {
 
 @media (max-width: 700px) {
     .navbar__logo img {
-        height: 36px;
-        margin-right: 8px;
-        margin-top: 12px;
+        height: 32px;
+        margin-right: 6px;
+        margin-top: 0;
+        align-self: center;
     }
     .navbar {
         height: 70px;
+        padding: 0 16px;
     }
     .navbar__underline {
         width: 30px;
@@ -391,7 +394,7 @@ section {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 40px;
+    padding: 0 32px;
     height: 110px;
     box-shadow: none;
     transition: transform 0.6s ease, background 0.3s;
@@ -408,12 +411,13 @@ section {
 }
 
 .navbar__logo img {
-    height: 100px;
+    height: 80px;
     width: auto;
     display: block;
     filter: drop-shadow(0 0 8px var(--neon-green));
-    margin-right: 24px;
-    margin-top: 20px;
+    margin-right: 20px;
+    margin-top: 0;
+    align-self: center;
 }
 
 .navbar h2{
