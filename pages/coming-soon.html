@@ -594,7 +594,9 @@
     <!-- NAVBAR COHERENTE CON INDEX.HTML -->
     <nav class="navbar" role="navigation">
         <div class="navbar__logo">
-            <img src="../assets/images/fotos/logo.svg" alt="Logo Parche" height="90" style="vertical-align:middle;">
+            <a href="../index.html#home" aria-label="Ir al inicio">
+                <img src="../assets/images/fotos/logo.svg" alt="Logo Parche" height="90" style="vertical-align:middle;">
+            </a>
         </div>
         <div class="navbar__menu-container">
             <ul class="menu" id="menu-list">
@@ -755,7 +757,8 @@
         </div>
     </main>
 
-    <!-- Script para el formulario -->
+    <!-- Script para el formulario y animaciones navideñas -->
+    <script src="../assets/js/main.js"></script>
     <script>
         document.getElementById('notification-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1123,59 +1126,7 @@
             });
         }
 
-        // 4. MENÚ MÓVIL ANIMADO
-        function initMobileMenuAnimation() {
-            const menuIcon = document.querySelector('.menu-icon');
-            const menuList = document.querySelector('.menu');
-
-            if (menuIcon && menuList) {
-                menuIcon.addEventListener('click', () => {
-                    const isExpanded = menuIcon.getAttribute('aria-expanded') === 'true';
-
-                    if (!isExpanded) {
-                        // Abrir menú
-                        gsap.to(menuList, {
-                            opacity: 1,
-                            visibility: 'visible',
-                            height: 'auto',
-                            duration: 0.3,
-                            ease: "power2.out"
-                        });
-
-                        // Animar líneas del hamburger
-                        const lines = menuIcon.querySelectorAll('.hamburger-line');
-                        lines.forEach((line, index) => {
-                            gsap.to(line, {
-                                rotation: index === 1 ? 45 : index === 2 ? -45 : 0,
-                                duration: 0.3,
-                                ease: "power2.out"
-                            });
-                        });
-                    } else {
-                        // Cerrar menú
-                        gsap.to(menuList, {
-                            opacity: 0,
-                            visibility: 'hidden',
-                            height: 0,
-                            duration: 0.3,
-                            ease: "power2.out"
-                        });
-
-                        // Resetear líneas del hamburger
-                        const lines = menuIcon.querySelectorAll('.hamburger-line');
-                        lines.forEach(line => {
-                            gsap.to(line, {
-                                rotation: 0,
-                                duration: 0.3,
-                                ease: "power2.out"
-                            });
-                        });
-                    }
-                });
-            }
-        }
-
-        // 5. FUNCIONES ADICIONALES QUE FALTABAN
+        // 4. FUNCIONES ADICIONALES QUE FALTABAN
         function initNavbarScrollHide() {
             let lastScrollTop = 0;
             let isAnimating = false;
@@ -1231,8 +1182,6 @@
             initNavbarScrollHide();
             initChristmasEffects();
             initNavbarAndChristmasLightsScrollEffect();
-            initMobileMenuAnimation();
-            initChristmasLightSequences(); // 🌟 NUEVAS SECUENCIAS MÁGICAS 🌟
 
             console.log('✨🎄 Parche navideño con secuencias mágicas activado - ¡Feliz Navidad! 🎄✨');
         });
