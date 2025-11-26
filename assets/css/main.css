@@ -212,8 +212,13 @@ body {
     }
     
     .navbar__menu-container {
-        display: none;
+        display: block; /* Cambiar de none a block */
         flex: 0;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 101;
     }
     
     .navbar__logo img {
@@ -250,10 +255,22 @@ body {
         box-sizing: border-box;
         overflow: hidden;
     }
+    .menu {
+        display: none;
+    }
+    
     .menu.active {
         display: flex;
         opacity: 1;
         transform: translateY(0);
+    }
+    
+    .navbar__menu-container:not(.active) {
+        display: none;
+    }
+    
+    .navbar__menu-container.active {
+        display: block;
     }
     .menu li {
         width: 100%;

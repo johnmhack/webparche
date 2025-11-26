@@ -47,6 +47,7 @@ document.querySelectorAll('.faq-item h6').forEach(faqItemHeading => {
         // Menú hamburguesa mejorado
     const menuIcon = document.querySelector('.menu-icon');
     const menu = document.querySelector('.menu');
+    const menuContainer = document.querySelector('.navbar__menu-container');
     if (!menuIcon || !menu) {
         // Error: No se encuentran los elementos .menu-icon o .menu en el DOM.
         return;
@@ -56,6 +57,7 @@ document.querySelectorAll('.faq-item h6').forEach(faqItemHeading => {
     function closeMenu() {
         menu.classList.remove('active');
         menuIcon.classList.remove('active');
+        if (menuContainer) menuContainer.classList.remove('active');
         menuIcon.setAttribute('aria-expanded', 'false');
     }
     
@@ -63,6 +65,7 @@ document.querySelectorAll('.faq-item h6').forEach(faqItemHeading => {
     function openMenu() {
         menu.classList.add('active');
         menuIcon.classList.add('active');
+        if (menuContainer) menuContainer.classList.add('active');
         menuIcon.setAttribute('aria-expanded', 'true');
     }
     
