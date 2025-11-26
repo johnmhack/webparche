@@ -3,29 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Revista Parche - En Construcción | Parche</title>
+    <title>Revista Parche - El Mundo del Motociclismo | Parche</title>
     <link rel="icon" href="../../assets/images/fotos/logo.svg" type="image/svg+xml">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/components.css">
-    <meta http-equiv="refresh" content="0; url=../coming-soon.html">
-    <meta name="description" content="Revista Parche está en desarrollo. Pronto tendrás acceso a contenido exclusivo sobre el mundo motociclista.">
-    <script>
-        // Redirección inmediata para navegadores que no soporten meta refresh
-        window.location.href = '../coming-soon.html';
-    </script>
+    <link rel="stylesheet" href="assets/css/revista.css">
+    
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <meta name="description" content="Revista Parche: Contenido exclusivo sobre motocicletas, mantenimiento, eventos y noticias del mundo motociclista.">
 </head>
-<body>
-    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
-        <h1>Redirigiendo...</h1>
-        <p>Serás redirigido a la página de construcción en un momento.</p>
-        <p><a href="../coming-soon.html" style="color: #00C2FF;">Haz clic aquí si no eres redirigido automáticamente</a></p>
-    </div>
-    <script>
-        // Redirección más agresiva
-        setTimeout(function() {
-            window.location.replace('../coming-soon.html');
-        }, 100);
-    </script>
+<body class="revista-page">
+    <!-- NAVBAR -->
+    <nav class="navbar" role="navigation">
+        <div class="navbar__logo">
+            <a href="../../index.html#home" aria-label="Ir al inicio">
+                <img src="../../assets/images/fotos/logo.svg" alt="Logo Parche" height="90" style="vertical-align:middle;">
+            </a>
+        </div>
+        <div class="navbar__menu-container">
+            <ul class="menu" id="menu-list">
+                <li><a href="../../index.html#home">Inicio</a></li>
+                <li><a href="#hero">Revista</a></li>
+                <li><a href="../../pages/coming-soon.html">Torker</a></li>
+                <li><a href="../../index.html#services">Nuestros servicios</a></li>
+                <li><a href="../../index.html#testimonios">Testimonios</a></li>
+                <li><a href="../../index.html#faq">Preguntas frecuentes</a></li>
+                <li><a href="../../index.html#contact">Contacto</a></li>
+            </ul>
+        </div>
+        <a href="../../index.html#download" class="hire-btn" role="button" aria-label="Descargar nuestra aplicación">Descarga nuestra app</a>
+        <button class="menu-icon" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-list">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+    </nav>
+    <div class="navbar__divider"></div>
+
+    <!-- HERO SECTION - Estilo GTA VI -->
+    <section class="hero-section" id="hero">
+        <div class="hero-video-overlay"></div>
+        <div class="hero-content">
+            <h1 class="hero-title" data-text="Revista Parche">Revista Parche</h1>
+            <p class="hero-subtitle">El mundo del motociclismo</p>
+            <div class="hero-scroll-indicator">
+                <span>Scroll</span>
+                <i class='bx bx-down-arrow-alt'></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARTÍCULO DESTACADO - Scroll Horizontal -->
+    <section class="featured-article-section" id="featured">
+        <div class="featured-container">
+            <div class="featured-slide">
+                <div class="featured-image-wrapper">
+                    <img src="../../assets/images/fotos/taller1.jpg" alt="Taller de motos" class="featured-image">
+                    <div class="featured-overlay"></div>
+                </div>
+                <div class="featured-content">
+                    <span class="featured-category">Mantenimiento</span>
+                    <h2 class="featured-title">Guía Completa de Mantenimiento para tu Moto</h2>
+                    <p class="featured-excerpt">Aprende los secretos de los mejores mecánicos para mantener tu moto en perfecto estado durante todo el año.</p>
+                    <a href="#" class="featured-link">Leer más <i class='bx bx-arrow-right'></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN DE ARTÍCULOS - Scroll Vertical con Parallax -->
+    <section class="articles-section" id="articles">
+        <article class="article-item" data-article="1">
+            <div class="article-image-container">
+                <img src="../../assets/images/fotos/servicio_1.jpeg" alt="Moto personalizada" class="article-image">
+                <div class="article-overlay"></div>
+            </div>
+            <div class="article-content">
+                <span class="article-date">Enero 2024</span>
+                <h3 class="article-title">Personalización Extrema: Transforma tu Moto</h3>
+                <p class="article-description">Descubre cómo los mejores talleres de Colombia están transformando motos comunes en obras de arte sobre ruedas.</p>
+            </div>
+        </article>
+
+        <article class="article-item" data-article="2">
+            <div class="article-image-container">
+                <img src="../../assets/images/fotos/taller1.jpg" alt="Evento motociclista" class="article-image">
+                <div class="article-overlay"></div>
+            </div>
+            <div class="article-content">
+                <span class="article-date">Diciembre 2023</span>
+                <h3 class="article-title">Los Mejores Eventos Motociclistas de 2024</h3>
+                <p class="article-description">Una guía completa de los eventos, rallies y encuentros que no te puedes perder este año.</p>
+            </div>
+        </article>
+
+        <article class="article-item" data-article="3">
+            <div class="article-image-container">
+                <img src="../../assets/images/fotos/servicio_1.jpeg" alt="Seguridad en moto" class="article-image">
+                <div class="article-overlay"></div>
+            </div>
+            <div class="article-content">
+                <span class="article-date">Noviembre 2023</span>
+                <h3 class="article-title">Seguridad Vial: Equipamiento Esencial</h3>
+                <p class="article-description">Todo lo que necesitas saber sobre cascos, protecciones y equipamiento de seguridad para rodar tranquilo.</p>
+            </div>
+        </article>
+    </section>
+
+    <!-- SECCIÓN ESPECIAL - Estilo GTA VI Character -->
+    <section class="character-section" id="character">
+        <div class="character-container">
+            <div class="character-image-wrapper">
+                <img src="../../assets/images/fotos/taller1.jpg" alt="Mecánico experto" class="character-image">
+                <div class="character-overlay"></div>
+            </div>
+            <div class="character-content">
+                <h2 class="character-name">El Mecánico</h2>
+                <p class="character-quote">"Cada moto tiene su alma. Mi trabajo es encontrarla."</p>
+                <div class="character-description">
+                    <p>Con más de 20 años de experiencia, este mecánico ha transformado cientos de motos y ha enseñado a decenas de aprendices el arte del mantenimiento.</p>
+                    <p>En esta entrevista exclusiva, comparte sus secretos y la filosofía detrás de cada reparación.</p>
+                </div>
+                <a href="#" class="character-link">Leer entrevista completa <i class='bx bx-arrow-right'></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer" id="contact" role="region" aria-labelledby="contacto-titulo">
+        <div class="footer__container">
+            <!-- Sección de Logo y Descripción -->
+            <div class="footer__section">
+                <h2 class="footer__logo" id="contacto-titulo">Parche</h2>
+                <p class="footer__description">
+                    Tu pasión, nuestra misión. Conecta con el mundo del motociclismo: los mejores talleres, eventos y mucho más en la palma de tu mano.
+                </p>
+            </div>
+
+            <!-- Sección de Enlaces Rápidos -->
+            <div class="footer__section">
+                <h3>Enlaces Rápidos</h3>
+                <ul class="footer__links">
+                    <li><a href="../../index.html#home">Acerca de</a></li>
+                    <li><a href="#hero">Revista</a></li>
+                    <li><a href="../../index.html#services">Servicios</a></li>
+                    <li><a href="../../index.html#contact">Contacto</a></li>
+                    <li><a href="../../index.html#faq">Preguntas Frecuentes</a></li>
+                </ul>
+            </div>
+
+            <!-- Sección de Contacto -->
+            <div class="footer__section">
+                <h3>Contacto</h3>
+                <ul class="footer__contact">
+                    <li><i class='bx bxs-phone' aria-hidden="true"></i> <a href="tel:+573194274416"
+                            aria-label="Llamar al número de contacto">+57 319 427 4416</a></li>
+                    <li><i class='bx bxs-envelope' aria-hidden="true"></i> <a href="mailto:soporte@appparche.com"
+                            aria-label="Enviar un correo a soporte@appparche.com">soporte@appparche.com</a></li>
+                    <li><i class='bx bxs-map' aria-hidden="true"></i> Carrera 5 # 7 -17 Villeta Cundinamarca</li>
+                </ul>
+            </div>
+
+            <!-- Sección de Redes Sociales -->
+            <div class="footer__section">
+                <h3>Síguenos</h3>
+                <div class="footer__socials">
+                    <a href="https://web.facebook.com/profile.php?id=61576711569346" target="_blank" aria-label="Facebook de Parche"><i class='bx bxl-facebook-circle'></i></a>
+                    <a href="https://www.instagram.com/parcheapp33/" target="_blank" aria-label="Instagram de Parche"><i class='bx bxl-instagram-alt'></i></a>
+                    <a href="https://www.tiktok.com/@parche_app" target="_blank" aria-label="TikTok de Parche"><i class='bx bxl-tiktok'></i></a>
+                    <a href="https://whatsapp.com/channel/0029VbB9YBECxoAs3gUAtA2r" target="_blank" aria-label="WhatsApp de Parche"><i class='bx bxl-whatsapp'></i></a>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p><small>&copy; 2024 ParcheApp. Todos los derechos reservados.</small></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="../../assets/js/main.js"></script>
+    <script src="assets/js/revista.js"></script>
 </body>
 </html>

@@ -1,100 +1,458 @@
-/* Estilos específicos para la Revista */
+/* Estilos Revista Parche - Inspirado en GTA VI */
 
-.hero-revista {
-    background: linear-gradient(135deg, var(--dark-blue), var(--deeper-dark-blue));
-    color: var(--surface);
-    padding: 80px 0;
-    text-align: center;
+:root {
+    --revista-dark: #0a0a0a;
+    --revista-darker: #050505;
+    --revista-accent: #00C2FF;
+    --revista-accent-2: #25FF7A;
+    --revista-text: #ffffff;
+    --revista-text-muted: rgba(255, 255, 255, 0.7);
 }
 
-.hero-revista .hero-title {
-    font-size: 3rem;
-    margin-bottom: 20px;
-    color: var(--neon-green);
+.revista-page {
+    background: var(--revista-dark);
+    color: var(--revista-text);
+    overflow-x: hidden;
 }
 
-.hero-revista .hero-description {
-    font-size: 1.2rem;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.revista-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 40px 20px;
-}
-
-.featured-article {
-    margin-bottom: 60px;
-}
-
-.featured-article h2 {
-    color: var(--neon-blue);
-    font-size: 2rem;
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.article-card {
-    background: var(--surface);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+/* HERO SECTION - Estilo GTA VI */
+.hero-section {
+    position: relative;
+    width: 100%;
+    height: 100vh;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--revista-darker) 0%, var(--dark-blue) 100%);
+    overflow: hidden;
+}
+
+.hero-video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 0 20px;
+}
+
+.hero-title {
+    font-size: clamp(3rem, 8vw, 8rem);
+    font-weight: 800;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, var(--revista-accent), var(--revista-accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -2px;
+    opacity: 0;
+    transform: translateY(50px);
+}
+
+.hero-subtitle {
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    color: var(--revista-text-muted);
+    margin-bottom: 40px;
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.hero-scroll-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--revista-text-muted);
+    font-size: 0.9rem;
+    opacity: 0;
+    animation: bounce 2s infinite;
+}
+
+.hero-scroll-indicator i {
+    font-size: 1.5rem;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(10px); }
+}
+
+/* FEATURED ARTICLE SECTION - Scroll Horizontal */
+.featured-article-section {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 100px 0;
+    background: var(--revista-darker);
+}
+
+.featured-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+.featured-slide {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+.featured-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    overflow: hidden;
+    border-radius: 20px;
+}
+
+.featured-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.1);
+    transition: transform 0.8s ease;
+}
+
+.featured-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0, 194, 255, 0.2) 0%, rgba(37, 255, 122, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.featured-content {
+    padding: 40px;
+}
+
+.featured-category {
+    display: inline-block;
+    padding: 8px 20px;
+    background: var(--revista-accent);
+    color: var(--revista-dark);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.featured-title {
+    font-size: clamp(2rem, 4vw, 4rem);
+    font-weight: 800;
+    margin-bottom: 20px;
+    line-height: 1.2;
+    color: var(--revista-text);
+}
+
+.featured-excerpt {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: var(--revista-text-muted);
     margin-bottom: 30px;
 }
 
-.article-card .article-image {
-    width: 50%;
-    height: 300px;
+.featured-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--revista-accent);
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: gap 0.3s ease;
+}
+
+.featured-link:hover {
+    gap: 15px;
+}
+
+.featured-link i {
+    transition: transform 0.3s ease;
+}
+
+.featured-link:hover i {
+    transform: translateX(5px);
+}
+
+/* ARTICLES SECTION - Scroll Vertical con Parallax */
+.articles-section {
+    position: relative;
+    width: 100%;
+    padding: 100px 0;
+    background: var(--revista-dark);
+}
+
+.article-item {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    padding: 100px 40px;
+    margin-bottom: 200px;
+}
+
+.article-item:nth-child(even) {
+    grid-template-columns: 1fr 1fr;
+    direction: rtl;
+}
+
+.article-item:nth-child(even) > * {
+    direction: ltr;
+}
+
+.article-image-container {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    overflow: hidden;
+    border-radius: 20px;
+}
+
+.article-image {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    transform: scale(1.2);
+    transition: transform 0.8s ease;
 }
 
-.article-card .article-info {
-    padding: 30px;
-    flex: 1;
+.article-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0, 194, 255, 0.3) 0%, rgba(37, 255, 122, 0.2) 100%);
+    opacity: 0;
+    transition: opacity 0.8s ease;
 }
 
-.article-card h3 {
-    color: var(--text-dark);
-    font-size: 1.8rem;
+.article-content {
+    padding: 40px;
+}
+
+.article-date {
+    display: block;
+    color: var(--revista-accent);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.article-title {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    margin-bottom: 20px;
+    line-height: 1.2;
+    color: var(--revista-text);
+}
+
+.article-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--revista-text-muted);
+}
+
+/* CHARACTER SECTION - Estilo GTA VI */
+.character-section {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 100px 0;
+    background: var(--revista-darker);
+}
+
+.character-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+}
+
+.character-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 700px;
+    overflow: hidden;
+    border-radius: 20px;
+}
+
+.character-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.1);
+    transition: transform 0.8s ease;
+}
+
+.character-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0, 194, 255, 0.4) 0%, rgba(37, 255, 122, 0.3) 100%);
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.character-content {
+    padding: 40px;
+}
+
+.character-name {
+    font-size: clamp(2.5rem, 5vw, 5rem);
+    font-weight: 800;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, var(--revista-accent), var(--revista-accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.character-quote {
+    font-size: clamp(1.3rem, 2.5vw, 2rem);
+    font-style: italic;
+    color: var(--revista-text-muted);
+    margin-bottom: 30px;
+    padding-left: 20px;
+    border-left: 4px solid var(--revista-accent);
+}
+
+.character-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--revista-text-muted);
+    margin-bottom: 30px;
+}
+
+.character-description p {
     margin-bottom: 15px;
 }
 
-.article-card p {
-    color: var(--surface-variant);
-    line-height: 1.6;
-    margin-bottom: 20px;
+.character-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--revista-accent);
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: gap 0.3s ease;
 }
 
-.articles-grid h2 {
-    color: var(--neon-blue);
-    font-size: 2rem;
-    margin-bottom: 30px;
+.character-link:hover {
+    gap: 15px;
+}
+
+.character-link i {
+    transition: transform 0.3s ease;
+}
+
+.character-link:hover i {
+    transform: translateX(5px);
+}
+
+/* FOOTER */
+.revista-footer {
+    background: var(--revista-darker);
+    padding: 60px 40px;
     text-align: center;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-}
-
-.article-card.small {
-    flex-direction: column;
-}
-
-.article-card.small .article-image {
-    width: 100%;
-    height: 200px;
-}
-
-.article-card.small .article-info {
-    padding: 20px;
-}
-
-.article-card.small h4 {
-    font-size: 1.3rem;
+.footer-content h3 {
+    font-size: 2rem;
     margin-bottom: 10px;
+    color: var(--revista-accent);
+}
+
+.footer-content p {
+    color: var(--revista-text-muted);
+    margin-bottom: 30px;
+}
+
+.footer-socials {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.footer-socials a {
+    color: var(--revista-text-muted);
+    font-size: 2rem;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.footer-socials a:hover {
+    color: var(--revista-accent);
+    transform: translateY(-5px);
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .featured-slide,
+    .article-item,
+    .character-container {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .article-item:nth-child(even) {
+        direction: ltr;
+    }
+
+    .featured-image-wrapper,
+    .article-image-container,
+    .character-image-wrapper {
+        height: 400px;
+    }
+
+    .hero-title {
+        font-size: 4rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .featured-container,
+    .character-container {
+        padding: 0 20px;
+    }
+
+    .article-item {
+        padding: 60px 20px;
+        margin-bottom: 100px;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+    }
 }
