@@ -686,20 +686,21 @@ function setupMobileMenuLinks() {
     });
 }
 
-// Cerrar menú al hacer clic fuera
+// DESHABILITADO: Cerrar menú al hacer clic fuera (interfiere con menú principal)
 function setupMobileMenuOutsideClick() {
-    document.addEventListener('click', function(event) {
-        const navMenu = document.querySelector('.nav-menu');
-        const menuIcon = document.querySelector('.menu-icon');
+    // DESHABILITADO PARA EVITAR CONFLICTOS
+    // document.addEventListener('click', function(event) {
+    //     const navMenu = document.querySelector('.nav-menu');
+    //     const menuIcon = document.querySelector('.menu-icon');
 
-        if (navMenu && navMenu.classList.contains('active') &&
-            !navMenu.contains(event.target) &&
-            !menuIcon.contains(event.target)) {
-            menuIcon.classList.remove('active');
-            navMenu.classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-    });
+    //     if (navMenu && navMenu.classList.contains('active') &&
+    //         !navMenu.contains(event.target) &&
+    //         !menuIcon.contains(event.target)) {
+    //         menuIcon.classList.remove('active');
+    //         navMenu.classList.remove('active');
+    //         document.body.style.overflow = 'auto';
+    //     }
+    // });
 }
 
 // Iniciar funcionalidad del menú hamburguesa

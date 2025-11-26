@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEST MENU HAMBURGUESA</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        .navbar {
+            background: #1B2140;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        /* MENU HAMBURGUESA - OCULTO POR DEFECTO */
+        .menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1B2140;
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .menu.active {
+            display: flex;
+        }
+        
+        .menu a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .menu a:last-child {
+            border-bottom: none;
+        }
+        
+        /* BOTON HAMBURGUESA */
+        .menu-icon {
+            display: block;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .hamburger-line {
+            width: 25px;
+            height: 3px;
+            background: white;
+            margin: 3px 0;
+            transition: 0.3s;
+        }
+        
+        /* EN DESKTOP - MOSTRAR MENU HORIZONTAL */
+        @media (min-width: 901px) {
+            .menu {
+                display: flex !important;
+                position: static;
+                flex-direction: row;
+                padding: 0;
+                box-shadow: none;
+                background: transparent;
+            }
+            
+            .menu a {
+                padding: 0 15px;
+                border-bottom: none;
+                border-right: 1px solid #333;
+            }
+            
+            .menu a:last-child {
+                border-right: none;
+            }
+            
+            .menu-icon {
+                display: none !important;
+            }
+        }
+        
+        /* CONTENIDO DE PRUEBA */
+        .content {
+            margin-top: 80px;
+            padding: 20px;
+            font-size: 18px;
+        }
+        
+        .debug {
+            background: #333;
+            color: #0f0;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR DE PRUEBA -->
+    <nav class="navbar">
+        <div class="logo">TEST MENU</div>
+        <button class="menu-icon" aria-label="Abrir menú">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+        <ul class="menu" id="test-menu">
+            <li><a href="#home">Inicio</a></li>
+            <li><a href="#about">Acerca</a></li>
+            <li><a href="#contact">Contacto</a></li>
+            <li><a href="#services">Servicios</a></li>
+        </ul>
+    </nav>
+    
+    <!-- CONTENIDO DE PRUEBA -->
+    <div class="content">
+        <h1>TEST MENÚ HAMBURGUESA</h1>
+        <p>Resize la ventana para ver el comportamiento.</p>
+        
+        <div class="debug" id="debug-info">
+            DEBUG: Esperando interacción...
+        </div>
+        
+        <div style="height: 2000px; background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);">
+            <p style="padding: 20px;">Haz scroll para probar. El menú hamburguesa debe aparecer en móvil (< 901px).</p>
+        </div>
+    </div>
+    
+    <script>
+        console.log('🔥 INICIANDO TEST MENU HAMBURGUESA');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DOM Cargado');
+            
+            // Obtener elementos
+            const menuIcon = document.querySelector('.menu-icon');
+            const menu = document.querySelector('.menu');
+            const debugInfo = document.getElementById('debug-info');
+            
+            console.log('🎯 Elementos encontrados:', {
+                menuIcon: !!menuIcon,
+                menu: !!menu
+            });
+            
+            if (!menuIcon || !menu) {
+                console.error('❌ ERROR: No se encontraron elementos del menú');
+                debugInfo.innerHTML = '❌ ERROR: Elementos no encontrados';
+                return;
+            }
+            
+            // Función de debug
+            function updateDebug() {
+                const width = window.innerWidth;
+                const isMobile = width <= 900;
+                const menuActive = menu.classList.contains('active');
+                const iconActive = menuIcon.classList.contains('active');
+                
+                debugInfo.innerHTML = `
+                    📱 Pantalla: ${width}px (${isMobile ? 'MÓVIL' : 'DESKTOP'})
+                    🔄 Menú activo: ${menuActive}
+                    🍔 Icono activo: ${iconActive}
+                    📦 display: ${getComputedStyle(menu).display}
+                `;
+                
+                console.log('🔍 Estado:', {
+                    width,
+                    isMobile,
+                    menuActive,
+                    iconActive,
+                    display: getComputedStyle(menu).display
+                });
+            }
+            
+            // Evento del botón hamburguesa
+            menuIcon.addEventListener('click', function(e) {
+                console.log('🖱️ Click en hamburguesa');
+                e.preventDefault();
+                
+                menu.classList.toggle('active');
+                menuIcon.classList.toggle('active');
+                
+                console.log('✅ Toggle completado');
+                updateDebug();
+            });
+            
+            // Cerrar menú al hacer clic en enlace
+            menu.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    console.log('📍 Click en enlace:', e.target.textContent);
+                    menu.classList.remove('active');
+                    menuIcon.classList.remove('active');
+                    updateDebug();
+                }
+            });
+            
+            // Cerrar menú al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!menu.contains(e.target) && !menuIcon.contains(e.target) && menu.classList.contains('active')) {
+                    console.log('🖱️ Click fuera - cerrando menú');
+                    menu.classList.remove('active');
+                    menuIcon.classList.remove('active');
+                    updateDebug();
+                }
+            });
+            
+            // Actualizar debug al redimensionar
+            window.addEventListener('resize', updateDebug);
+            
+            // Inicializar debug
+            updateDebug();
+            
+            console.log('🎉 TEST MENÚ INICIADO CORRECTAMENTE');
+        });
+    </script>
+</body>
+</html>
