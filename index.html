@@ -99,237 +99,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
-    
-    <!-- Estilos CSS para Luces Navideñas REALES -->
-    <style>
-        /* LUCES NAVIDEÑAS COLGANTES - DISEÑO REALISTA MEJORADO */
-        .christmas-lights {
-            position: fixed;
-            top: 0; /* Cable hasta el tope de arriba */
-            left: 0;
-            right: 0;
-            z-index: 1000; /* Valor original para que se vean siempre por encima del contenido */
-            pointer-events: none;
-            opacity: 0.9;
-            padding-top: 70px; /* Espacio para que los bombillos estén debajo del navbar */
-        }
-        
-        .light-string {
-            position: relative;
-            width: 100%;
-            height: 130px; /* Aumentado de 90px a 130px para cables SÚPER largos */
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 0 10%;
-        }
-        
-        .light-string::before {
-            content: '';
-            display: none; /* Línea negra eliminada para evitar tapar contenido */
-        }
-        
-        .light {
-            position: relative;
-            width: 25px;
-            height: 40px;
-            transform: translateY(-100px);
-            opacity: 0;
-            z-index: 10;
-            pointer-events: none;
-        }
-        
-        /* CABLE QUE CUELGA DEL PRINCIPAL - SÚPER LARGO */
-        .light::before {
-            content: '';
-            position: absolute;
-            top: -50px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 3px;
-            height: 80px; /* Aumentado de 50px a 80px para cables SÚPER largos */
-            background: #2c2c2c;
-            border-radius: 1px;
-            z-index: 1;
-        }
-        
-        /* CAPUCHÓN DE LA BOMBILLA */
-        .light-cap {
-            position: absolute;
-            top: -4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 10px;
-            height: 6px;
-            background: #3a3a3a;
-            border-radius: 2px;
-            z-index: 3;
-        }
-        
-        /* BOMBILLA SIMPLE Y REALISTA */
-        .light-bulb {
-            width: 100%;
-            height: 30px;
-            border-radius: 50% 50% 45% 45% / 55% 55% 45% 45%;
-            position: relative;
-            z-index: 2;
-            background: currentColor;
-            box-shadow: 
-                0 0 12px currentColor,
-                0 0 20px currentColor,
-                inset 0 1px 2px rgba(255,255,255,0.4);
-            transition: all 0.3s ease;
-        }
-        
-        /* Colores de las luces CON BRILLOS REALISTAS */
-        .red-light .light-bulb { 
-            color: #e74c3c; 
-            background: #e74c3c;
-            box-shadow: 
-                0 0 12px #e74c3c,
-                0 0 20px #e74c3c;
-        }
-        .green-light .light-bulb { 
-            color: #27ae60; 
-            background: #27ae60;
-            box-shadow: 
-                0 0 12px #27ae60,
-                0 0 20px #27ae60;
-        }
-        .blue-light .light-bulb { 
-            color: #3498db; 
-            background: #3498db;
-            box-shadow: 
-                0 0 12px #3498db,
-                0 0 20px #3498db;
-        }
-        .yellow-light .light-bulb { 
-            color: #f1c40f; 
-            background: #f1c40f;
-            box-shadow: 
-                0 0 12px #f1c40f,
-                0 0 20px #f1c40f;
-        }
-        .pink-light .light-bulb { 
-            color: #e91e63; 
-            background: #e91e63;
-            box-shadow: 
-                0 0 12px #e91e63,
-                0 0 20px #e91e63;
-        }
-        .cyan-light .light-bulb { 
-            color: #00bcd4; 
-            background: #00bcd4;
-            box-shadow: 
-                0 0 12px #00bcd4,
-                0 0 20px #00bcd4;
-        }
-        .orange-light .light-bulb { 
-            color: #ff9800; 
-            background: #ff9800;
-            box-shadow: 
-                0 0 12px #ff9800,
-                0 0 20px #ff9800;
-        }
-        .white-light .light-bulb { 
-            color: #ffffff; 
-            background: #ffffff;
-            box-shadow: 
-                0 0 12px #ffffff,
-                0 0 20px #ffffff;
-        }
-        .purple-light .light-bulb { 
-            color: #9c27b0; 
-            background: #9c27b0;
-            box-shadow: 
-                0 0 12px #9c27b0,
-                0 0 20px #9c27b0;
-        }
-        .neon-green-light .light-bulb { 
-            color: var(--neon-green, #25FF7A); 
-            background: var(--neon-green, #25FF7A);
-            box-shadow: 
-                0 0 12px var(--neon-green, #25FF7A),
-                0 0 20px var(--neon-green, #25FF7A);
-        }
-        
-        /* EFECTO BRILLO REALISTA */
-        .light.glow .light-bulb {
-            box-shadow:
-                0 0 20px currentColor,
-                0 0 40px currentColor,
-                inset 0 -8px 20px rgba(0,0,0,0.3),
-                inset 0 8px 12px rgba(255,255,255,0.1);
-        }
-        
-        /* ANIMACIONES REALISTAS */
-        @keyframes lightAppear {
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes glowPulse {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.3); }
-        }
-        
-        /* Efecto de parpadeo aleatorio SIN AFECTAR COLORES */
-        .light.blink {
-            animation: blink 2s ease-in-out infinite;
-        }
-        
-        @keyframes blink {
-            0%, 85%, 100% { 
-                opacity: 1; 
-            }
-            90%, 95% { 
-                opacity: 0.4; 
-            }
-        }
-        
-        /* RESPONSIVE DESIGN REALISTA */
-        @media (max-width: 900px) {
-            .light-string {
-                padding: 0 5%;
-            }
-            
-            .light::before {
-                height: 20px;
-            }
-        }
-        
-        @media (max-width: 700px) {
-            .light {
-                width: 20px;
-                height: 35px;
-            }
-            
-            .light::before {
-                height: 18px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .light-string {
-                padding: 0 3%;
-            }
-            
-            .light {
-                width: 18px;
-                height: 30px;
-            }
-            
-            .light::before {
-                height: 15px;
-            }
-            
-            .light-bulb {
-                height: 25px;
-            }
-        }
-    </style>
 </head>
 
 <!--  BOTONES DEL INICIO  -->
@@ -360,62 +129,6 @@
         </button>
     </nav>
     <div class="navbar__divider"></div>
-
-    <!-- LUCES NAVIDEÑAS COLGANTES -->
-    <div class="christmas-lights" id="christmasLights" style="transition: transform 0.25s ease-in-out;">
-        <div class="light-string">
-            <!-- Luz 1 - Rojo -->
-            <div class="light red-light" data-color="red">
-                <div class="light-bulb"></div>
-                <div class="light-cap"></div>
-            </div>
-            <!-- Luz 2 - Verde -->
-            <div class="light green-light" data-color="green">
-                <div class="light-bulb"></div>
-                <div class="light-cap"></div>
-            </div>
-            <!-- Luz 3 - Azul -->
-            <div class="light blue-light" data-color="blue">
-                <div class="light-bulb"></div>
-                <div class="light-cap"></div>
-            </div>
-            <!-- Luz 4 - Amarillo -->
-            <div class="light yellow-light" data-color="yellow">
-                <div class="light-bulb"></div>
-                <div class="light-cap"></div>
-            </div>
-            <!-- Luz 5 - Rosa -->
-            <div class="light pink-light" data-color="pink">
-                <div class="light-bulb"></div>
-                <div class="light-cap"></div>
-            </div>
-            <!-- Luz 6 - Cian -->
-            <div class="light cyan-light" data-color="cyan">
-                <div class="light-bulb"></div>
-                <div class="light-cap"></div>
-            </div>
-            <!-- Luz 7 - Naranja -->
-            <div class="light orange-light" data-color="orange">
-                <div class="light-bulb"></div>
-                <div class="light-cap"></div>
-            </div>
-            <!-- Luz 8 - Blanco -->
-            <div class="light white-light" data-color="white">
-                <div class="light-bulb"></div>
-                <div class="light-cap"></div>
-            </div>
-            <!-- Luz 9 - Morado -->
-            <div class="light purple-light" data-color="purple">
-                <div class="light-bulb"></div>
-                <div class="light-cap"></div>
-            </div>
-            <!-- Luz 10 - Verde neón -->
-            <div class="light neon-green-light" data-color="neon-green">
-                <div class="light-bulb"></div>
-                <div class="light-cap"></div>
-            </div>
-        </div>
-    </div>
 
     <!--  INICIO  -->
 
@@ -788,55 +501,14 @@
     <!-- Scripts de Swiper -->
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     
-    <!-- JavaScript GSAP - Animaciones Navideñas y Modernas -->
+    <!-- JavaScript GSAP - Animaciones generales -->
     <script>
         // Registrar plugins de GSAP
         gsap.registerPlugin(ScrollTrigger, TextPlugin);
-        
-        // Animación de entrada de las luces navideñas
+
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🎄🎅 Iniciando animaciones navideñas de Parche 🎅🎄');
-            
-            // 1. ANIMACIÓN DE LUCES NAVIDEÑAS COLGANTES
-            function initChristmasLights() {
-                const lights = document.querySelectorAll('.light');
-                
-                if (lights.length === 0) return;
-                
-                // Animación de caída de las luces - súper profunda para cables SÚPER largos
-                gsap.from(lights, {
-                    y: -200, /* Aumentado de -150px a -200px para cables SÚPER largos */
-                    opacity: 0,
-                    duration: 1.5,
-                    stagger: 0.1,
-                    ease: "bounce.out",
-                    delay: 0.5
-                });
-                
-                // Animación de parpadeo secuencial
-                lights.forEach((light, index) => {
-                    gsap.to(light, {
-                        opacity: 0.3,
-                        duration: 0.1,
-                        repeat: -1,
-                        yoyo: true,
-                        delay: (index * 0.2) + 2,
-                        ease: "power2.inOut"
-                    });
-                });
-                
-                // Efecto de brillo rotativo SIN interferir con colores
-                lights.forEach((light, index) => {
-                    // Agregar clase glow después de un delay
-                    setTimeout(() => {
-                        light.classList.add('glow');
-                    }, (index * 300) + 3000);
-                });
-            }
-            
-            // 2. ANIMACIONES MODERNAS DE LA PÁGINA
+            // Animaciones modernas de la página (sin navidad)
             function initModernAnimations() {
-                // Animación de entrada del navbar
                 const navbar = document.querySelector('.navbar');
                 if (navbar) {
                     gsap.from(navbar, {
@@ -846,8 +518,7 @@
                         ease: "power3.out"
                     });
                 }
-                
-                // Animación del título principal
+
                 const mainTitle = document.querySelector('h1');
                 if (mainTitle) {
                     gsap.from(mainTitle, {
@@ -858,8 +529,7 @@
                         ease: "power3.out"
                     });
                 }
-                
-                // Animación de la imagen principal
+
                 const mainImage = document.querySelector('.home__image img');
                 if (mainImage) {
                     gsap.from(mainImage, {
@@ -870,8 +540,7 @@
                         ease: "power3.out"
                     });
                 }
-                
-                // Animación de las cards/tarjetas con ScrollTrigger
+
                 const cards = document.querySelectorAll('.torker, .service, .testimonial__card, .faq-item');
                 cards.forEach((card, index) => {
                     gsap.from(card, {
@@ -888,11 +557,9 @@
                         }
                     });
                 });
-                
-                // Animación de los botones con hover effects
+
                 const buttons = document.querySelectorAll('.hire-btn, .testimonial__card, .service-list li');
                 buttons.forEach(button => {
-                    // Hover effect
                     button.addEventListener('mouseenter', () => {
                         gsap.to(button, {
                             scale: 1.05,
@@ -900,7 +567,7 @@
                             ease: "power2.out"
                         });
                     });
-                    
+
                     button.addEventListener('mouseleave', () => {
                         gsap.to(button, {
                             scale: 1,
@@ -909,8 +576,7 @@
                         });
                     });
                 });
-                
-                // Animación de números/estadísticas
+
                 const numbers = document.querySelectorAll('.item h3, .stat-number');
                 numbers.forEach(number => {
                     ScrollTrigger.create({
@@ -920,7 +586,7 @@
                             const targetText = number.textContent;
                             const numberValue = parseInt(targetText.replace(/\D/g, ''));
                             if (numberValue) {
-                                gsap.to({val: 0}, {
+                                gsap.to({ val: 0 }, {
                                     val: numberValue,
                                     duration: 2,
                                     ease: "power3.out",
@@ -934,130 +600,14 @@
                     });
                 });
             }
-            
-        // 1. ANIMACIÓN DE LUCES NAVIDEÑAS COLGANTES - FUNCIÓN CRÍTICA FALTANTE
-        function initChristmasLights() {
-            const lights = document.querySelectorAll('.light');
-            
-            // Secuencia de encendido de luces
-            lights.forEach((light, index) => {
-                gsap.to(light, {
-                    delay: index * 0.3,
-                    duration: 1,
-                    opacity: 1,
-                    y: 0,
-                    ease: "elastic.out(1, 0.5)"
-                });
-            });
-            
-            // Efecto de parpadeo aleatorio después del encendido inicial
-            setTimeout(() => {
-                lights.forEach((light, index) => {
-                    setTimeout(() => {
-                        gsap.to(light.querySelector('.light-bulb'), {
-                            duration: 0.3,
-                            opacity: 0.3,
-                            yoyo: true,
-                            repeat: 3,
-                            ease: "power2.inOut"
-                        });
-                    }, Math.random() * 3000);
-                });
-                
-                // Parpadeo continuo cada 5 segundos
-                setInterval(() => {
-                    const randomLight = lights[Math.floor(Math.random() * lights.length)];
-                    if (randomLight) {
-                        gsap.to(randomLight.querySelector('.light-bulb'), {
-                            duration: 0.2,
-                            opacity: 0.4,
-                            yoyo: true,
-                            repeat: 1,
-                            ease: "power2.inOut"
-                        });
-                    }
-                }, 5000);
-            }, 2000);
-            
-            // Efecto de brillo rotativo
-            lights.forEach((light, index) => {
-                setTimeout(() => {
-                    light.classList.add('glow');
-                }, (index * 300) + 3000);
-            });
-        }
-            // 3. EFECTOS ADICIONALES NAVIDEÑOS OPTIMIZADOS
-            function initChristmasEffects() {
-                let snowflakeCount = 0;
-                const maxSnowflakes = 75; // Límite MUCHO más alto de copos
-                
-                // Animación de partículas flotantes OPTIMIZADA
-                function createSnowflake() {
-                    // Controlar cantidad máxima para optimizar rendimiento
-                    if (snowflakeCount >= maxSnowflakes) return;
-                    
-                    const snowflake = document.createElement('div');
-                    const snowflakes = ['❄', '❅', '❆']; // Solo 3 símbolos
-                    const randomFlake = snowflakes[Math.floor(Math.random() * snowflakes.length)];
-                    
-                    snowflake.innerHTML = randomFlake;
-                    snowflake.style.cssText = `
-                        position: fixed;
-                        top: -20px;
-                        left: ${Math.random() * window.innerWidth}px;
-                        font-size: ${Math.random() * 16 + 12}px; /* Más grandes: 12-28px */
-                        color: rgba(255, 255, 255, 0.8);
-                        pointer-events: none;
-                        z-index: 10000;
-                        opacity: ${Math.random() * 0.4 + 0.4};
-                        user-select: none;
-                    `;
-                    
-                    document.body.appendChild(snowflake);
-                    snowflakeCount++;
-                    
-                    gsap.to(snowflake, {
-                        y: window.innerHeight + 40,
-                        x: Math.random() * 200 - 100,
-                        rotation: Math.random() * 360,
-                        duration: Math.random() * 10 + 8,
-                        ease: "power1.in",
-                        onComplete: () => {
-                            if (snowflake.parentNode) {
-                                snowflake.remove();
-                                snowflakeCount--;
-                            }
-                        }
-                    });
-                }
-                
-                // Crear copos de nieve cada 800ms (MUCHÍSIMO más frecuentes)
-                setInterval(createSnowflake, 800);
-                
-                // Efecto de resplandor en el logo
-                const logo = document.querySelector('.navbar__logo img');
-                if (logo) {
-                    setInterval(() => {
-                        gsap.to(logo, {
-                            filter: 'brightness(1.3) hue-rotate(120deg)',
-                            duration: 1,
-                            yoyo: true,
-                            repeat: 1,
-                            ease: "power2.inOut"
-                        });
-                    }, 5000);
-                }
-            }
-            
 
-            
-            // 5. EFECTO DE ESCRITURA PARA TEXTOS
+            // Efecto de escritura para textos
             function initTypeWriterEffect() {
                 const texts = document.querySelectorAll('.tittle, .subtitle');
                 texts.forEach((text, index) => {
                     const originalText = text.textContent;
                     text.textContent = '';
-                    
+
                     ScrollTrigger.create({
                         trigger: text,
                         start: "top 80%",
@@ -1075,65 +625,34 @@
                     });
                 });
             }
-            
-            // 6. EFECTO DE NAVBAR HIDE ON SCROLL - VERSIÓN FINAL CON LUCES
+
+            // Navbar hide on scroll (sin luces navideñas)
             function initNavbarScrollHide() {
                 let lastScrollTop = 0;
                 let isHidden = false;
                 const navbar = document.querySelector('.navbar');
-                const christmasLights = document.querySelector('#christmasLights');
-                
+
                 if (!navbar) return;
-                
+
                 window.addEventListener('scroll', () => {
                     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                    
-                    // Scroll hacia abajo - OCULTAR header Y LUCES
+
                     if (scrollTop > lastScrollTop && scrollTop > 100 && !isHidden) {
                         isHidden = true;
                         navbar.style.transform = 'translateY(-100%)';
-                        if (christmasLights) {
-                            christmasLights.style.transform = 'translateY(-100%)';
-                        }
-                    }
-                    // Scroll hacia arriba - MOSTRAR header Y LUCES
-                    else if (scrollTop < lastScrollTop && isHidden) {
+                    } else if (scrollTop < lastScrollTop && isHidden) {
                         isHidden = false;
                         navbar.style.transform = 'translateY(0)';
-                        if (christmasLights) {
-                            christmasLights.style.transform = 'translateY(0)';
-                        }
                     }
-                    
+
                     lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
                 });
             }
-            
-            // Inicializar todas las animaciones
-            initChristmasLights();
-            initModernAnimations();
-            initChristmasLights(); // ← FUNCIÓN CRÍTICA PARA LOS BOMBILLOS
-            initChristmasEffects();
 
+            initModernAnimations();
             initTypeWriterEffect();
             initNavbarScrollHide();
-            
-            console.log('✨🎄 Parche navideño activado - ¡Feliz Navidad! 🎄✨');
         });
-        
-        // Función para desactivar luces navideñas (opcional)
-        window.toggleChristmasLights = function() {
-            const lightsContainer = document.getElementById('christmasLights');
-            if (lightsContainer) {
-                if (lightsContainer.style.display === 'none') {
-                    lightsContainer.style.display = 'block';
-                    console.log('🎄 Luces navideñas activadas');
-                } else {
-                    lightsContainer.style.display = 'none';
-                    console.log('❌ Luces navideñas desactivadas');
-                }
-            }
-        };
     </script>
 </body>
 
