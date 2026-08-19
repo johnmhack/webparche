@@ -1,0 +1,22 @@
+# Variables de entorno (NUNCA subir)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Django local
+db.sqlite3
+db.sqlite3-journal
+
+# Certificados
+*.p12
+*.pfx
+*.key
+*.pem
+
+# Cursor workspace
+parche-ecosystem.code-workspace

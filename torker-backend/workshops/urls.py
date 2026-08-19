@@ -5,6 +5,13 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from . import views
+from .supabase.views import (
+    SupabaseCerrarOrdenView,
+    SupabaseHealthView,
+    SupabaseMotoBuscarView,
+    SupabaseOrdenesView,
+    SupabaseTallerView,
+)
 
 router = DefaultRouter()
 # Modelos principales
@@ -40,6 +47,12 @@ urlpatterns = [
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/register/', views.RegisterView.as_view(), name='register'),
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
+    # Integración Supabase (ecosistema Parche) — DIAN postergado
+    path('supabase/health/', SupabaseHealthView.as_view(), name='supabase_health'),
+    path('supabase/taller/', SupabaseTallerView.as_view(), name='supabase_taller'),
+    path('supabase/motos/buscar/', SupabaseMotoBuscarView.as_view(), name='supabase_moto_buscar'),
+    path('supabase/ordenes/', SupabaseOrdenesView.as_view(), name='supabase_ordenes'),
+    path('supabase/ordenes/<uuid:orden_id>/cerrar/', SupabaseCerrarOrdenView.as_view(), name='supabase_cerrar_orden'),
     # TEMPORAL: Endpoint para crear usuario de prueba
     path('create-test-user/', views.create_test_user, name='create_test_user'),
 ]
