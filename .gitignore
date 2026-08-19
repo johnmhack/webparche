@@ -20,3 +20,6 @@ db.sqlite3-journal
 
 # Cursor workspace
 parche-ecosystem.code-workspace
+
+# Supabase frontend (copiar desde supabase-config.example.js)
+assets/js/supabase-config.js

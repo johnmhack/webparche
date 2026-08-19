@@ -189,8 +189,37 @@ function hideDashboard() {
     // Header se mantiene visible
 }
 
-// Función para manejar login
+// Auth Supabase (misma cuenta Parche)
 async function handleLogin(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const email = formData.get('email');
+    const password = formData.get('password');
+
+    if (!email || !password) {
+        showNotification('Por favor completa todos los campos.', 'error');
+        return;
+    }
+
+    try {
+        if (!supabaseConfigured()) {
+            showNotification('Falta supabase-config.js — copia supabase-config.example.js', 'error');
+            return;
+        }
+        await supabaseSignIn(email, password);
+        hideLogin();
+        event.target.reset();
+        showNotification('¡Bienvenido! Sesión Parche/Torker iniciada.', 'success');
+        window.location.href = '../dashboard/';
+    } catch (error) {
+        console.error('Login error:', error);
+        showNotification(error.message || 'Error al iniciar sesión.', 'error');
+    }
+}
+
+// Legacy Django login (respaldo)
+async function handleLoginDjango(event) {
     event.preventDefault();
 
     const formData = new FormData(event.target);
@@ -213,28 +242,18 @@ async function handleLogin(event) {
         if (response.ok) {
             const data = await response.json();
 
-            // Guardar tokens
             accessToken = data.access;
             refreshToken = data.refresh;
 
-            // Guardar en localStorage
             localStorage.setItem('torker_access_token', accessToken);
             localStorage.setItem('torker_refresh_token', refreshToken);
 
-            // Cargar datos del usuario y taller
             const userDataSuccess = await loadUserData();
 
             if (userDataSuccess) {
-                // Redirigir al dashboard
                 window.location.href = '../dashboard/';
-
-                // Ocultar modal de login
                 hideLogin();
-
-                // Mostrar mensaje de éxito
                 showNotification('¡Bienvenido! Has iniciado sesión correctamente.', 'success');
-
-                // Limpiar formulario
                 event.target.reset();
             } else {
                 showNotification('Error al cargar datos del usuario.', 'error');
@@ -467,6 +486,15 @@ async function loadUserData() {
 
 // Función para verificar autenticación al cargar la página
 async function checkAuthStatus() {
+    if (typeof getSupabaseAccessToken === 'function' && getSupabaseAccessToken()) {
+        const ok = await loadSupabaseUserData();
+        if (ok) {
+            window.location.href = '../dashboard/';
+            return;
+        }
+        supabaseSignOut();
+    }
+
     const savedAccessToken = localStorage.getItem('torker_access_token');
     const savedRefreshToken = localStorage.getItem('torker_refresh_token');
 

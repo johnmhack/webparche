@@ -134,6 +134,7 @@ function logout() {
     localStorage.removeItem('torker_authenticated');
     localStorage.removeItem('torker_access_token');
     localStorage.removeItem('torker_refresh_token');
+    if (typeof supabaseSignOut === 'function') supabaseSignOut();
 
     // Redirigir a página principal de torker
     window.location.href = '../torker/';
@@ -247,6 +248,12 @@ async function loadUserData() {
 
 // Función para verificar autenticación al cargar la página
 async function checkAuthStatus() {
+    if (typeof getSupabaseAccessToken === 'function' && getSupabaseAccessToken()) {
+        const ok = await loadSupabaseUserData();
+        if (ok) return;
+        supabaseSignOut();
+    }
+
     const savedAccessToken = localStorage.getItem('torker_access_token');
     const savedRefreshToken = localStorage.getItem('torker_refresh_token');
 
@@ -885,6 +892,7 @@ function showDashboard() {
     document.getElementById('inventorySection').classList.add('hidden');
     document.getElementById('workOrdersSection').classList.add('hidden');
     document.getElementById('agendaSection').classList.add('hidden');
+    document.getElementById('parcheSection')?.classList.add('hidden');
 
     // Mostrar dashboard
     document.getElementById('dashboard').classList.remove('hidden');
@@ -1342,6 +1350,7 @@ let currentMechanics = [];
 // Mostrar sección de órdenes de trabajo
 async function showWorkOrders() {
     document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('parcheSection')?.classList.add('hidden');
     document.getElementById('workOrdersSection').classList.remove('hidden');
 
     // Cargar datos de forma asíncrona y silenciosa

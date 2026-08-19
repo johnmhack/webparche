@@ -109,6 +109,14 @@
                     </button>
                 </div>
                 <div class="module-card">
+                    <h3><i class='bx bx-link'></i> Parche · Motos</h3>
+                    <p>Buscar moto por placa, crear orden y escribir historial verificado</p>
+                    <button class="btn btn-primary" onclick="showParche()">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
                     <h3><i class='bx bx-receipt'></i> Facturación DIAN</h3>
                     <p>Genera facturas electrónicas DIAN válidas</p>
                     <button class="btn btn-primary" onclick="showInvoices()">
@@ -173,6 +181,71 @@
             </div>
             <div id="workOrdersList" class="work-orders-list">
                 <!-- Las órdenes de trabajo se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección Parche / Supabase (MVP) -->
+    <div id="parcheSection" class="dashboard hidden">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-link'></i> Parche · Ecosistema</h2>
+            <button class="btn btn-secondary" onclick="showDashboard()">
+                <i class='bx bx-arrow-back'></i> Volver
+            </button>
+        </div>
+        <div class="dashboard-content">
+            <style>
+                .parche-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+                .parche-box h4 { margin: 0 0 0.75rem; color: #64E4BC; }
+                .parche-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
+                .parche-row input { flex: 1; min-width: 140px; padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); color: #fff; }
+                .parche-hint { color: rgba(255,255,255,0.55); font-size: 0.9rem; margin: 0.5rem 0; }
+                .parche-orden-card { background: rgba(0,0,0,0.25); border-radius: 10px; padding: 0.75rem; margin-bottom: 0.5rem; }
+                .parche-ok { color: #22c55e; font-size: 0.85rem; }
+                .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.85rem; margin-top: 0.5rem; }
+            </style>
+
+            <div class="parche-box" id="parcheUuidBox">
+                <h4>1. Vincular cuenta Supabase (solo si no iniciaste sesión)</h4>
+                <p class="parche-hint">Supabase → Authentication → Users → copia el UID. Temporal hasta login Supabase.</p>
+                <div class="parche-row">
+                    <input type="text" id="parchePropietarioId" placeholder="UUID del usuario Supabase">
+                    <button class="btn btn-primary" onclick="guardarParcheUuid()">Guardar</button>
+                </div>
+                <p id="parcheTallerStatus" class="parche-hint">—</p>
+            </div>
+
+            <div class="parche-box">
+                <h4>2. Taller en Supabase (si no existe)</h4>
+                <div class="parche-row">
+                    <input type="text" id="parcheTallerNombre" placeholder="Nombre del taller">
+                    <input type="text" id="parcheTallerCiudad" placeholder="Ciudad" value="Bogota">
+                </div>
+                <div class="parche-row">
+                    <input type="text" id="parcheTallerDireccion" placeholder="Dirección">
+                    <input type="text" id="parcheTallerTelefono" placeholder="Teléfono">
+                </div>
+                <button class="btn btn-secondary" onclick="crearTallerParche()">Crear taller en Supabase</button>
+            </div>
+
+            <div class="parche-box">
+                <h4>3. Buscar moto y crear orden</h4>
+                <div class="parche-row">
+                    <input type="text" id="parchePlaca" placeholder="Placa (ej. HTNEJ)" style="text-transform:uppercase">
+                    <button class="btn btn-primary" onclick="buscarMotoParche()">Buscar</button>
+                </div>
+                <div id="parcheMotoResult" class="parche-hint hidden"></div>
+                <div class="parche-row">
+                    <input type="text" id="parcheMecanico" placeholder="Mecánico" value="Juan">
+                    <input type="text" id="parcheServicio" placeholder="Servicio" value="Cambio de aceite">
+                </div>
+                <input type="text" id="parcheNotas" placeholder="Notas (opcional)" style="width:100%;margin-bottom:0.5rem;padding:0.5rem;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.2);color:#fff;">
+                <button class="btn btn-primary" onclick="crearOrdenParche()">Crear orden</button>
+            </div>
+
+            <div class="parche-box">
+                <h4>4. Órdenes · cerrar = historial en Parche</h4>
+                <div id="parcheOrdenesList"><p class="parche-hint">Cargando…</p></div>
             </div>
         </div>
     </div>
@@ -1285,9 +1358,12 @@
     </footer>
 
     <script src="../../../assets/js/torker-api-config.js"></script>
+    <script src="../../../assets/js/supabase-config.js"></script>
+    <script src="../../../assets/js/supabase-auth.js"></script>
     <script src="../../../assets/js/main.js"></script>
     <script src="../../../assets/js/components.js"></script>
     <script src="assets/js/dashboard.js"></script>
+    <script src="assets/js/supabase-parche.js"></script>
     <script src="assets/js/profile.js"></script>
 </body>
 </html>

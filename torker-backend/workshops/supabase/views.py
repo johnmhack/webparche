@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .auth import propietario_id_desde_request
 from .client import supabase_configurado
 from .services import (
     SupabaseError,
@@ -17,16 +18,20 @@ from .services import (
 
 
 def _propietario_id(request) -> str | None:
-    header = request.headers.get('X-Propietario-Id') or request.data.get('propietario_id')
-    return str(header).strip() if header else None
+    return propietario_id_desde_request(request)
 
 
 def _respuesta_error(exc: SupabaseError):
     return Response({'error': str(exc), 'detalle': exc.detalle}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SupabaseHealthView(APIView):
+class SupabaseAPIView(APIView):
+    """Sin JWT de Django — usa token Supabase o X-Propietario-Id."""
+    authentication_classes = []
     permission_classes = [AllowAny]
+
+
+class SupabaseHealthView(SupabaseAPIView):
 
     def get(self, request):
         return Response({
@@ -35,9 +40,8 @@ class SupabaseHealthView(APIView):
         })
 
 
-class SupabaseTallerView(APIView):
+class SupabaseTallerView(SupabaseAPIView):
     """CRUD de talleres en Supabase (ecosistema Parche)."""
-    permission_classes = [AllowAny]
 
     def get(self, request):
         if not supabase_configurado():
@@ -91,8 +95,7 @@ class SupabaseTallerView(APIView):
             return _respuesta_error(exc)
 
 
-class SupabaseMotoBuscarView(APIView):
-    permission_classes = [AllowAny]
+class SupabaseMotoBuscarView(SupabaseAPIView):
 
     def get(self, request):
         if not supabase_configurado():
@@ -111,8 +114,7 @@ class SupabaseMotoBuscarView(APIView):
             return _respuesta_error(exc)
 
 
-class SupabaseOrdenesView(APIView):
-    permission_classes = [AllowAny]
+class SupabaseOrdenesView(SupabaseAPIView):
 
     def get(self, request):
         if not supabase_configurado():
@@ -145,8 +147,7 @@ class SupabaseOrdenesView(APIView):
             return _respuesta_error(exc)
 
 
-class SupabaseCerrarOrdenView(APIView):
-    permission_classes = [AllowAny]
+class SupabaseCerrarOrdenView(SupabaseAPIView):
 
     def post(self, request, orden_id):
         if not supabase_configurado():
