@@ -7,8 +7,8 @@ let isAuthenticated = false;
 let accessToken = null;
 let refreshToken = null;
 
-// Configuración de la API
-const API_BASE_URL = 'https://webparche-production.up.railway.app/api';
+// Configuración de la API (ver assets/js/torker-api-config.js)
+const API_BASE_URL = window.TORKER_API_BASE || 'http://127.0.0.1:8000/api';
 
 // Estado para controlar reintentos de autenticación
 let isRefreshingToken = false;

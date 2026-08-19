@@ -1,14 +1,10 @@
-# Netlify configuration for static site
+# Netlify — sitio estático Parche + Torker
+# Backend Django: local (127.0.0.1:8000) o proxy /api cuando despliegues el servidor
 [build]
   publish = "."
 
-# API redirects to Railway backend
-[[redirects]]
-  from = "/api/*"
-  to = "https://webparche-production.up.railway.app/api/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/pages/torker/*"
-  to = "https://webparche-production.up.railway.app/pages/torker/:splat"
-  status = 200
+# Cuando tengas backend en producción, descomenta y apunta a tu servidor:
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://TU-SERVIDOR/api/:splat"
+#   status = 200

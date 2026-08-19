@@ -3,29 +3,638 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torker - En Construcción | Parche</title>
+    <title>Torker - Gestión de Talleres | Parche</title>
     <link rel="icon" href="../../assets/images/fotos/logo.svg" type="image/svg+xml">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/components.css">
-    <meta http-equiv="refresh" content="0; url=../coming-soon.html">
-    <meta name="description" content="Torker - Sistema de gestión integral para talleres de motos está en desarrollo. Muy pronto disponible en Parche.">
-    <script>
-        // Redirección inmediata para navegadores que no soporten meta refresh
-        window.location.href = '../coming-soon.html';
-    </script>
+    <link rel="stylesheet" href="assets/css/torker.css">
+    <meta name="description" content="Torker - Sistema de gestión integral para talleres de motos. Gestiona citas, inventario, clientes y más desde Parche.">
 </head>
 <body>
-    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
-        <h1>Redirigiendo...</h1>
-        <p>Serás redirigido a la página de construcción en un momento.</p>
-        <p><a href="../coming-soon.html" style="color: #00C2FF;">Haz clic aquí si no eres redirigido automáticamente</a></p>
+    <!-- Header con navegación a Parche -->
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-brand">
+                <a href="../../../index.html" class="logo">
+                    <span class="logo-text">Torker</span>
+                </a>
+            </div>
+            <div class="nav-menu">
+                <a href="#" onclick="showLogin()" class="nav-link">Iniciar Sesión</a>
+                <a href="#" onclick="showRegister()" class="nav-link">Registrarse</a>
+            </div>
+            <button class="menu-icon" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-list">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Línea decorativa debajo del header -->
+    <div class="header__divider"></div>
+
+    <!-- Hero Section de Torker -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">Torker</h1>
+                <h2 class="hero-subtitle">Gestión Integral para Talleres de Motos</h2>
+                <p class="hero-description">
+                    Optimiza tu taller con nuestro sistema completo de gestión. 
+                    Controla citas, inventario, clientes y reportes desde una sola plataforma.
+                    Potencia tu negocio con tecnología de vanguardia.
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary" onclick="showLogin()">
+                        <i class='bx bx-log-in'></i>
+                        Iniciar Sesión
+                    </button>
+                    <button class="btn btn-secondary" onclick="showRegister()">
+                        <i class='bx bx-user-plus'></i>
+                        Registrarse
+                    </button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img loading="lazy" src="../../assets/images/fotos/servicio_1.jpeg" alt="Motor de Moto - Torker" class="hero-img">
+            </div>
+        </div>
+    </section>
+
+    <!-- Formulario de Login (oculto por defecto) -->
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class='bx bx-log-in'></i> Iniciar Sesión</h3>
+                <button class="close-btn" onclick="hideLogin()">&times;</button>
+            </div>
+            <form class="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class='bx bx-log-in'></i>
+                    Iniciar Sesión
+                </button>
+            </form>
+            <p class="form-footer">
+                ¿No tienes cuenta? <a href="#" onclick="showRegister()">Regístrate aquí</a>
+            </p>
+        </div>
     </div>
+
+    <!-- Formulario de Registro (oculto por defecto) -->
+    <div id="registerModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class='bx bx-wrench'></i> Registrar Taller</h3>
+                <button class="close-btn" onclick="hideRegister()">&times;</button>
+            </div>
+            <form class="register-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="workshopName">Nombre del Taller</label>
+                    <input type="text" id="workshopName" name="workshopName" placeholder="Mi Taller de Motos" required>
+                </div>
+                <div class="form-group">
+                    <label for="ownerName">Nombre del Propietario</label>
+                    <input type="text" id="ownerName" name="ownerName" placeholder="Tu Nombre Completo" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Teléfono</label>
+                    <input type="tel" id="phone" name="phone" placeholder="+57 300 123 4567" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Contraseña</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class='bx bx-wrench'></i>
+                    Registrar Taller
+                </button>
+            </form>
+            <p class="form-footer">
+                ¿Ya tienes cuenta? <a href="#" onclick="showLogin()">Inicia sesión aquí</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Dashboard (oculto por defecto) -->
+    <div id="dashboard" class="dashboard hidden">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-wrench'></i> Dashboard - <span id="workshopNameDisplay"></span></h2>
+            <button class="btn btn-outline" onclick="logout()">
+                <i class='bx bx-log-out'></i>
+                Cerrar Sesión
+            </button>
+        </div>
+        <div class="dashboard-content">
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3><i class='bx bx-calendar-check'></i> Citas Hoy</h3>
+                    <p class="stat-number">12</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-wrench'></i> Órdenes Activas</h3>
+                    <p class="stat-number">8</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-user'></i> Clientes</h3>
+                    <p class="stat-number">45</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-box'></i> Inventario</h3>
+                    <p class="stat-number">156</p>
+                </div>
+            </div>
+            <div class="dashboard-modules">
+                <div class="module-card">
+                    <h3><i class='bx bx-calendar'></i> Agenda</h3>
+                    <p>Gestiona citas y horarios de trabajo</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-clipboard'></i> Órdenes de Trabajo</h3>
+                    <p>Controla reparaciones y servicios</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-group'></i> Clientes</h3>
+                    <p>Administra base de datos de clientes</p>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-package'></i> Inventario</h3>
+                    <p>Gestiona repuestos y stock</p>
+                    <button class="btn btn-primary" onclick="showInventory()">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+                <div class="module-card">
+                    <h3><i class='bx bx-receipt'></i> Facturación</h3>
+                    <p>Genera facturas y controla ingresos</p>
+                    <button class="btn btn-primary" onclick="showInvoices()">
+                        <i class='bx bx-right-arrow-alt'></i>
+                        Acceder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Facturación (oculta por defecto) -->
+    <div id="invoicesSection" class="dashboard hidden">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-receipt'></i> Facturación</h2>
+            <div>
+                <button class="btn btn-secondary" onclick="showDashboard()">
+                    <i class='bx bx-arrow-back'></i>
+                    Volver
+                </button>
+                <button class="btn btn-primary" onclick="showCreateInvoiceModal()">
+                    <i class='bx bx-plus'></i>
+                    Nueva Factura
+                </button>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <div class="invoices-filters">
+                <div class="filter-group">
+                    <label for="invoiceStatusFilter">Estado:</label>
+                    <select id="invoiceStatusFilter" onchange="filterInvoices()">
+                        <option value="">Todos</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="paid">Pagada</option>
+                        <option value="overdue">Vencida</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="invoiceSearch">Buscar:</label>
+                    <input type="text" id="invoiceSearch" placeholder="Número o cliente..." onkeyup="filterInvoices()">
+                </div>
+            </div>
+            <div id="invoicesList" class="invoices-list">
+                <!-- Las facturas se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+    <!-- Modal para crear factura -->
+    <div id="createInvoiceModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class='bx bx-plus'></i> Crear Nueva Factura</h3>
+                <button class="close-btn" onclick="hideCreateInvoiceModal()">&times;</button>
+            </div>
+            <form class="invoice-form" onsubmit="handleCreateInvoice(event)">
+                <div class="form-group">
+                    <label for="invoiceCustomer">Cliente</label>
+                    <select id="invoiceCustomer" name="customer" required>
+                        <option value="">Seleccionar cliente...</option>
+                        <!-- Los clientes se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoiceWorkOrder">Orden de Trabajo (opcional)</label>
+                    <select id="invoiceWorkOrder" name="work_order">
+                        <option value="">Sin orden de trabajo</option>
+                        <!-- Las OT completadas se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoiceDueDate">Fecha de Vencimiento</label>
+                    <input type="date" id="invoiceDueDate" name="due_date">
+                </div>
+                <div class="form-group">
+                    <label for="invoiceNotes">Notas</label>
+                    <textarea id="invoiceNotes" name="notes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class='bx bx-save'></i>
+                    Crear Factura
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sección de Inventario (oculta por defecto) -->
+    <div id="inventorySection" class="dashboard hidden">
+        <div class="dashboard-header">
+            <h2><i class='bx bx-package'></i> Inventario</h2>
+            <div>
+                <button class="btn btn-secondary" onclick="showDashboard()">
+                    <i class='bx bx-arrow-back'></i>
+                    Volver
+                </button>
+                <button class="btn btn-primary" onclick="showAddPartModal()">
+                    <i class='bx bx-plus'></i>
+                    Agregar Repuesto
+                </button>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <!-- Estadísticas de Inventario -->
+            <div class="inventory-stats">
+                <div class="stat-card">
+                    <h3><i class='bx bx-package'></i> Total Repuestos</h3>
+                    <p class="stat-number" id="totalParts">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-error-circle'></i> Stock Bajo</h3>
+                    <p class="stat-number low-stock" id="lowStockParts">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-trending-up'></i> Valor Total</h3>
+                    <p class="stat-number" id="totalValue">$0</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class='bx bx-category'></i> Categorías</h3>
+                    <p class="stat-number" id="totalCategories">0</p>
+                </div>
+            </div>
+
+            <!-- Filtros y Búsqueda -->
+            <div class="inventory-filters">
+                <div class="filter-group">
+                    <label for="inventorySearch">Buscar:</label>
+                    <input type="text" id="inventorySearch" placeholder="Nombre, código, marca..." onkeyup="filterParts()">
+                </div>
+                <div class="filter-group">
+                    <label for="categoryFilter">Categoría:</label>
+                    <select id="categoryFilter" onchange="filterParts()">
+                        <option value="">Todas las categorías</option>
+                        <option value="motor">Motor</option>
+                        <option value="transmision">Transmisión</option>
+                        <option value="frenos">Frenos</option>
+                        <option value="suspension">Suspensión</option>
+                        <option value="electrico">Sistema Eléctrico</option>
+                        <option value="carroceria">Carrocería</option>
+                        <option value="accesorios">Accesorios</option>
+                        <option value="lubricantes">Lubricantes</option>
+                        <option value="filtros">Filtros</option>
+                        <option value="neumaticos">Neumáticos</option>
+                        <option value="other">Otro</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="stockFilter">Stock:</label>
+                    <select id="stockFilter" onchange="filterParts()">
+                        <option value="">Todo el stock</option>
+                        <option value="low">Stock bajo</option>
+                        <option value="normal">Stock normal</option>
+                        <option value="over">Sobre stock</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="sortBy">Ordenar por:</label>
+                    <select id="sortBy" onchange="sortParts()">
+                        <option value="name">Nombre</option>
+                        <option value="category">Categoría</option>
+                        <option value="stock">Stock</option>
+                        <option value="price">Precio</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Lista de Repuestos -->
+            <div id="partsList" class="parts-list">
+                <!-- Los repuestos se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar repuesto -->
+    <div id="partModal" class="modal hidden">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3 id="partModalTitle"><i class='bx bx-plus'></i> Agregar Repuesto</h3>
+                <button class="close-btn" onclick="hidePartModal()">&times;</button>
+            </div>
+            <form class="part-form" onsubmit="handlePartSubmit(event)">
+                <input type="hidden" id="partId" name="partId">
+
+                <!-- Información Básica -->
+                <div class="form-section">
+                    <h4><i class='bx bx-info-circle'></i> Información Básica</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="partName">Nombre del Repuesto *</label>
+                            <input type="text" id="partName" name="name" placeholder="Ej: Filtro de aceite" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="partNumber">Número de Parte</label>
+                            <input type="text" id="partNumber" name="part_number" placeholder="Ej: FO-12345">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="internalCode">Código Interno *</label>
+                            <input type="text" id="internalCode" name="internal_code" placeholder="Ej: REP001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="brand">Marca</label>
+                            <input type="text" id="brand" name="brand" placeholder="Ej: Bosch">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Descripción</label>
+                        <textarea id="description" name="description" rows="3" placeholder="Descripción detallada del repuesto..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Categorización -->
+                <div class="form-section">
+                    <h4><i class='bx bx-category'></i> Categorización</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Categoría *</label>
+                            <select id="category" name="category" required>
+                                <option value="">Seleccionar categoría</option>
+                                <option value="motor">Motor</option>
+                                <option value="transmision">Transmisión</option>
+                                <option value="frenos">Frenos</option>
+                                <option value="suspension">Suspensión</option>
+                                <option value="electrico">Sistema Eléctrico</option>
+                                <option value="carroceria">Carrocería</option>
+                                <option value="accesorios">Accesorios</option>
+                                <option value="lubricantes">Lubricantes</option>
+                                <option value="filtros">Filtros</option>
+                                <option value="neumaticos">Neumáticos</option>
+                                <option value="other">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="vehicleType">Tipo de Vehículo</label>
+                            <select id="vehicleType" name="applicable_vehicle_types">
+                                <option value="motorcycle">Motocicleta</option>
+                                <option value="car">Automóvil</option>
+                                <option value="truck">Camión</option>
+                                <option value="all">Todos los tipos</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventario y Precios -->
+                <div class="form-section">
+                    <h4><i class='bx bx-package'></i> Inventario y Precios</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="stockQuantity">Cantidad en Stock *</label>
+                            <input type="number" id="stockQuantity" name="stock_quantity" min="0" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="minStockLevel">Stock Mínimo</label>
+                            <input type="number" id="minStockLevel" name="min_stock_level" min="0" placeholder="5" value="5">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="unitCost">Costo Unitario *</label>
+                            <input type="number" id="unitCost" name="unit_cost" min="0" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="salePrice">Precio de Venta *</label>
+                            <input type="number" id="salePrice" name="sale_price" min="0" step="0.01" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="wholesalePrice">Precio Mayorista</label>
+                            <input type="number" id="wholesalePrice" name="wholesale_price" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Ubicación</label>
+                            <input type="text" id="location" name="location" placeholder="Ej: Estante A-3">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Adicional -->
+                <div class="form-section">
+                    <h4><i class='bx bx-cog'></i> Información Adicional</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="supplier">Proveedor</label>
+                            <input type="text" id="supplier" name="supplier" placeholder="Nombre del proveedor">
+                        </div>
+                        <div class="form-group">
+                            <label for="supplierCode">Código de Proveedor</label>
+                            <input type="text" id="supplierCode" name="supplier_code" placeholder="Código del proveedor">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="warrantyMonths">Garantía (meses)</label>
+                            <input type="number" id="warrantyMonths" name="warranty_months" min="0" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="weight">Peso (kg)</label>
+                            <input type="number" id="weight" name="weight_kg" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dimensions">Dimensiones</label>
+                        <input type="text" id="dimensions" name="dimensions" placeholder="Ej: 30x20x10 cm">
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Notas</label>
+                        <textarea id="notes" name="notes" rows="2" placeholder="Notas adicionales..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="hidePartModal()">
+                        <i class='bx bx-x'></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class='bx bx-save'></i>
+                        <span id="submitBtnText">Guardar Repuesto</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <!-- Modal para crear factura -->
+    <div id="createInvoiceModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class='bx bx-plus'></i> Crear Nueva Factura</h3>
+                <button class="close-btn" onclick="hideCreateInvoiceModal()">&times;</button>
+            </div>
+            <form class="invoice-form" onsubmit="handleCreateInvoice(event)">
+                <div class="form-group">
+                    <label for="invoiceCustomer">Cliente</label>
+                    <select id="invoiceCustomer" name="customer" required>
+                        <option value="">Seleccionar cliente...</option>
+                        <!-- Los clientes se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoiceWorkOrder">Orden de Trabajo (opcional)</label>
+                    <select id="invoiceWorkOrder" name="work_order">
+                        <option value="">Sin orden de trabajo</option>
+                        <!-- Las OT completadas se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoiceDueDate">Fecha de Vencimiento</label>
+                    <input type="date" id="invoiceDueDate" name="due_date">
+                </div>
+                <div class="form-group">
+                    <label for="invoiceNotes">Notas</label>
+                    <textarea id="invoiceNotes" name="notes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class='bx bx-save'></i>
+                    Crear Factura
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" role="region" aria-labelledby="footer-titulo">
+        <div class="footer__container">
+            <!-- Sección de Logo y Descripción -->
+            <div class="footer__section">
+                <h2 class="footer__logo" id="footer-titulo">Torker</h2>
+                <p class="footer__description">
+                    Potenciamos tu taller con tecnología en la nube.<br>
+                    Gestión integral de citas, inventario y clientes<br>
+                    con control total en tiempo real.
+                </p>
+            </div>
+
+            <!-- Sección de Enlaces Rápidos -->
+            <div class="footer__section">
+                <h3>Enlaces Rápidos</h3>
+                <ul class="footer__links">
+                    <li><a href="#" onclick="showLogin()">Iniciar Sesión</a></li>
+                    <li><a href="#" onclick="showRegister()">Registrarse</a></li>
+                    <li><a href="#">Soporte</a></li>
+                    <li><a href="#">Ayuda</a></li>
+                </ul>
+            </div>
+
+            <!-- Sección de Contacto -->
+            <div class="footer__section">
+                <h3>Contacto</h3>
+                <ul class="footer__contact">
+                    <li><i class='bx bxs-phone' aria-hidden="true"></i> <a href="tel:+573194274416"
+                            aria-label="Llamar al número de contacto">+57 319 427 4416</a></li>
+                    <li><i class='bx bxs-envelope' aria-hidden="true"></i> <a href="mailto:torker@appparche.com"
+                            aria-label="Enviar un correo a torker@appparche.com">torker@appparche.com</a></li>
+                    <li><i class='bx bxs-map' aria-hidden="true"></i> Carrera 5 # 7 -17 Villeta Cundinamarca</li>
+                </ul>
+            </div>
+
+            <!-- Sección de Redes Sociales -->
+            <div class="footer__section">
+                <h3>Síguenos</h3>
+                <div class="footer__socials">
+                    <a href="https://web.facebook.com/profile.php?id=61576711569346" target="_blank" aria-label="Facebook de Torker"><i class='bx bxl-facebook-circle'></i></a>
+                    <a href="https://www.instagram.com/parcheapp33/" target="_blank" aria-label="Instagram de Torker"><i class='bx bxl-instagram-alt'></i></a>
+                    <a href="https://www.tiktok.com/@parche_app" target="_blank" aria-label="TikTok de Torker"><i class='bx bxl-tiktok'></i></a>
+                    <a href="https://whatsapp.com/channel/0029VbB9YBECxoAs3gUAtA2r" target="_blank" aria-label="WhatsApp de Torker"><i class='bx bxl-whatsapp'></i></a>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p><small>by <strong>Parche</strong> - &copy; 2024 Torker. Todos los derechos reservados.</small></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../../assets/js/torker-api-config.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/components.js"></script>
+    <script src="assets/js/torker-v2.js"></script>
     <script>
-        // Redirección más agresiva
-        setTimeout(function() {
-            window.location.replace('../coming-soon.html');
-        }, 100);
+        // Debug adicional - FORZADO PARA QUE APAREZCA
+        console.log('🔥🔥🔥 DEBUG FORZADO - HTML CARGADO 🔥🔥🔥');
+        console.log('📍 URL actual:', window.location.href);
+        console.log('🎯 Elemento dashboard existe:', !!document.getElementById('dashboard'));
+        console.log('🎯 Elemento inventorySection existe:', !!document.getElementById('inventorySection'));
+
+        // Verificar si estamos en la página correcta
+        if (window.location.href.includes('torker')) {
+            console.log('✅ Estamos en la página de Torker');
+        } else {
+            console.log('❌ NO estamos en la página de Torker - POSIBLE ERROR DE URL');
+        }
+
+        // Verificar elementos críticos
+        const inventoryButton = document.querySelector('.module-card .btn[onclick*="showInventory"]');
+        console.log('🎯 Botón Inventario encontrado:', !!inventoryButton);
+        if (inventoryButton) {
+            console.log('🎯 Texto del botón:', inventoryButton.textContent.trim());
+            console.log('🎯 onclick del botón:', inventoryButton.getAttribute('onclick'));
+        }
     </script>
 </body>
 </html>

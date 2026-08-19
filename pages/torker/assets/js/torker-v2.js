@@ -7,9 +7,8 @@ let isAuthenticated = false;
 let accessToken = null;
 let refreshToken = null;
 
-// Configuración de la API - SIEMPRE USA RAILWAY (v2)
-const API_BASE_URL = 'https://webparche-production.up.railway.app/api';
-// Cache buster: 2025-10-05-v2
+// Configuración de la API (ver assets/js/torker-api-config.js)
+const API_BASE_URL = window.TORKER_API_BASE || 'http://127.0.0.1:8000/api';
 
 // Funciones helper para API
 async function apiRequest(endpoint, options = {}) {
