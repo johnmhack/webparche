@@ -376,11 +376,38 @@ export const supabaseApi = {
     const rows = await rest<Record<string, unknown>[]>(
       `ordenes_trabajo?taller_id=eq.${tallerId}&select=*&order=created_at.desc`,
     );
-    return (rows || []).map((r) => ({
+    const ordenes = rows || [];
+    if (!ordenes.length) return [];
+
+    const ids = ordenes.map((r) => r.id).join(',');
+    const items = await rest<Record<string, unknown>[]>(
+      `orden_items?orden_id=in.(${ids})&select=*&order=created_at.asc`,
+    ).catch(() => [] as Record<string, unknown>[]);
+
+    const byOrden: Record<string, Orden['items']> = {};
+    for (const it of items || []) {
+      const oid = String(it.orden_id);
+      if (!byOrden[oid]) byOrden[oid] = [];
+      byOrden[oid]!.push({
+        id: String(it.id),
+        orden_id: oid,
+        repuesto_id: (it.repuesto_id as string) || null,
+        nombre: String(it.nombre || ''),
+        cantidad: Number(it.cantidad || 1),
+        precio_unitario: Number(it.precio_unitario || 0),
+      });
+    }
+
+    return ordenes.map((r) => ({
       id: String(r.id),
       estado: String(r.estado || ''),
       servicios: r.servicios as Orden['servicios'],
       created_at: String(r.created_at || ''),
+      mecanico_nombre: (r.mecanico_nombre as string) || null,
+      costo_total: r.costo_total != null ? Number(r.costo_total) : null,
+      moto_id: (r.moto_id as string) || null,
+      notas: (r.notas as string) || null,
+      items: byOrden[String(r.id)] || [],
     }));
   },
 
@@ -402,41 +429,58 @@ export const supabaseApi = {
       notas: body.notas || null,
       fecha_entrada: body.fecha_entrada || new Date().toISOString(),
     };
-    return rest('ordenes_trabajo', { method: 'POST', body: JSON.stringify(payload) });
+    const rows = await rest<Record<string, unknown>[]>('ordenes_trabajo', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    return {
+      id: String(row.id),
+      estado: String(row.estado || 'pendiente'),
+      servicios: row.servicios as Orden['servicios'],
+      created_at: String(row.created_at || ''),
+      items: [],
+    } satisfies Orden;
+  },
+
+  async addOrdenItem(ordenId: string, body: {
+    repuesto_id?: string | null;
+    nombre: string;
+    cantidad: number;
+    precio_unitario: number;
+  }) {
+    const rows = await rest<Record<string, unknown>[]>('orden_items', {
+      method: 'POST',
+      body: JSON.stringify({
+        orden_id: ordenId,
+        repuesto_id: body.repuesto_id || null,
+        nombre: body.nombre,
+        cantidad: body.cantidad,
+        precio_unitario: body.precio_unitario,
+      }),
+    });
+    const it = Array.isArray(rows) ? rows[0] : rows;
+    return {
+      id: String(it.id),
+      orden_id: ordenId,
+      repuesto_id: (it.repuesto_id as string) || null,
+      nombre: String(it.nombre),
+      cantidad: Number(it.cantidad),
+      precio_unitario: Number(it.precio_unitario),
+    };
+  },
+
+  async removeOrdenItem(itemId: string) {
+    await rest(`orden_items?id=eq.${itemId}`, { method: 'DELETE' });
   },
 
   async cerrarOrden(id: string, body: Record<string, unknown>) {
-    const ordenes = await rest<Record<string, unknown>[]>(`ordenes_trabajo?id=eq.${id}&select=*`);
-    const orden = ordenes?.[0];
-    if (!orden) throw new Error('Orden no encontrada');
-
-    const servicios = (orden.servicios as { nombre?: string }[]) || [];
-    const tipo = body.tipo_servicio || servicios[0]?.nombre || 'Servicio general';
-    const costo = body.costo_total ?? orden.costo_total;
-
-    await rest('historial_moto', {
-      method: 'POST',
-      body: JSON.stringify({
-        moto_id: orden.moto_id,
-        taller_id: orden.taller_id,
-        mecanico_nombre: body.mecanico_nombre || orden.mecanico_nombre || null,
-        tipo_servicio: tipo,
-        descripcion: body.descripcion || orden.notas || null,
-        kilometraje: body.kilometraje || null,
-        costo,
-        fecha: body.fecha || new Date().toISOString().slice(0, 10),
-        verificado: true,
-      }),
-    });
-
-    return rest(`ordenes_trabajo?id=eq.${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({
-        estado: 'completado',
-        fecha_salida: new Date().toISOString(),
-        costo_total: costo,
-        updated_at: new Date().toISOString(),
-      }),
+    return rpc('cerrar_orden_con_stock', {
+      p_orden_id: id,
+      p_costo: body.costo_total ?? null,
+      p_kilometraje: body.kilometraje ?? null,
+      p_tipo_servicio: body.tipo_servicio ?? null,
+      p_descripcion: body.descripcion ?? null,
     });
   },
 

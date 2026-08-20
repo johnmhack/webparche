@@ -8,6 +8,7 @@ import {
   Wrench,
   Bike,
   Package,
+  ClipboardList,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -19,6 +20,7 @@ const nav = [
   { to: '/clientes', icon: Users, label: 'Clientes' },
   { to: '/agenda', icon: Calendar, label: 'Agenda' },
   { to: '/inventario', icon: Package, label: 'Inventario' },
+  { to: '/ordenes', icon: ClipboardList, label: 'Órdenes' },
   { to: '/parche', icon: Bike, label: 'Parche · Motos' },
 ];
 

@@ -1,8 +1,3 @@
-export const API_BASE =
-  import.meta.env.DEV
-    ? '/api'
-    : `${window.location.origin}/api`;
-
 export interface Taller {
   id: string;
   nombre: string;
@@ -60,11 +55,25 @@ export interface Moto {
   kilometraje_actual?: number;
 }
 
+export interface OrdenItem {
+  id: string;
+  orden_id: string;
+  repuesto_id?: string | null;
+  nombre: string;
+  cantidad: number;
+  precio_unitario: number;
+}
+
 export interface Orden {
   id: string;
   estado: string;
   servicios?: { nombre: string }[];
   created_at: string;
+  mecanico_nombre?: string | null;
+  costo_total?: number | null;
+  moto_id?: string | null;
+  notas?: string | null;
+  items?: OrdenItem[];
 }
 
 export interface Repuesto {

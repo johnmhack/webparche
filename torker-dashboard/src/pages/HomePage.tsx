@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Users, Bike, Package, ArrowRight, Loader2 } from 'lucide-react';
+import { Calendar, Users, Bike, Package, ClipboardList, ArrowRight, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PageHeader, StatCard } from '../components/ui';
 import { useApp } from '../context/AppContext';
@@ -54,6 +54,13 @@ export function HomePage() {
       title: 'Inventario',
       desc: 'Controla repuestos, stock y precios',
       color: 'text-amber-400',
+    },
+    {
+      to: '/ordenes',
+      icon: ClipboardList,
+      title: 'Órdenes',
+      desc: 'Repuestos, cierre y descuento de stock',
+      color: 'text-violet-400',
     },
     {
       to: '/parche',
