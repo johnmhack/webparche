@@ -1,0 +1,8 @@
+{
+  "name": "web-parche",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix apps/torker",
+    "build": "node tools/assemble-dist.mjs"
+  }
+}

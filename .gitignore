@@ -1,29 +1,27 @@
-# Variables de entorno (NUNCA subir)
+# Env (nunca subir)
 .env
 .env.*
 !.env.example
 
-# Python
-__pycache__/
-*.py[cod]
-*.pyc
+# Build
+dist/
+node_modules/
+apps/torker/node_modules/
+apps/torker/dist/
 
-# Django local
-db.sqlite3
-db.sqlite3-journal
+# OS
+.DS_Store
+Thumbs.db
 
-# Certificados
-*.p12
-*.pfx
-*.key
-*.pem
-
-# Cursor workspace
+# Cursor
 parche-ecosystem.code-workspace
 
-# Supabase frontend (copiar desde supabase-config.example.js)
+# Legacy
 assets/js/supabase-config.js
-
-# React dashboard (torker-dashboard)
-torker-dashboard/node_modules/
-torker-dashboard/dist/
+db.sqlite3
+*.p12
+*.pfx
+*.pem
+*.key
+__pycache__/
+*.pyc
