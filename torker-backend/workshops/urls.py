@@ -14,6 +14,8 @@ from .supabase.views import (
     SupabaseHealthView,
     SupabaseMotoBuscarView,
     SupabaseOrdenesView,
+    SupabaseRepuestoDetailView,
+    SupabaseRepuestosView,
     SupabaseTallerView,
     SupabaseTiposServicioSembrarView,
     SupabaseTiposServicioView,
@@ -65,6 +67,8 @@ urlpatterns = [
     path('supabase/tipos-servicio/sembrar/', SupabaseTiposServicioSembrarView.as_view(), name='supabase_tipos_servicio_sembrar'),
     path('supabase/citas/', SupabaseCitasView.as_view(), name='supabase_citas'),
     path('supabase/citas/<uuid:cita_id>/cancelar/', SupabaseCitaCancelarView.as_view(), name='supabase_cita_cancelar'),
+    path('supabase/repuestos/', SupabaseRepuestosView.as_view(), name='supabase_repuestos'),
+    path('supabase/repuestos/<uuid:repuesto_id>/', SupabaseRepuestoDetailView.as_view(), name='supabase_repuesto_detail'),
     # TEMPORAL: Endpoint para crear usuario de prueba
     path('create-test-user/', views.create_test_user, name='create_test_user'),
 ]

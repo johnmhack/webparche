@@ -79,6 +79,21 @@ export const api = {
 
   cerrarOrden: (id: string, body: object) =>
     request(`/supabase/ordenes/${id}/cerrar/`, { method: 'POST', body: JSON.stringify(body) }),
+
+  getRepuestos: (tallerId: string) =>
+    request<import('./types').Repuesto[]>(`/supabase/repuestos/?taller_id=${tallerId}`),
+
+  createRepuesto: (tallerId: string, body: object) =>
+    request<import('./types').Repuesto>(`/supabase/repuestos/?taller_id=${tallerId}`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  updateRepuesto: (id: string, body: object) =>
+    request<import('./types').Repuesto>(`/supabase/repuestos/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
 };
 
 let tallerCache: import('./types').Taller | null = null;

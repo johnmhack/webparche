@@ -33,6 +33,7 @@ urlpatterns = [
     path('pages/dashboard/app/<path:resource_path>', serve_dashboard_spa, name='dashboard_spa_path'),
     path('pages/dashboard/', RedirectView.as_view(url='/pages/dashboard/app/login', permanent=False)),
     path('pages/torker/', RedirectView.as_view(url='/pages/dashboard/app/login', permanent=False)),
+    path('pages/coming-soon.html', RedirectView.as_view(url='/pages/dashboard/app/login', permanent=True)),
 ]
 
 # Servir archivos estáticos en desarrollo

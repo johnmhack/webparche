@@ -66,3 +66,24 @@ export interface Orden {
   servicios?: { nombre: string }[];
   created_at: string;
 }
+
+export interface Repuesto {
+  id: string;
+  name: string;
+  description?: string | null;
+  part_number?: string | null;
+  internal_code?: string | null;
+  category: string;
+  category_display: string;
+  brand?: string | null;
+  stock_quantity: number;
+  min_stock_level: number;
+  max_stock_level: number;
+  unit_cost: number;
+  sale_price: number;
+  location?: string | null;
+  supplier?: string | null;
+  is_active: boolean;
+  stock_status: 'low' | 'normal' | 'over';
+  inventory_value: number;
+}

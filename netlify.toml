@@ -1,7 +1,28 @@
-# Netlify — sitio estático Parche + Torker
-# Backend Django: local (127.0.0.1:8000) o proxy /api cuando despliegues el servidor
+# Netlify — sitio estático Parche + Torker React
 [build]
   publish = "."
+
+# SPA React: /pages/dashboard/app/login (y cualquier ruta) → index.html
+[[redirects]]
+  from = "/pages/dashboard/app"
+  to = "/pages/dashboard/app/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/pages/dashboard/app/"
+  to = "/pages/dashboard/app/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/pages/dashboard/app/*"
+  to = "/pages/dashboard/app/index.html"
+  status = 200
+
+# Coming soon viejo → login Torker
+[[redirects]]
+  from = "/pages/coming-soon.html"
+  to = "/pages/dashboard/app/login"
+  status = 301
 
 # Cuando tengas backend en producción, descomenta y apunta a tu servidor:
 # [[redirects]]

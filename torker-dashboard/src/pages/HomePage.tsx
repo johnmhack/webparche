@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Users, Bike, ArrowRight, Loader2 } from 'lucide-react';
+import { Calendar, Users, Bike, Package, ArrowRight, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PageHeader, StatCard } from '../components/ui';
 import { useApp } from '../context/AppContext';
@@ -49,6 +49,13 @@ export function HomePage() {
       color: 'text-cyan-400',
     },
     {
+      to: '/inventario',
+      icon: Package,
+      title: 'Inventario',
+      desc: 'Controla repuestos, stock y precios',
+      color: 'text-amber-400',
+    },
+    {
       to: '/parche',
       icon: Bike,
       title: 'Parche · Motos',
@@ -71,7 +78,7 @@ export function HomePage() {
       </div>
 
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Módulos</h2>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {modules.map(({ to, icon: Icon, title, desc, color }) => (
           <Link
             key={to}

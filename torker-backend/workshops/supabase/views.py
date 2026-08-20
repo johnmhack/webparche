@@ -25,6 +25,7 @@ from .services_clientes import (
     listar_tipos_servicio,
     sembrar_tipos_servicio_default,
 )
+from .services_inventario import actualizar_repuesto, crear_repuesto, listar_repuestos
 
 
 def _propietario_id(request) -> str | None:
@@ -305,5 +306,58 @@ class SupabaseCitaCancelarView(SupabaseAPIView):
         try:
             cita = cancelar_cita(cita_id, taller_id, propietario_id, request.data.get('notes'))
             return Response(cita)
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+
+class SupabaseRepuestosView(SupabaseAPIView):
+
+    def get(self, request):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.query_params.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        try:
+            return Response(listar_repuestos(taller_id, propietario_id))
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+    def post(self, request):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.query_params.get('taller_id') or request.data.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        if not request.data.get('name'):
+            return Response({'error': 'name es obligatorio'}, status=400)
+
+        try:
+            repuesto = crear_repuesto(taller_id, propietario_id, request.data)
+            return Response(repuesto, status=201)
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+
+class SupabaseRepuestoDetailView(SupabaseAPIView):
+
+    def patch(self, request, repuesto_id):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.data.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        try:
+            repuesto = actualizar_repuesto(repuesto_id, taller_id, propietario_id, request.data)
+            return Response(repuesto)
         except SupabaseError as exc:
             return _respuesta_error(exc)
