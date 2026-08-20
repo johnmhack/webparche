@@ -7,10 +7,16 @@ from rest_framework_simplejwt.views import (
 from . import views
 from .supabase.views import (
     SupabaseCerrarOrdenView,
+    SupabaseCitaCancelarView,
+    SupabaseCitasView,
+    SupabaseClienteDetailView,
+    SupabaseClientesView,
     SupabaseHealthView,
     SupabaseMotoBuscarView,
     SupabaseOrdenesView,
     SupabaseTallerView,
+    SupabaseTiposServicioSembrarView,
+    SupabaseTiposServicioView,
 )
 
 router = DefaultRouter()
@@ -53,6 +59,12 @@ urlpatterns = [
     path('supabase/motos/buscar/', SupabaseMotoBuscarView.as_view(), name='supabase_moto_buscar'),
     path('supabase/ordenes/', SupabaseOrdenesView.as_view(), name='supabase_ordenes'),
     path('supabase/ordenes/<uuid:orden_id>/cerrar/', SupabaseCerrarOrdenView.as_view(), name='supabase_cerrar_orden'),
+    path('supabase/clientes/', SupabaseClientesView.as_view(), name='supabase_clientes'),
+    path('supabase/clientes/<uuid:cliente_id>/', SupabaseClienteDetailView.as_view(), name='supabase_cliente_detail'),
+    path('supabase/tipos-servicio/', SupabaseTiposServicioView.as_view(), name='supabase_tipos_servicio'),
+    path('supabase/tipos-servicio/sembrar/', SupabaseTiposServicioSembrarView.as_view(), name='supabase_tipos_servicio_sembrar'),
+    path('supabase/citas/', SupabaseCitasView.as_view(), name='supabase_citas'),
+    path('supabase/citas/<uuid:cita_id>/cancelar/', SupabaseCitaCancelarView.as_view(), name='supabase_cita_cancelar'),
     # TEMPORAL: Endpoint para crear usuario de prueba
     path('create-test-user/', views.create_test_user, name='create_test_user'),
 ]

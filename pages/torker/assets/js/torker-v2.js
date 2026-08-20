@@ -211,7 +211,7 @@ async function handleLogin(event) {
         hideLogin();
         event.target.reset();
         showNotification('¡Bienvenido! Sesión Parche/Torker iniciada.', 'success');
-        window.location.href = '../dashboard/';
+        window.location.href = '../dashboard/app/login';
     } catch (error) {
         console.error('Login error:', error);
         showNotification(error.message || 'Error al iniciar sesión.', 'error');
@@ -251,7 +251,7 @@ async function handleLoginDjango(event) {
             const userDataSuccess = await loadUserData();
 
             if (userDataSuccess) {
-                window.location.href = '../dashboard/';
+                window.location.href = '../dashboard/app/login';
                 hideLogin();
                 showNotification('¡Bienvenido! Has iniciado sesión correctamente.', 'success');
                 event.target.reset();
@@ -333,7 +333,7 @@ async function handleRegister(event) {
             await loadUserData();
 
             // Redirigir al dashboard
-            window.location.href = '../dashboard/';
+            window.location.href = '../dashboard/app/login';
 
             // Ocultar modal de registro
             hideRegister();
@@ -489,7 +489,7 @@ async function checkAuthStatus() {
     if (typeof getSupabaseAccessToken === 'function' && getSupabaseAccessToken()) {
         const ok = await loadSupabaseUserData();
         if (ok) {
-            window.location.href = '../dashboard/';
+            window.location.href = '../dashboard/app/login';
             return;
         }
         supabaseSignOut();
@@ -506,7 +506,7 @@ async function checkAuthStatus() {
         const success = await loadUserData();
         if (success) {
             // Usuario ya autenticado, redirigir a dashboard
-            window.location.href = '../dashboard/';
+            window.location.href = '../dashboard/app/login';
         } else {
             // Tokens inválidos, limpiar
             logout();

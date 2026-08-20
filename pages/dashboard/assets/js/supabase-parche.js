@@ -1,11 +1,13 @@
 // MVP Parche ↔ Torker vía Supabase (temporal: UUID manual hasta Auth Supabase)
 
 const PARCHE_UUID_KEY = 'torker_propietario_id';
-let parcheTaller = null;
 let parcheMotoEncontrada = null;
 
-function getPropietarioId() {
-  return (localStorage.getItem(PARCHE_UUID_KEY) || '').trim();
+function getParcheTaller() {
+  return parcheTallerCache || null;
+}
+
+function getPropietarioId() {  return (localStorage.getItem(PARCHE_UUID_KEY) || '').trim();
 }
 
 function hideParcheSection() {
@@ -24,32 +26,7 @@ function hideAllForParche() {
   ].forEach((id) => document.getElementById(id)?.classList.add('hidden'));
 }
 
-async function supabaseApi(endpoint, options = {}) {
-  const token = typeof getSupabaseAccessToken === 'function' ? getSupabaseAccessToken() : '';
-  const propietarioId = getPropietarioId();
-
-  if (!token && !propietarioId) {
-    throw new Error('Inicia sesión con tu cuenta Parche');
-  }
-
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-  const uid = typeof getSupabasePropietarioId === 'function' ? getSupabasePropietarioId() : propietarioId;
-  if (uid) headers['X-Propietario-Id'] = uid;
-  if (token) headers.Authorization = `Bearer ${token}`;
-  else if (propietarioId) headers['X-Propietario-Id'] = propietarioId;
-
-  const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = data.error || data.detail || `Error ${res.status}`;
-    throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
-  }
-  return data;
-}
-
-function guardarParcheUuid() {
-  const input = document.getElementById('parchePropietarioId');
+function guardarParcheUuid() {  const input = document.getElementById('parchePropietarioId');
   const val = input?.value.trim();
   if (!val) {
     showNotification('Pega tu UUID de Supabase', 'warning');
@@ -76,11 +53,11 @@ async function initParcheModule() {
   }
 
   try {
-    parcheTaller = await supabaseApi('/supabase/taller/');
+    const parcheTaller = await supabaseApi('/supabase/taller/');
+    setParcheTallerCache(parcheTaller);
     if (status) status.textContent = `Taller vinculado: ${parcheTaller.nombre}`;
   } catch {
-    parcheTaller = null;
-    if (status) status.textContent = 'Sin taller en Supabase. Créalo con el botón de abajo.';
+    setParcheTallerCache(null);    if (status) status.textContent = 'Sin taller en Supabase. Créalo con el botón de abajo.';
   }
 
   await cargarOrdenesParche();
@@ -93,7 +70,7 @@ async function crearTallerParche() {
     return;
   }
   try {
-    parcheTaller = await supabaseApi('/supabase/taller/', {
+    const parcheTaller = await supabaseApi('/supabase/taller/', {
       method: 'POST',
       body: JSON.stringify({
         nombre,
@@ -102,12 +79,12 @@ async function crearTallerParche() {
         telefono: document.getElementById('parcheTallerTelefono')?.value.trim() || null,
       }),
     });
+    setParcheTallerCache(parcheTaller);
     showNotification('Taller creado en Supabase', 'success');
     initParcheModule();
   } catch (e) {
     if (String(e.message).includes('ya tiene un taller')) {
-      parcheTaller = (await supabaseApi('/supabase/taller/'));
-      initParcheModule();
+      setParcheTallerCache(await supabaseApi('/supabase/taller/'));      initParcheModule();
       return;
     }
     showNotification(e.message, 'error');
@@ -139,8 +116,8 @@ async function buscarMotoParche() {
 }
 
 async function crearOrdenParche() {
-  if (!parcheTaller?.id) {
-    showNotification('Primero vincula o crea tu taller en Supabase', 'warning');
+  const parcheTaller = getParcheTaller();
+  if (!parcheTaller?.id) {    showNotification('Primero vincula o crea tu taller en Supabase', 'warning');
     return;
   }
   const placa = document.getElementById('parchePlaca')?.value.trim();
@@ -168,8 +145,8 @@ async function crearOrdenParche() {
 
 async function cargarOrdenesParche() {
   const list = document.getElementById('parcheOrdenesList');
-  if (!list || !parcheTaller?.id) {
-    if (list) list.innerHTML = '<p class="parche-hint">Sin taller vinculado.</p>';
+  const parcheTaller = getParcheTaller();
+  if (!list || !parcheTaller?.id) {    if (list) list.innerHTML = '<p class="parche-hint">Sin taller vinculado.</p>';
     return;
   }
   try {

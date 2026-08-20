@@ -21,12 +21,18 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
 
+from .spa_views import serve_dashboard_spa
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('workshops.urls')),
-    path('', RedirectView.as_view(url='/pages/torker/index.html', permanent=False)),
-    path('pages/dashboard/', RedirectView.as_view(url='/pages/dashboard/index.html', permanent=False)),
-    path('pages/torker/', RedirectView.as_view(url='/pages/torker/index.html', permanent=False)),
+    path('', RedirectView.as_view(url='/pages/dashboard/app/login', permanent=False)),
+    # SPA React — con y sin barra final (evita caer en static /pages/)
+    path('pages/dashboard/app', serve_dashboard_spa, name='dashboard_spa_root'),
+    path('pages/dashboard/app/', serve_dashboard_spa, name='dashboard_spa'),
+    path('pages/dashboard/app/<path:resource_path>', serve_dashboard_spa, name='dashboard_spa_path'),
+    path('pages/dashboard/', RedirectView.as_view(url='/pages/dashboard/app/login', permanent=False)),
+    path('pages/torker/', RedirectView.as_view(url='/pages/dashboard/app/login', permanent=False)),
 ]
 
 # Servir archivos estáticos en desarrollo

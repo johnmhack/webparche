@@ -25,8 +25,8 @@ async function apiRequest(endpoint, options = {}) {
         ...options
     };
 
-    // Agregar token de autenticación si existe
-    if (accessToken && !config.headers.Authorization) {
+    // Agregar token Django solo si NO hay sesión Supabase
+    if (accessToken && !config.headers.Authorization && !(typeof useSupabaseErp === 'function' && useSupabaseErp())) {
         config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
@@ -323,6 +323,19 @@ async function showAgenda() {
 // Cargar tipos de servicios
 async function loadServiceTypes() {
     try {
+        if (useSupabaseErp()) {
+            const taller = await ensureParcheTaller();
+            if (!taller?.id) {
+                currentServiceTypes = [];
+                return;
+            }
+            await supabaseApi('/supabase/tipos-servicio/sembrar/', {
+                method: 'POST',
+                body: JSON.stringify({ taller_id: taller.id }),
+            });
+            currentServiceTypes = await supabaseApi(`/supabase/tipos-servicio/?taller_id=${taller.id}`);
+            return;
+        }
         const response = await apiRequest('/service-types/');
         if (response.ok) {
             currentServiceTypes = await response.json();
@@ -339,6 +352,16 @@ async function loadServiceTypes() {
 // Cargar citas
 async function loadAppointments() {
     try {
+        if (useSupabaseErp()) {
+            const taller = await ensureParcheTaller();
+            if (!taller?.id) {
+                currentAppointments = [];
+                return;
+            }
+            currentAppointments = await supabaseApi(`/supabase/citas/?taller_id=${taller.id}`);
+            renderTodayAppointments();
+            return;
+        }
         const response = await apiRequest('/appointments/');
         if (response.ok) {
             const data = await response.json();
@@ -404,17 +427,13 @@ function renderMonthView(container, titleElement) {
     let currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
-        const weekStart = currentDate.getDay() === 0;
-        if (weekStart) {
-            html += '<div class="calendar-week">';
-        }
-
         const isCurrentMonth = currentDate.getMonth() === month;
         const isToday = isSameDate(currentDate, new Date());
         const dayAppointments = getAppointmentsForDate(currentDate);
+        const dateStr = currentDate.toISOString().split('T')[0];
 
         html += `
-            <div class="calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}" onclick="selectDate('${currentDate.toISOString().split('T')[0]}')">
+            <div class="calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''} ${dayAppointments.length ? 'has-appointments' : ''}" onclick="selectDate('${dateStr}')">
                 <div class="calendar-day-number">${currentDate.getDate()}</div>
                 <div class="calendar-day-appointments">
                     ${dayAppointments.slice(0, 3).map(apt => `
@@ -428,15 +447,10 @@ function renderMonthView(container, titleElement) {
             </div>
         `;
 
-        const weekEnd = currentDate.getDay() === 6;
-        if (weekEnd) {
-            html += '</div>';
-        }
-
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    html += '</div></div>';
+    html += '</div>';
     container.innerHTML = html;
 }
 
@@ -464,31 +478,59 @@ function formatTime(timeStr) {
 
 // Renderizar vista semanal (simplificada)
 function renderWeekView(container, titleElement) {
-    // Implementación simplificada - mostrar solo mensaje por ahora
-    container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-secondary);">Vista semanal próximamente</div>';
+    container.innerHTML = `
+        <div class="calendar-placeholder">
+            <i class='bx bx-calendar-week'></i>
+            <p>Vista semanal — próximamente</p>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="setCalendarView('month', document.querySelector('.calendar-view-toggle button[data-view=month]'))">Volver a mes</button>
+        </div>`;
     titleElement.textContent = 'Vista Semanal';
 }
 
 // Renderizar vista diaria (simplificada)
 function renderDayView(container, titleElement) {
-    // Implementación simplificada - mostrar solo mensaje por ahora
-    container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-secondary);">Vista diaria próximamente</div>';
-    titleElement.textContent = 'Vista Diaria';
+    const dateStr = currentCalendarDate.toISOString().split('T')[0];
+    const dayAppointments = getAppointmentsForDate(currentCalendarDate);
+    titleElement.textContent = currentCalendarDate.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    if (!dayAppointments.length) {
+        container.innerHTML = `
+            <div class="calendar-placeholder">
+                <i class='bx bx-calendar'></i>
+                <p>Sin citas para este día</p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="appointments-list" style="margin-top: 0;">
+            ${dayAppointments.map(apt => `
+                <div class="appointment-card ${apt.status}" onclick="viewAppointmentDetails('${apt.id}')">
+                    <div class="appointment-header">
+                        <div class="appointment-time">${formatTime(apt.start_time)} - ${formatTime(apt.end_time)}</div>
+                        <div class="appointment-status ${apt.status}">${getAppointmentStatusDisplay(apt.status)}</div>
+                    </div>
+                    <div class="appointment-customer">${apt.customer_full_name}</div>
+                    <div class="appointment-service">${apt.service_type?.name || apt.custom_service_description || 'Servicio'}</div>
+                </div>
+            `).join('')}
+        </div>`;
 }
 
 // Cambiar vista del calendario
-function setCalendarView(view) {
+function setCalendarView(view, buttonEl) {
     calendarView = view;
     renderCalendar();
 
-    // Actualizar botones
     document.querySelectorAll('.calendar-view-toggle button').forEach(btn => {
         btn.classList.remove('btn-primary');
-        btn.classList.add('btn-sm');
     });
 
-    event.target.classList.add('btn-primary');
-    event.target.classList.remove('btn-sm');
+    if (buttonEl) {
+        buttonEl.classList.add('btn-primary');
+    } else {
+        document.querySelector(`.calendar-view-toggle button[data-view="${view}"]`)?.classList.add('btn-primary');
+    }
 }
 
 // Navegación del calendario
@@ -500,7 +542,6 @@ function previousMonth() {
 function nextMonth() {
     currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
     renderCalendar();
-    showNotification('Módulo de Agenda activado', 'info');
 }
 
 // Seleccionar fecha en el calendario
@@ -528,8 +569,8 @@ function renderTodayAppointments() {
 
     if (todayAppointments.length === 0) {
         container.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                <i class='bx bx-calendar-x' style="font-size: 2rem; margin-bottom: 1rem;"></i>
+            <div class="agenda-empty">
+                <i class='bx bx-calendar-x'></i>
                 <p>No hay citas programadas para hoy</p>
             </div>
         `;
@@ -537,7 +578,7 @@ function renderTodayAppointments() {
     }
 
     container.innerHTML = todayAppointments.map(appointment => `
-        <div class="appointment-card ${appointment.status}" onclick="viewAppointmentDetails(${appointment.id})">
+        <div class="appointment-card ${appointment.status}" onclick="viewAppointmentDetails('${appointment.id}')">
             <div class="appointment-header">
                 <div class="appointment-time">${formatTime(appointment.start_time)} - ${formatTime(appointment.end_time)}</div>
                 <div class="appointment-status ${appointment.status}">${getAppointmentStatusDisplay(appointment.status)}</div>
@@ -545,14 +586,14 @@ function renderTodayAppointments() {
             <div class="appointment-info">
                 <div class="appointment-customer">${appointment.customer_full_name}</div>
                 <div class="appointment-service">${appointment.service_type?.name || appointment.custom_service_description}</div>
-                <div class="appointment-vehicle">${appointment.vehicle_info}</div>
+                <div class="appointment-vehicle">${appointment.vehicle_info || ''}</div>
             </div>
             <div class="appointment-actions">
-                <button class="btn btn-outline btn-sm" onclick="editAppointment(${appointment.id}); event.stopPropagation();">
+                <button class="btn btn-outline btn-sm" onclick="editAppointment('${appointment.id}'); event.stopPropagation();">
                     <i class='bx bx-edit'></i>
                     Editar
                 </button>
-                <button class="btn btn-danger btn-sm" onclick="cancelAppointment(${appointment.id}); event.stopPropagation();">
+                <button class="btn btn-danger btn-sm" onclick="cancelAppointment('${appointment.id}'); event.stopPropagation();">
                     <i class='bx bx-x'></i>
                     Cancelar
                 </button>
@@ -597,6 +638,17 @@ function showCreateAppointmentModal() {
 // Cargar clientes para citas
 async function loadCustomersForAppointment() {
     try {
+        if (useSupabaseErp()) {
+            const taller = await ensureParcheTaller();
+            if (!taller?.id) return;
+            const customers = await supabaseApi(`/supabase/clientes/?taller_id=${taller.id}`);
+            const select = document.getElementById('appointmentCustomer');
+            select.innerHTML = '<option value="">Seleccionar cliente...</option>' +
+                customers.map(customer =>
+                    `<option value="${customer.id}">${customer.first_name} ${customer.last_name}</option>`
+                ).join('');
+            return;
+        }
         const response = await apiRequest('/customers/');
         if (response.ok) {
             const customers = await response.json();
@@ -729,6 +781,23 @@ async function handleAppointmentSubmit(event) {
     }
 
     try {
+        if (useSupabaseErp()) {
+            const taller = await ensureParcheTaller();
+            if (!taller?.id) {
+                showNotification('Primero vincula tu taller en Supabase', 'warning');
+                return;
+            }
+            const appointment = await supabaseApi('/supabase/citas/', {
+                method: 'POST',
+                body: JSON.stringify({ ...appointmentData, taller_id: taller.id }),
+            });
+            showNotification(`Cita programada exitosamente para ${appointment.customer_full_name}`, 'success');
+            hideAppointmentModal();
+            event.target.reset();
+            loadAppointments();
+            renderCalendar();
+            return;
+        }
         const response = await apiRequest('/appointments/', {
             method: 'POST',
             body: JSON.stringify(appointmentData)
@@ -748,7 +817,7 @@ async function handleAppointmentSubmit(event) {
         }
     } catch (error) {
         console.error('Error creating appointment:', error);
-        showNotification('Error de conexión', 'error');
+        showNotification(error.message || 'Error de conexión', 'error');
     }
 }
 
@@ -786,6 +855,21 @@ async function cancelAppointment(appointmentId) {
     }
 
     try {
+        if (useSupabaseErp()) {
+            const taller = await ensureParcheTaller();
+            if (!taller?.id) {
+                showNotification('Primero vincula tu taller en Supabase', 'warning');
+                return;
+            }
+            await supabaseApi(`/supabase/citas/${appointmentId}/cancelar/`, {
+                method: 'POST',
+                body: JSON.stringify({ taller_id: taller.id, notes: 'Cancelada por usuario' }),
+            });
+            showNotification('Cita cancelada exitosamente', 'success');
+            loadAppointments();
+            renderCalendar();
+            return;
+        }
         const response = await apiRequest(`/appointments/${appointmentId}/cancel/`, {
             method: 'POST',
             body: JSON.stringify({ notes: 'Cancelada por usuario' })
@@ -1799,6 +1883,17 @@ async function showCustomers() {
 // Cargar lista de clientes
 async function loadCustomers() {
     try {
+        if (useSupabaseErp()) {
+            const taller = await ensureParcheTaller();
+            if (!taller?.id) {
+                currentCustomers = [];
+                renderCustomers([]);
+                return;
+            }
+            currentCustomers = await supabaseApi(`/supabase/clientes/?taller_id=${taller.id}`);
+            renderCustomers(currentCustomers);
+            return;
+        }
         const response = await apiRequest('/customers/');
         if (response.ok) {
             currentCustomers = await response.json();
@@ -1859,15 +1954,15 @@ function renderCustomers(customers) {
                 <div class="customer-info-value">${customer.full_address || 'N/A'}</div>
             </div>
             <div class="customer-actions">
-                <button class="btn btn-outline" onclick="viewCustomerDetails(${customer.id})">
+                <button class="btn btn-outline" onclick="viewCustomerDetails('${customer.id}')">
                     <i class='bx bx-show'></i>
                     Ver
                 </button>
-                <button class="btn btn-secondary" onclick="editCustomer(${customer.id})">
+                <button class="btn btn-secondary" onclick="editCustomer('${customer.id}')">
                     <i class='bx bx-edit'></i>
                     Editar
                 </button>
-                <button class="btn ${customer.is_active ? 'btn-warning' : 'btn-success'}" onclick="toggleCustomerStatus(${customer.id})">
+                <button class="btn ${customer.is_active ? 'btn-warning' : 'btn-success'}" onclick="toggleCustomerStatus('${customer.id}')">
                     <i class='bx ${customer.is_active ? 'bx-pause' : 'bx-play'}'></i>
                     ${customer.is_active ? 'Desactivar' : 'Activar'}
                 </button>
@@ -1968,38 +2063,37 @@ async function handleCustomerSubmit(event) {
     }
 
     try {
-        let response;
-        if (editingCustomer) {
-            // Actualizar cliente existente
-            response = await apiRequest(`/customers/${editingCustomer.id}/`, {
-                method: 'PUT',
-                body: JSON.stringify(customerData)
-            });
-        } else {
-            // Crear nuevo cliente
-            response = await apiRequest('/customers/', {
-                method: 'POST',
-                body: JSON.stringify(customerData)
-            });
-        }
-
-        if (response.ok) {
-            const customer = await response.json();
+        if (useSupabaseErp()) {
+            const taller = await ensureParcheTaller();
+            if (!taller?.id) {
+                showNotification('Primero vincula tu taller en Supabase', 'warning');
+                return;
+            }
+            let customer;
+            if (editingCustomer) {
+                customer = await supabaseApi(`/supabase/clientes/${editingCustomer.id}/`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ ...customerData, taller_id: taller.id }),
+                });
+            } else {
+                customer = await supabaseApi(`/supabase/clientes/?taller_id=${taller.id}`, {
+                    method: 'POST',
+                    body: JSON.stringify(customerData),
+                });
+            }
             const message = editingCustomer ?
                 `Cliente ${customer.first_name} ${customer.last_name} actualizado` :
                 `Cliente ${customer.first_name} ${customer.last_name} creado`;
             showNotification(message, 'success');
-
             hideCustomerModal();
             event.target.reset();
-            loadCustomers(); // Recargar lista
-        } else {
-            const error = await response.json();
-            showNotification(error.detail || 'Error al guardar cliente', 'error');
+            loadCustomers();
+            return;
         }
+        showNotification('Inicia sesión con tu cuenta Parche en Torker para gestionar clientes', 'warning');
     } catch (error) {
         console.error('Error saving customer:', error);
-        showNotification('Error de conexión', 'error');
+        showNotification(error.message || 'Error de conexión', 'error');
     }
 }
 
@@ -2030,6 +2124,21 @@ async function toggleCustomerStatus(customerId) {
     const action = newStatus ? 'activar' : 'desactivar';
 
     try {
+        if (useSupabaseErp()) {
+            const taller = await ensureParcheTaller();
+            if (!taller?.id) {
+                showNotification('Primero vincula tu taller en Supabase', 'warning');
+                return;
+            }
+            await supabaseApi(`/supabase/clientes/${customerId}/`, {
+                method: 'PATCH',
+                body: JSON.stringify({ is_active: newStatus, taller_id: taller.id }),
+            });
+            customer.is_active = newStatus;
+            showNotification(`Cliente ${action}do exitosamente`, 'success');
+            renderCustomers(currentCustomers);
+            return;
+        }
         const response = await apiRequest(`/customers/${customerId}/`, {
             method: 'PATCH',
             body: JSON.stringify({ is_active: newStatus })

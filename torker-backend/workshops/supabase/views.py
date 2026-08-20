@@ -15,6 +15,16 @@ from .services import (
     listar_ordenes_taller,
     obtener_taller_por_propietario,
 )
+from .services_clientes import (
+    actualizar_cliente,
+    cancelar_cita,
+    crear_cita,
+    crear_cliente,
+    listar_citas,
+    listar_clientes,
+    listar_tipos_servicio,
+    sembrar_tipos_servicio_default,
+)
 
 
 def _propietario_id(request) -> str | None:
@@ -160,5 +170,140 @@ class SupabaseCerrarOrdenView(SupabaseAPIView):
         try:
             resultado = cerrar_orden_y_registrar_historial(orden_id, propietario_id, request.data)
             return Response(resultado)
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+
+class SupabaseClientesView(SupabaseAPIView):
+
+    def get(self, request):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.query_params.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        try:
+            return Response(listar_clientes(taller_id, propietario_id))
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+    def post(self, request):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.query_params.get('taller_id') or request.data.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        try:
+            cliente = crear_cliente(taller_id, propietario_id, request.data)
+            return Response(cliente, status=201)
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+
+class SupabaseClienteDetailView(SupabaseAPIView):
+
+    def patch(self, request, cliente_id):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.data.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        try:
+            cliente = actualizar_cliente(cliente_id, taller_id, propietario_id, request.data)
+            return Response(cliente)
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+
+class SupabaseTiposServicioView(SupabaseAPIView):
+
+    def get(self, request):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.query_params.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        try:
+            return Response(listar_tipos_servicio(taller_id, propietario_id))
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+
+class SupabaseTiposServicioSembrarView(SupabaseAPIView):
+
+    def post(self, request):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.data.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        try:
+            sembrar_tipos_servicio_default(taller_id, propietario_id)
+            return Response(listar_tipos_servicio(taller_id, propietario_id))
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+
+class SupabaseCitasView(SupabaseAPIView):
+
+    def get(self, request):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.query_params.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        try:
+            return Response(listar_citas(taller_id, propietario_id))
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+    def post(self, request):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.data.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        try:
+            cita = crear_cita(taller_id, propietario_id, request.data)
+            return Response(cita, status=201)
+        except SupabaseError as exc:
+            return _respuesta_error(exc)
+
+
+class SupabaseCitaCancelarView(SupabaseAPIView):
+
+    def post(self, request, cita_id):
+        if not supabase_configurado():
+            return Response({'error': 'Supabase no configurado'}, status=503)
+
+        propietario_id = _propietario_id(request)
+        taller_id = request.data.get('taller_id')
+        if not propietario_id or not taller_id:
+            return Response({'error': 'X-Propietario-Id y taller_id requeridos'}, status=400)
+
+        try:
+            cita = cancelar_cita(cita_id, taller_id, propietario_id, request.data.get('notes'))
+            return Response(cita)
         except SupabaseError as exc:
             return _respuesta_error(exc)

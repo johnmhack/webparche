@@ -23,3 +23,7 @@ parche-ecosystem.code-workspace
 
 # Supabase frontend (copiar desde supabase-config.example.js)
 assets/js/supabase-config.js
+
+# React dashboard (torker-dashboard)
+torker-dashboard/node_modules/
+torker-dashboard/dist/
