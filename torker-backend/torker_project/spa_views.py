@@ -8,6 +8,13 @@ from django.http import FileResponse, Http404
 from django.views.static import serve
 
 DASHBOARD_APP_DIR = Path(settings.BASE_DIR).parent / 'pages' / 'dashboard' / 'app'
+LANDING_INDEX = Path(settings.BASE_DIR).parent / 'index.html'
+
+
+def serve_landing(_request):
+    if LANDING_INDEX.is_file():
+        return FileResponse(LANDING_INDEX.open('rb'), content_type='text/html; charset=utf-8')
+    raise Http404('Landing no encontrada')
 
 
 def serve_dashboard_spa(request, resource_path: str = ''):

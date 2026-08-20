@@ -21,12 +21,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
 
-from .spa_views import serve_dashboard_spa
+from .spa_views import serve_dashboard_spa, serve_landing
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('workshops.urls')),
-    path('', RedirectView.as_view(url='/pages/dashboard/app/login', permanent=False)),
+    path('', serve_landing, name='landing'),
     # SPA React — con y sin barra final (evita caer en static /pages/)
     path('pages/dashboard/app', serve_dashboard_spa, name='dashboard_spa_root'),
     path('pages/dashboard/app/', serve_dashboard_spa, name='dashboard_spa'),

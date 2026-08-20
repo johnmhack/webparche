@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
     <link rel="stylesheet" href="assets/css/main.css" media="screen">
     <link rel="stylesheet" href="assets/css/components.css" media="screen">
+    <link rel="stylesheet" href="assets/css/landing.css" media="screen">
     <link rel="preload" as="image" href="assets/images/fotos/taller1.jpg">
     <meta name="description" content="ParcheApp: Descubre talleres, repuestos, eventos y todo lo que necesitas para tu moto. Únete a la comunidad de motociclistas y gestiona tu moto fácilmente desde una sola app.">
     <meta name="keywords" content="app moto, talleres moto, repuestos moto, mantenimiento moto, motociclistas, asistencia carretera, eventos moto, parche app">
@@ -95,15 +96,11 @@
     }
     </script>
     
-    <!-- GSAP - Librería de animaciones profesionales -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
 </head>
 
 <!--  BOTONES DEL INICIO  -->
 
-<body>
+<body class="landing-v2">
     <nav class="navbar" role="navigation">
         <div class="navbar__logo">
             <a href="#home" aria-label="Ir al inicio">
@@ -114,7 +111,7 @@
             <ul class="menu" id="menu-list">
                 <li><a href="#home">Inicio</a></li>
                 <li><a href="pages/revista/index.html">Revista</a></li>
-                <li><a href="pages/coming-soon.html">Torker</a></li>
+                <li><a href="pages/dashboard/app/login">Torker</a></li>
                 <li><a href="#services">Nuestros servicios</a></li>
                 <li><a href="#testimonios">Testimonios</a></li>
                 <li><a href="#faq">Preguntas frecuentes</a></li>
@@ -136,10 +133,13 @@
         <section id="home">
             <div class="home__container">
                 <div class="home__text">
-                    <h1>Tu Moto, Tu Ruta, Tu App.</h1>
-                    <p class="tittle">Gestiona, descubre y ahorra. Todo lo que necesitas para rodar sin límites.</p>
-                    <p class="subtitle">Explora talleres de confianza, encuentra repuestos al instante y únete a la comunidad.</p>
-                    <a href="#download" class="hire-btn home__cta-btn" role="button">Descarga la App</a>
+                    <h1>Tu moto, tu ruta, tu app.</h1>
+                    <p class="tittle">Gestiona tu moto, encuentra talleres de confianza y guarda el historial clínico de cada servicio.</p>
+                    <p class="subtitle"><span class="text-parche">Parche</span> conecta motociclistas con talleres. <span class="text-torker">Torker</span> es el panel para que el taller organice clientes, citas y servicios.</p>
+                    <div class="home__cta-row">
+                        <a href="#download" class="hire-btn home__cta-btn" role="button">Descarga la app</a>
+                        <a href="pages/dashboard/app/login" class="btn-ghost-land">Soy taller · Torker</a>
+                    </div>
                 </div>
                 <div class="home__image">
                     <img src="assets/images/fotos/taller1.jpg" alt="Imagen de un taller de reparación de motos" width="800" height="600">
@@ -151,7 +151,8 @@
     <!--  TORKER  -->
 
     <section id="torker" role="region" aria-labelledby="torker-titulo">
-        <h2 class="separator" id="torker-titulo">Torker</h2>
+        <p class="separator" id="torker-titulo">Para talleres</p>
+        <h2 class="section-title">Torker</h2>
         <article class="torker">
             <div class="torker__content">
                 <div class="torker__text">
@@ -163,9 +164,8 @@
                         <li><i class='bx bxs-box'></i> Inventario</li>
                         <li><i class='bx bxs-user-detail'></i> Historial de clientes</li>
                     </ul>
-                    <a href="pages/coming-soon.html" target="_blank" rel="noopener noreferrer" class="hire-btn" role="button">
-                        <i class='bx bx-external-link'></i>
-                        Muy Pronto
+                    <a href="pages/dashboard/app/login" class="hire-btn" role="button">
+                        Entrar a Torker
                     </a>
                     
                 </div>
@@ -179,21 +179,18 @@
     <!--  SERVICIOS Y GARANTIAS -->
 
     <section id="services" role="region" aria-labelledby="servicios-titulo">
-        <h2 class="separator" id="servicios-titulo">Nuestros Servicios</h2>
+        <p class="separator" id="servicios-titulo">Motociclistas</p>
+        <h2 class="section-title">Nuestros servicios</h2>
         <article class="services">
-            <div class="service"> <!--uso service en vez de left-->
-                <div class="info">
-                    <p>Explora todo lo que ofrecemos para ti y tu moto.</p>
-                </div>
-            </div>
+            <p class="subtitle" style="text-align:center;margin:0 auto 1.5rem;max-width:36rem;color:#94a3b8;">Todo lo que necesitas para rodar con tranquilidad, en un solo lugar.</p>
             <ul class="service-list">
-                <li><i class='bx bxs-wrench'></i> Talleres de Reparación</li>
-                <li><i class='bx bxs-car-wash'></i> Limpieza y Mantenimiento</li>
-                <li><i class='bx bxs-gas-pump'></i> Gasolineras Cercanas</li>
-                <li><i class='bx bxs-store'></i> Accesorios y Repuestos</li>
-                <li><i class='bx bxs-bell-ring'></i> Asistencia en Carretera</li>
-                <li><i class='bx bx-calendar'></i> Eventos de motociclistas</li>
-                <li><i class='bx bxs-map'></i> Localización</li>
+                <li><i class='bx bxs-wrench'></i><span>Talleres de reparación</span></li>
+                <li><i class='bx bxs-car-wash'></i><span>Limpieza y mantenimiento</span></li>
+                <li><i class='bx bxs-gas-pump'></i><span>Gasolineras cercanas</span></li>
+                <li><i class='bx bxs-store'></i><span>Accesorios y repuestos</span></li>
+                <li><i class='bx bxs-bell-ring'></i><span>Asistencia en carretera</span></li>
+                <li><i class='bx bx-calendar'></i><span>Eventos de motociclistas</span></li>
+                <li><i class='bx bxs-map'></i><span>Mapa y localización</span></li>
             </ul>
         </article>
         <div class="guarantee">
@@ -203,7 +200,7 @@
                 </div>
                 <div class="info">
                     <h3>+5</h3>
-                    <p>Años de experiencia</p>
+                    <p>Años impulsando la comunidad motera con Parche</p>
                 </div>
             </div>
             <div class="item">
@@ -212,7 +209,7 @@
                 </div>
                 <div class="info">
                     <h3>+100</h3>
-                    <p>Trabajos Completados</p>
+                    <p>Servicios registrados en talleres aliados</p>
                 </div>
             </div>
             <div class="item">
@@ -221,7 +218,7 @@
                 </div>
                 <div class="info">
                     <h3>+50</h3>
-                    <p>Clientes Felices</p>
+                    <p>Motociclistas activos usando la plataforma</p>
                 </div>
             </div>
         </div>
@@ -230,7 +227,8 @@
     <!-- TESTIMONIOS -->
 
     <section id="testimonios" role="region" aria-labelledby="testimonios-titulo">
-        <h2 class="separator" id="testimonios-titulo">Testimonios</h2>
+        <p class="separator" id="testimonios-titulo">Comunidad</p>
+        <h2 class="section-title">Testimonios</h2>
         <section class="testimonial">
             <div class="testimonial__container">
                 <!-- Swiper contenedor principal -->
@@ -383,7 +381,8 @@
     <!--PREGUNTAS FRECUENTES-->
 
     <section id="faq" role="region" aria-labelledby="faq-titulo">
-        <h2 class="separator" id="faq-titulo">Preguntas Frecuentes</h2>
+        <p class="separator" id="faq-titulo">Ayuda</p>
+        <h2 class="section-title">Preguntas frecuentes</h2>
         <dl class="faq">
             <div class="faq-item">
                 <h6>¿Cómo puedo registrarme en la app?<i class='bx bxs-chevron-down' aria-label="Expandir pregunta"></i>
@@ -441,9 +440,16 @@
 
     <!--  BOTON ABAJO  -->
 
-    <div class="button-container">
-        <a href="#download" class="hire-btn hire-btn-bottom" role="button" aria-label="Descargar nuestra aplicación">Descarga nuestra app</a>
-    </div>
+    <div class="button-container"></div>
+
+    <section id="download" class="download-band" role="region">
+        <h2>Lleva Parche en tu bolsillo</h2>
+        <p>Descarga la app para motociclistas. Si tienes un taller, entra a Torker con la cuenta de tu negocio.</p>
+        <div class="home__cta-row" style="justify-content:center;">
+            <a href="https://whatsapp.com/channel/0029VbB9YBECxoAs3gUAtA2r" class="hire-btn" target="_blank" rel="noopener">Síguenos en WhatsApp</a>
+            <a href="pages/dashboard/app/login" class="btn-ghost-land">Panel Torker</a>
+        </div>
+    </section>
 
     <!--CONTACTOS-->
 
@@ -492,168 +498,16 @@
                 </div>
             </div>
             <div class="footer__bottom">
-                <p><small>&copy; 2024 ParcheApp. Todos los derechos reservados.</small></p>
+                <p><small>&copy; 2026 Parche. Todos los derechos reservados.</small></p>
             </div>
     </footer>
 
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script src="assets/js/main.js"></script>
     <script src="assets/js/components.js"></script>
-    <!-- Scripts de Swiper -->
-    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-    
-    <!-- JavaScript GSAP - Animaciones generales -->
-    <script>
-        // Registrar plugins de GSAP
-        gsap.registerPlugin(ScrollTrigger, TextPlugin);
+    <script src="assets/js/landing.js"></script>
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Animaciones modernas de la página (sin navidad)
-            function initModernAnimations() {
-                const navbar = document.querySelector('.navbar');
-                if (navbar) {
-                    gsap.from(navbar, {
-                        y: -80,
-                        opacity: 0,
-                        duration: 1,
-                        ease: "power3.out"
-                    });
-                }
 
-                const mainTitle = document.querySelector('h1');
-                if (mainTitle) {
-                    gsap.from(mainTitle, {
-                        opacity: 0,
-                        y: 50,
-                        duration: 1.2,
-                        delay: 0.3,
-                        ease: "power3.out"
-                    });
-                }
-
-                const mainImage = document.querySelector('.home__image img');
-                if (mainImage) {
-                    gsap.from(mainImage, {
-                        opacity: 0,
-                        x: 100,
-                        duration: 1.2,
-                        delay: 0.6,
-                        ease: "power3.out"
-                    });
-                }
-
-                const cards = document.querySelectorAll('.torker, .service, .testimonial__card, .faq-item');
-                cards.forEach((card, index) => {
-                    gsap.from(card, {
-                        opacity: 0,
-                        y: 80,
-                        duration: 1,
-                        delay: index * 0.1,
-                        ease: "power3.out",
-                        scrollTrigger: {
-                            trigger: card,
-                            start: "top 85%",
-                            end: "bottom 15%",
-                            toggleActions: "play none none reverse"
-                        }
-                    });
-                });
-
-                const buttons = document.querySelectorAll('.hire-btn, .testimonial__card, .service-list li');
-                buttons.forEach(button => {
-                    button.addEventListener('mouseenter', () => {
-                        gsap.to(button, {
-                            scale: 1.05,
-                            duration: 0.3,
-                            ease: "power2.out"
-                        });
-                    });
-
-                    button.addEventListener('mouseleave', () => {
-                        gsap.to(button, {
-                            scale: 1,
-                            duration: 0.3,
-                            ease: "power2.out"
-                        });
-                    });
-                });
-
-                const numbers = document.querySelectorAll('.item h3, .stat-number');
-                numbers.forEach(number => {
-                    ScrollTrigger.create({
-                        trigger: number,
-                        start: "top 85%",
-                        onEnter: () => {
-                            const targetText = number.textContent;
-                            const numberValue = parseInt(targetText.replace(/\D/g, ''));
-                            if (numberValue) {
-                                gsap.to({ val: 0 }, {
-                                    val: numberValue,
-                                    duration: 2,
-                                    ease: "power3.out",
-                                    onUpdate: function() {
-                                        number.textContent = '+' + Math.round(this.targets()[0].val);
-                                    }
-                                });
-                            }
-                        },
-                        toggleActions: "play none none reverse"
-                    });
-                });
-            }
-
-            // Efecto de escritura para textos
-            function initTypeWriterEffect() {
-                const texts = document.querySelectorAll('.tittle, .subtitle');
-                texts.forEach((text, index) => {
-                    const originalText = text.textContent;
-                    text.textContent = '';
-
-                    ScrollTrigger.create({
-                        trigger: text,
-                        start: "top 80%",
-                        onEnter: () => {
-                            gsap.to(text, {
-                                text: {
-                                    value: originalText
-                                },
-                                duration: 2,
-                                ease: "none",
-                                delay: index * 0.5
-                            });
-                        },
-                        toggleActions: "play none none reverse"
-                    });
-                });
-            }
-
-            // Navbar hide on scroll (sin luces navideñas)
-            function initNavbarScrollHide() {
-                let lastScrollTop = 0;
-                let isHidden = false;
-                const navbar = document.querySelector('.navbar');
-
-                if (!navbar) return;
-
-                window.addEventListener('scroll', () => {
-                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-                    if (scrollTop > lastScrollTop && scrollTop > 100 && !isHidden) {
-                        isHidden = true;
-                        navbar.style.transform = 'translateY(-100%)';
-                    } else if (scrollTop < lastScrollTop && isHidden) {
-                        isHidden = false;
-                        navbar.style.transform = 'translateY(0)';
-                    }
-
-                    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-                });
-            }
-
-            initModernAnimations();
-            initTypeWriterEffect();
-            initNavbarScrollHide();
-        });
-    </script>
 </body>
 
 </html>
