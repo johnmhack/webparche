@@ -1,5 +1,7 @@
 # Netlify — sitio estático Parche + Torker React
 [build]
+  # Genera supabase-runtime.js (no está en .gitignore → sí se publica)
+  command = "python3 scripts/gen-supabase-config.py || python scripts/gen-supabase-config.py"
   publish = "."
 
 # SPA React: /pages/dashboard/app/login (y cualquier ruta) → index.html

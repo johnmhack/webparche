@@ -19,7 +19,7 @@ export function supabaseConfigured(): boolean {
 async function authFetch(path: string, options: RequestInit = {}) {
   if (!supabaseConfigured()) {
     throw new Error(
-      'Falta supabase-config.js — ejecuta: python scripts/gen-supabase-config.py',
+      'Falta supabase-runtime.js — en Netlify revisa SUPABASE_URL / SUPABASE_ANON_KEY y redeploy',
     );
   }
   const res = await fetch(`${baseUrl()}${path}`, {
