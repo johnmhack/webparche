@@ -45,15 +45,29 @@ export function isAuthenticated(): boolean {
 export function saveSession(data: {
   access_token: string;
   refresh_token: string;
-  user?: { id: string; email?: string };
+  user?: { id?: string; email?: string };
 }) {
   localStorage.setItem(TOKEN_KEY, data.access_token);
   localStorage.setItem(REFRESH_KEY, data.refresh_token);
-  if (data.user && Object.keys(data.user).length > 0) {
-    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-  }
-  if (data.user?.id) {
-    localStorage.setItem('torker_propietario_id', data.user.id);
+  if (data.user && (data.user.id || data.user.email)) {
+    const prev = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(USER_KEY) || '{}') as {
+          id?: string;
+          email?: string;
+        };
+      } catch {
+        return {};
+      }
+    })();
+    const merged = {
+      id: data.user.id || prev.id || '',
+      email: data.user.email || prev.email || '',
+    };
+    localStorage.setItem(USER_KEY, JSON.stringify(merged));
+    if (merged.id) {
+      localStorage.setItem('torker_propietario_id', merged.id);
+    }
   }
 }
 
