@@ -49,6 +49,7 @@ export function ParchePage() {
   const [mecanico, setMecanico] = useState('Mecánico');
   const [buscando, setBuscando] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [busquedaError, setBusquedaError] = useState('');
 
   const loadOrdenes = async () => {
     if (!taller?.id) return;
@@ -79,19 +80,25 @@ export function ParchePage() {
 
   const buscarCodigo = useCallback(
     async (codigo: string) => {
-      if (!codigo.trim() || !taller?.id) return;
-      setQuery(codigo.trim().toUpperCase());
+      const code = codigo.trim().toUpperCase();
+      if (!code || !taller?.id) return;
+      setQuery(code);
       setBuscando(true);
       setHistorial([]);
+      setBusquedaError('');
       setScannerOpen(false);
       try {
-        const found = await api.buscarMoto(codigo.trim(), taller.id);
+        const found = await api.buscarMoto(code, taller.id);
         setMoto(found);
         await loadHistorial(found.id, Boolean(found.es_cliente));
-      } catch {
+      } catch (err) {
         setMoto(null);
         setHistorial([]);
-        alert('Moto no encontrada');
+        setBusquedaError(
+          err instanceof Error
+            ? `Código ${code}: ${err.message}`
+            : `No se encontró moto con código ${code}`,
+        );
       } finally {
         setBuscando(false);
       }
@@ -198,6 +205,12 @@ export function ParchePage() {
             {buscando ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar'}
           </button>
         </div>
+
+        {busquedaError && (
+          <p className="mt-3 rounded-lg bg-pink-500/10 px-3 py-2 text-sm text-pink-400">
+            {busquedaError}
+          </p>
+        )}
 
         <QrScannerModal
           open={scannerOpen}
