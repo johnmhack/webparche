@@ -44,3 +44,28 @@
   background: #334155;
   border-radius: 4px;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #contrato-parche-print,
+  #contrato-parche-print * {
+    visibility: visible;
+  }
+  #contrato-parche-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  #contrato-parche-print h2,
+  #contrato-parche-print h3,
+  #contrato-parche-print p {
+    color: #0f172a !important;
+  }
+}

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ClipboardList, Loader2, Plus, Trash2, Camera } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { PageHeader, EmptyState, Badge } from '../components/ui';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api';
 import { uploadEvidencia } from '../lib/storageEvidencia';
-import type { Cliente, Orden, Repuesto } from '../lib/types';
+import type { Cliente, Mecanico, Orden, Repuesto } from '../lib/types';
 
 function money(n: number) {
   return new Intl.NumberFormat('es-CO', {
@@ -20,6 +21,7 @@ export function OrdenesPage() {
   const { taller, loading: tallerLoading } = useApp();
   const [ordenes, setOrdenes] = useState<Orden[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Orden | null>(null);
@@ -31,7 +33,7 @@ export function OrdenesPage() {
   const [nuevaOpen, setNuevaOpen] = useState(false);
   const [nuevoClienteId, setNuevoClienteId] = useState('');
   const [nuevoServicio, setNuevoServicio] = useState('Servicio general');
-  const [nuevoMecanico, setNuevoMecanico] = useState('Mecánico');
+  const [nuevoMecanico, setNuevoMecanico] = useState('');
 
   const [cerrarOpen, setCerrarOpen] = useState(false);
   const [costo, setCosto] = useState('');
@@ -52,8 +54,18 @@ export function OrdenesPage() {
         api.getOrdenes(taller.id),
         api.getClientes(taller.id),
       ]);
+      let mecs: Mecanico[] = [];
+      try {
+        mecs = await api.getMecanicos(taller.id, true);
+      } catch {
+        mecs = [];
+      }
       setOrdenes(ords);
       setClientes(clis.filter((c) => c.is_active));
+      setMecanicos(mecs);
+      if (mecs.length && !nuevoMecanico) {
+        setNuevoMecanico(mecs[0].nombre);
+      }
       setSelected((prev) => {
         if (!prev) return null;
         const found = ords.find((o) => o.id === prev.id);
@@ -586,11 +598,35 @@ export function OrdenesPage() {
               </div>
               <div>
                 <label className="label-field">Mecánico</label>
-                <input
-                  className="input-field"
-                  value={nuevoMecanico}
-                  onChange={(e) => setNuevoMecanico(e.target.value)}
-                />
+                {mecanicos.length > 0 ? (
+                  <select
+                    className="input-field"
+                    value={nuevoMecanico}
+                    onChange={(e) => setNuevoMecanico(e.target.value)}
+                  >
+                    {mecanicos.map((m) => (
+                      <option key={m.id} value={m.nombre}>
+                        {m.nombre}
+                        {m.especialidad ? ` · ${m.especialidad}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <>
+                    <input
+                      className="input-field"
+                      value={nuevoMecanico}
+                      onChange={(e) => setNuevoMecanico(e.target.value)}
+                      placeholder="Nombre del mecánico"
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                      Tip: regístralos en{' '}
+                      <Link to="/taller" className="text-cyan-400 hover:underline">
+                        Mi taller → Mecánicos
+                      </Link>
+                    </p>
+                  </>
+                )}
               </div>
               {error && <p className="text-sm text-pink-400">{error}</p>}
               <div className="flex gap-3 pt-1">

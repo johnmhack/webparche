@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Users, Bike, Package, ClipboardList, ArrowRight, Loader2 } from 'lucide-react';
+import { Calendar, Users, Bike, Package, ClipboardList, Building2, ArrowRight, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PageHeader, StatCard } from '../components/ui';
 import { useApp } from '../context/AppContext';
@@ -34,6 +34,13 @@ export function HomePage() {
   }
 
   const modules = [
+    {
+      to: '/taller',
+      icon: Building2,
+      title: 'Mi taller',
+      desc: 'Perfil, mecánicos y contrato Parche',
+      color: 'text-sky-400',
+    },
     {
       to: '/clientes',
       icon: Users,

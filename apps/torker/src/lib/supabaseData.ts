@@ -7,6 +7,7 @@ import { getSupabaseAnonKey, getSupabaseUrl, supabaseConfigured } from './supaba
 import type {
   Cita,
   Cliente,
+  Mecanico,
   Moto,
   Orden,
   RegistroHistorialMoto,
@@ -14,6 +15,32 @@ import type {
   Taller,
   TipoServicio,
 } from './types';
+
+function serializarTaller(t: Record<string, unknown>): Taller {
+  return {
+    id: String(t.id),
+    nombre: String(t.nombre || ''),
+    direccion: (t.direccion as string) || null,
+    ciudad: (t.ciudad as string) || null,
+    telefono: (t.telefono as string) || null,
+    email: (t.email as string) || null,
+    nit: (t.nit as string) || null,
+    horario: (t.horario as string) || null,
+    descripcion: (t.descripcion as string) || null,
+    contrato_aceptado_at: (t.contrato_aceptado_at as string) || null,
+    contrato_version: (t.contrato_version as string) || null,
+  };
+}
+
+function serializarMecanico(row: Record<string, unknown>): Mecanico {
+  return {
+    id: String(row.id),
+    nombre: String(row.nombre || ''),
+    telefono: (row.telefono as string) || null,
+    especialidad: (row.especialidad as string) || null,
+    activo: row.activo !== false,
+  };
+}
 
 const DOC_LABELS: Record<string, string> = {
   cc: 'Cédula de Ciudadanía',
@@ -242,13 +269,97 @@ export const supabaseApi = {
       `talleres?propietario_id=eq.${pid}&select=*&limit=1`,
     );
     if (!rows?.[0]) throw new Error('Taller no encontrado');
-    const t = rows[0];
-    return {
-      id: String(t.id),
-      nombre: String(t.nombre || ''),
-      direccion: t.direccion as string | undefined,
-      ciudad: t.ciudad as string | undefined,
-    };
+    return serializarTaller(rows[0]);
+  },
+
+  async updateTaller(
+    id: string,
+    body: Partial<{
+      nombre: string;
+      direccion: string | null;
+      ciudad: string | null;
+      telefono: string | null;
+      email: string | null;
+      nit: string | null;
+      horario: string | null;
+      descripcion: string | null;
+      contrato_aceptado_at: string | null;
+      contrato_version: string | null;
+    }>,
+  ): Promise<Taller> {
+    const payload: Record<string, unknown> = {};
+    const keys = [
+      'nombre',
+      'direccion',
+      'ciudad',
+      'telefono',
+      'email',
+      'nit',
+      'horario',
+      'descripcion',
+      'contrato_aceptado_at',
+      'contrato_version',
+    ] as const;
+    for (const k of keys) {
+      if (k in body && body[k] !== undefined) payload[k] = body[k];
+    }
+    const rows = await rest<Record<string, unknown>[]>(`talleres?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    if (!row) throw new Error('No se pudo actualizar el taller');
+    return serializarTaller(row);
+  },
+
+  async getMecanicos(tallerId: string, soloActivos = true): Promise<Mecanico[]> {
+    const filtro = soloActivos ? '&activo=eq.true' : '';
+    const rows = await rest<Record<string, unknown>[]>(
+      `mecanicos_taller?taller_id=eq.${tallerId}${filtro}&select=*&order=nombre.asc`,
+    );
+    return (Array.isArray(rows) ? rows : []).map(serializarMecanico);
+  },
+
+  async createMecanico(
+    tallerId: string,
+    body: { nombre: string; telefono?: string | null; especialidad?: string | null },
+  ): Promise<Mecanico> {
+    const rows = await rest<Record<string, unknown>[]>('mecanicos_taller', {
+      method: 'POST',
+      body: JSON.stringify({
+        taller_id: tallerId,
+        nombre: body.nombre.trim(),
+        telefono: body.telefono || null,
+        especialidad: body.especialidad || null,
+        activo: true,
+      }),
+    });
+    return serializarMecanico(Array.isArray(rows) ? rows[0] : rows);
+  },
+
+  async updateMecanico(
+    id: string,
+    body: Partial<{
+      nombre: string;
+      telefono: string | null;
+      especialidad: string | null;
+      activo: boolean;
+    }>,
+  ): Promise<Mecanico> {
+    const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (body.nombre !== undefined) payload.nombre = body.nombre.trim();
+    if (body.telefono !== undefined) payload.telefono = body.telefono;
+    if (body.especialidad !== undefined) payload.especialidad = body.especialidad;
+    if (body.activo !== undefined) payload.activo = body.activo;
+    const rows = await rest<Record<string, unknown>[]>(`mecanicos_taller?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+    return serializarMecanico(Array.isArray(rows) ? rows[0] : rows);
+  },
+
+  async deleteMecanico(id: string): Promise<void> {
+    await rest(`mecanicos_taller?id=eq.${id}`, { method: 'DELETE' });
   },
 
   async getClientes(tallerId: string): Promise<Cliente[]> {

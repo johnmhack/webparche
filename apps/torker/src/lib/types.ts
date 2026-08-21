@@ -1,8 +1,23 @@
 export interface Taller {
   id: string;
   nombre: string;
-  direccion?: string;
-  ciudad?: string;
+  direccion?: string | null;
+  ciudad?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  nit?: string | null;
+  horario?: string | null;
+  descripcion?: string | null;
+  contrato_aceptado_at?: string | null;
+  contrato_version?: string | null;
+}
+
+export interface Mecanico {
+  id: string;
+  nombre: string;
+  telefono?: string | null;
+  especialidad?: string | null;
+  activo: boolean;
 }
 
 export interface Cliente {

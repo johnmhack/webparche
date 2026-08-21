@@ -23,6 +23,56 @@ export const api = {
     return supabaseApi.getTaller();
   },
 
+  updateTaller: (
+    id: string,
+    body: Partial<{
+      nombre: string;
+      direccion: string | null;
+      ciudad: string | null;
+      telefono: string | null;
+      email: string | null;
+      nit: string | null;
+      horario: string | null;
+      descripcion: string | null;
+      contrato_aceptado_at: string | null;
+      contrato_version: string | null;
+    }>,
+  ) => {
+    assertReady();
+    return supabaseApi.updateTaller(id, body);
+  },
+
+  getMecanicos: (tallerId: string, soloActivos = true) => {
+    assertReady();
+    return supabaseApi.getMecanicos(tallerId, soloActivos);
+  },
+
+  createMecanico: (
+    tallerId: string,
+    body: { nombre: string; telefono?: string | null; especialidad?: string | null },
+  ) => {
+    assertReady();
+    return supabaseApi.createMecanico(tallerId, body);
+  },
+
+  updateMecanico: (
+    id: string,
+    body: Partial<{
+      nombre: string;
+      telefono: string | null;
+      especialidad: string | null;
+      activo: boolean;
+    }>,
+  ) => {
+    assertReady();
+    return supabaseApi.updateMecanico(id, body);
+  },
+
+  deleteMecanico: (id: string) => {
+    assertReady();
+    return supabaseApi.deleteMecanico(id);
+  },
+
   getClientes: (tallerId: string) => {
     assertReady();
     return supabaseApi.getClientes(tallerId);

@@ -8,6 +8,7 @@ import { AgendaPage } from './pages/AgendaPage';
 import { ParchePage } from './pages/ParchePage';
 import { InventarioPage } from './pages/InventarioPage';
 import { OrdenesPage } from './pages/OrdenesPage';
+import { TallerPage } from './pages/TallerPage';
 import { LoginPage } from './pages/LoginPage';
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
             }
           >
             <Route index element={<HomePage />} />
+            <Route path="taller" element={<TallerPage />} />
             <Route path="clientes" element={<ClientesPage />} />
             <Route path="agenda" element={<AgendaPage />} />
             <Route path="inventario" element={<InventarioPage />} />

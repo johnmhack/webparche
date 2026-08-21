@@ -9,6 +9,7 @@ import {
   Package,
   ClipboardList,
   Wrench,
+  Building2,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -17,6 +18,7 @@ import { useApp } from '../context/AppContext';
 
 const nav = [
   { to: '/', icon: Home, label: 'Inicio' },
+  { to: '/taller', icon: Building2, label: 'Mi taller' },
   { to: '/clientes', icon: Users, label: 'Clientes' },
   { to: '/agenda', icon: Calendar, label: 'Agenda' },
   { to: '/inventario', icon: Package, label: 'Inventario' },
