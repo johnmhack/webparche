@@ -2,7 +2,6 @@ import {
   Bike,
   Loader2,
   Search,
-  CheckCircle2,
   UserPlus,
   Mail,
   Phone,
@@ -11,12 +10,12 @@ import {
   ClipboardList,
   ScanLine,
 } from 'lucide-react';
-import { PageHeader, EmptyState, Badge } from '../components/ui';
+import { PageHeader, Badge } from '../components/ui';
 import { FotosHistorial } from '../components/FotosHistorial';
 import { QrScannerModal } from '../components/QrScannerModal';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api';
-import type { Moto, Orden, RegistroHistorialMoto } from '../lib/types';
+import type { Cliente, Moto, RegistroHistorialMoto } from '../lib/types';
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -42,19 +41,33 @@ export function ParchePage() {
   const [moto, setMoto] = useState<Moto | null>(null);
   const [historial, setHistorial] = useState<RegistroHistorialMoto[]>([]);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
-  const [ordenes, setOrdenes] = useState<Orden[]>([]);
-  const [loading, setLoading] = useState(false);
   const [agregandoCliente, setAgregandoCliente] = useState(false);
-  const [servicio, setServicio] = useState('Cambio de aceite');
-  const [mecanico, setMecanico] = useState('Mecánico');
   const [buscando, setBuscando] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [busquedaError, setBusquedaError] = useState('');
+  const [clientesParche, setClientesParche] = useState<Cliente[]>([]);
+  const [cargandoClientes, setCargandoClientes] = useState(false);
 
-  const loadOrdenes = async () => {
+  const loadClientesParche = async () => {
     if (!taller?.id) return;
-    setOrdenes(await api.getOrdenes(taller.id));
+    setCargandoClientes(true);
+    try {
+      const all = await api.getClientes(taller.id);
+      setClientesParche(
+        all.filter((c) => c.is_active && c.motero_id).sort((a, b) =>
+          `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, 'es'),
+        ),
+      );
+    } catch {
+      setClientesParche([]);
+    } finally {
+      setCargandoClientes(false);
+    }
   };
+
+  useEffect(() => {
+    loadClientesParche();
+  }, [taller?.id]);
 
   const loadHistorial = async (motoId: string, esCliente: boolean) => {
     if (!taller?.id || !esCliente) {
@@ -73,10 +86,6 @@ export function ParchePage() {
       setCargandoHistorial(false);
     }
   };
-
-  useEffect(() => {
-    loadOrdenes();
-  }, [taller?.id]);
 
   const buscarCodigo = useCallback(
     async (codigo: string) => {
@@ -110,24 +119,6 @@ export function ParchePage() {
     await buscarCodigo(query);
   };
 
-  const crearOrden = async () => {
-    if (!taller?.id || !moto) return;
-    setLoading(true);
-    try {
-      await api.createOrden({
-        taller_id: taller.id,
-        moto_id: moto.id,
-        motero_id: moto.dueno_id || null,
-        placa: moto.placa,
-        mecanico_nombre: mecanico,
-        servicios: [{ nombre: servicio }],
-      });
-      await loadOrdenes();
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const agregarComoCliente = async () => {
     if (!taller?.id || !moto?.dueno_id) return;
     setAgregandoCliente(true);
@@ -146,6 +137,7 @@ export function ParchePage() {
       const refreshed = await api.buscarMoto(query.trim() || moto.codigo_parche || '', taller.id);
       setMoto(refreshed);
       await loadHistorial(refreshed.id, Boolean(refreshed.es_cliente));
+      await loadClientesParche();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'No se pudo agregar el cliente');
     } finally {
@@ -173,7 +165,7 @@ export function ParchePage() {
     <div>
       <PageHeader
         title="Parche · Motos"
-        description="Busca con el código Parche (QR del motero), crea la orden y gestiona repuestos en Órdenes"
+        description="Busca moteros Parche por código/QR. Para clientes solo del taller, crea la orden en Órdenes."
       />
 
       <div className="glass-card mb-6 p-6">
@@ -357,70 +349,60 @@ export function ParchePage() {
                 Agrega al motero como cliente para ver el historial completo de la moto.
               </p>
             )}
+
+            {moto.es_cliente && (
+              <p className="mt-4 text-xs text-slate-400">
+                Para abrir una orden de trabajo:{' '}
+                <Link to="/ordenes" className="font-medium text-cyan-400 hover:underline">
+                  Ir a Órdenes →
+                </Link>
+              </p>
+            )}
           </div>
         )}
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div>
-            <label className="label-field">Servicio</label>
-            <input
-              className="input-field"
-              value={servicio}
-              onChange={(e) => setServicio(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="label-field">Mecánico</label>
-            <input
-              className="input-field"
-              value={mecanico}
-              onChange={(e) => setMecanico(e.target.value)}
-            />
-          </div>
-        </div>
-        <button
-          type="button"
-          className="btn-primary mt-4"
-          onClick={crearOrden}
-          disabled={loading || !moto}
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear orden de trabajo'}
-        </button>
       </div>
 
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Órdenes recientes
+          Clientes Parche
         </h3>
-        <Link to="/ordenes" className="text-sm font-medium text-cyan-400 hover:underline">
-          Ir a Órdenes →
+        <Link to="/clientes" className="text-sm font-medium text-cyan-400 hover:underline">
+          Ver todos →
         </Link>
       </div>
-      {ordenes.length === 0 ? (
-        <EmptyState icon={Bike} title="Sin órdenes" description="Busca una moto y crea la primera orden" />
+      <p className="mb-4 text-xs text-slate-500">
+        Solo moteros vinculados a la app. En Clientes ves el listado completo (con y sin Parche).
+      </p>
+
+      {cargandoClientes ? (
+        <div className="flex h-24 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+        </div>
+      ) : clientesParche.length === 0 ? (
+        <div className="glass-card p-6 text-center text-sm text-slate-400">
+          Aún no hay clientes Parche. Busca por código/QR y agrégalos como cliente.
+        </div>
       ) : (
-        <div className="space-y-3">
-          {ordenes.map((o) => (
-            <div key={o.id} className="glass-card flex items-center justify-between gap-3 p-4">
-              <div>
-                <p className="font-medium text-white">{o.servicios?.[0]?.nombre || 'Servicio'}</p>
-                <p className="text-xs text-slate-500">
-                  {new Date(o.created_at).toLocaleString('es-CO')}
+        <ul className="space-y-2">
+          {clientesParche.map((c) => (
+            <li key={c.id} className="glass-card flex flex-wrap items-center justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium text-white">
+                    {c.first_name} {c.last_name}
+                  </p>
+                  <Badge variant="success">Parche</Badge>
+                </div>
+                <p className="mt-0.5 truncate text-xs text-slate-500">
+                  {[c.phone, c.email, c.city].filter(Boolean).join(' · ') || 'Sin contacto'}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <Badge variant={o.estado === 'completado' ? 'success' : 'warning'}>{o.estado}</Badge>
-                {o.estado === 'pendiente' ? (
-                  <Link to="/ordenes" className="btn-primary text-xs">
-                    Agregar repuestos / Cerrar
-                  </Link>
-                ) : (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                )}
-              </div>
-            </div>
+              <Link to="/ordenes" className="btn-secondary text-xs shrink-0">
+                Órdenes
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

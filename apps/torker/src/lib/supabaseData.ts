@@ -561,21 +561,38 @@ export const supabaseApi = {
   },
 
   async getOrdenes(tallerId: string): Promise<Orden[]> {
-    const rows = await rest<Record<string, unknown>[]>(
-      `ordenes_trabajo?taller_id=eq.${tallerId}&select=*&order=created_at.desc`,
-    );
+    let rows: Record<string, unknown>[] = [];
+    try {
+      rows = await rest<Record<string, unknown>[]>(
+        `ordenes_trabajo?taller_id=eq.${tallerId}&select=*,clientes_taller(nombre,apellido)&order=created_at.desc`,
+      );
+    } catch {
+      rows = await rest<Record<string, unknown>[]>(
+        `ordenes_trabajo?taller_id=eq.${tallerId}&select=*&order=created_at.desc`,
+      );
+    }
     const ordenes = Array.isArray(rows) ? rows : [];
-    return ordenes.map((r) => ({
-      id: String(r.id),
-      estado: String(r.estado || ''),
-      servicios: r.servicios as Orden['servicios'],
-      created_at: String(r.created_at || ''),
-      mecanico_nombre: (r.mecanico_nombre as string) || null,
-      costo_total: r.costo_total != null ? Number(r.costo_total) : null,
-      moto_id: (r.moto_id as string) || null,
-      notas: (r.notas as string) || null,
-      items: [],
-    }));
+    return ordenes.map((r) => {
+      const cli = r.clientes_taller as { nombre?: string; apellido?: string } | null;
+      const clienteNombre = cli
+        ? `${cli.nombre || ''} ${cli.apellido || ''}`.trim() || null
+        : null;
+      return {
+        id: String(r.id),
+        estado: String(r.estado || ''),
+        servicios: r.servicios as Orden['servicios'],
+        created_at: String(r.created_at || ''),
+        mecanico_nombre: (r.mecanico_nombre as string) || null,
+        costo_total: r.costo_total != null ? Number(r.costo_total) : null,
+        moto_id: (r.moto_id as string) || null,
+        cliente_id: r.cliente_id ? String(r.cliente_id) : null,
+        cliente_nombre: clienteNombre,
+        motero_id: r.motero_id ? String(r.motero_id) : null,
+        notas: (r.notas as string) || null,
+        origen: r.moto_id ? ('parche' as const) : ('taller' as const),
+        items: [],
+      };
+    });
   },
 
   async getOrdenItems(ordenId: string) {
@@ -598,19 +615,25 @@ export const supabaseApi = {
   },
 
   async createOrden(body: Record<string, unknown>) {
-    let motoId = body.moto_id;
-    let moteroId = body.motero_id;
+    let motoId = body.moto_id ?? null;
+    let moteroId = body.motero_id ?? null;
+    let clienteId = body.cliente_id ?? null;
+
     if (!motoId && (body.placa || body.codigo_parche || body.query)) {
       const moto = await supabaseApi.buscarMoto(
         String(body.placa || body.codigo_parche || body.query),
+        body.taller_id ? String(body.taller_id) : undefined,
       );
       motoId = moto.id;
       if (!moteroId && moto.dueno_id) moteroId = moto.dueno_id;
+      if (!clienteId && moto.cliente_id) clienteId = moto.cliente_id;
     }
+
     const payload = {
       taller_id: body.taller_id,
-      moto_id: motoId,
+      moto_id: motoId || null,
       motero_id: moteroId || null,
+      cliente_id: clienteId || null,
       mecanico_nombre: body.mecanico_nombre || null,
       servicios: body.servicios || [],
       estado: body.estado || 'pendiente',
@@ -628,6 +651,9 @@ export const supabaseApi = {
       estado: String(row.estado || 'pendiente'),
       servicios: row.servicios as Orden['servicios'],
       created_at: String(row.created_at || ''),
+      moto_id: row.moto_id ? String(row.moto_id) : null,
+      cliente_id: row.cliente_id ? String(row.cliente_id) : null,
+      origen: row.moto_id ? ('parche' as const) : ('taller' as const),
       items: [],
     } satisfies Orden;
   },

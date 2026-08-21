@@ -112,7 +112,11 @@ export interface Orden {
   mecanico_nombre?: string | null;
   costo_total?: number | null;
   moto_id?: string | null;
+  cliente_id?: string | null;
+  cliente_nombre?: string | null;
+  motero_id?: string | null;
   notas?: string | null;
+  origen?: 'parche' | 'taller';
   items?: OrdenItem[];
 }
 

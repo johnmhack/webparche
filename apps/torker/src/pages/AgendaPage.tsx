@@ -10,7 +10,7 @@ import {
 import { PageHeader, Badge } from '../components/ui';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api';
-import type { Cita, Cliente, TipoServicio } from '../lib/types';
+import type { Cita, Cliente } from '../lib/types';
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -38,14 +38,12 @@ export function AgendaPage() {
   const { taller } = useApp();
   const [citas, setCitas] = useState<Cita[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [tipos, setTipos] = useState<TipoServicio[]>([]);
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(() => new Date());
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     customer: '',
-    service_type: '',
     custom_service_description: '',
     appointment_date: dateKey(new Date()),
     start_time: '09:00',
@@ -56,15 +54,12 @@ export function AgendaPage() {
     if (!taller?.id) return;
     setLoading(true);
     try {
-      await api.sembrarTiposServicio(taller.id);
-      const [c, cl, t] = await Promise.all([
+      const [c, cl] = await Promise.all([
         api.getCitas(taller.id),
         api.getClientes(taller.id),
-        api.getTiposServicio(taller.id),
       ]);
       setCitas(c);
       setClientes(cl);
-      setTipos(t);
     } finally {
       setLoading(false);
     }
@@ -110,7 +105,7 @@ export function AgendaPage() {
       await api.createCita({
         ...form,
         taller_id: taller.id,
-        service_type: form.service_type || null,
+        service_type: null,
         custom_service_description: form.custom_service_description || null,
       });
       setModalOpen(false);
@@ -222,7 +217,7 @@ export function AgendaPage() {
                         {formatTime(c.start_time)} – {formatTime(c.end_time)}
                       </p>
                       <p className="mt-1 text-sm text-slate-300">
-                        {c.service_type?.name || c.custom_service_description}
+                        {c.custom_service_description || c.service_type?.name || 'Cita'}
                       </p>
                     </div>
                     <Badge variant={c.status === 'cancelled' ? 'danger' : 'success'}>
@@ -258,20 +253,17 @@ export function AgendaPage() {
                 </select>
               </div>
               <div>
-                <label className="label-field">Tipo de servicio</label>
-                <select className="input-field" value={form.service_type} onChange={(e) => setForm({ ...form, service_type: e.target.value })}>
-                  <option value="">Otro / personalizado</option>
-                  {tipos.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
+                <label className="label-field">Motivo *</label>
+                <input
+                  className="input-field"
+                  required
+                  placeholder="Ej. revisión, cambio de aceite…"
+                  value={form.custom_service_description}
+                  onChange={(e) =>
+                    setForm({ ...form, custom_service_description: e.target.value })
+                  }
+                />
               </div>
-              {!form.service_type && (
-                <div>
-                  <label className="label-field">Descripción *</label>
-                  <input className="input-field" required value={form.custom_service_description} onChange={(e) => setForm({ ...form, custom_service_description: e.target.value })} />
-                </div>
-              )}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label-field">Fecha *</label>

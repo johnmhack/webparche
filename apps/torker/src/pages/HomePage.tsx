@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Users, Bike, Package, ClipboardList, Wrench, ArrowRight, Loader2 } from 'lucide-react';
+import { Calendar, Users, Bike, Package, ClipboardList, ArrowRight, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PageHeader, StatCard } from '../components/ui';
 import { useApp } from '../context/AppContext';
@@ -49,13 +49,6 @@ export function HomePage() {
       color: 'text-cyan-400',
     },
     {
-      to: '/servicios',
-      icon: Wrench,
-      title: 'Servicios',
-      desc: 'Etiquetas para la agenda (sin tiempo fijo)',
-      color: 'text-sky-400',
-    },
-    {
       to: '/inventario',
       icon: Package,
       title: 'Inventario',
@@ -66,14 +59,14 @@ export function HomePage() {
       to: '/ordenes',
       icon: ClipboardList,
       title: 'Órdenes',
-      desc: 'Repuestos, cierre y descuento de stock',
+      desc: 'Órdenes de trabajo, repuestos y cierre',
       color: 'text-violet-400',
     },
     {
       to: '/parche',
       icon: Bike,
       title: 'Parche · Motos',
-      desc: 'Busca motos y registra historial clínico',
+      desc: 'Busca por código/QR e historial de clientes',
       color: 'text-pink-400',
     },
   ];

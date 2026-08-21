@@ -4,7 +4,7 @@ import { PageHeader, EmptyState, Badge } from '../components/ui';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api';
 import { uploadEvidencia } from '../lib/storageEvidencia';
-import type { Orden, Repuesto } from '../lib/types';
+import type { Cliente, Orden, Repuesto } from '../lib/types';
 
 function money(n: number) {
   return new Intl.NumberFormat('es-CO', {
@@ -19,6 +19,7 @@ const MAX_FOTOS = 5;
 export function OrdenesPage() {
   const { taller, loading: tallerLoading } = useApp();
   const [ordenes, setOrdenes] = useState<Orden[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Orden | null>(null);
@@ -26,6 +27,11 @@ export function OrdenesPage() {
   const [cantidad, setCantidad] = useState('1');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const [nuevaOpen, setNuevaOpen] = useState(false);
+  const [nuevoClienteId, setNuevoClienteId] = useState('');
+  const [nuevoServicio, setNuevoServicio] = useState('Servicio general');
+  const [nuevoMecanico, setNuevoMecanico] = useState('Mecánico');
 
   const [cerrarOpen, setCerrarOpen] = useState(false);
   const [costo, setCosto] = useState('');
@@ -42,8 +48,12 @@ export function OrdenesPage() {
     setLoading(true);
     setError('');
     try {
-      const ords = await api.getOrdenes(taller.id);
+      const [ords, clis] = await Promise.all([
+        api.getOrdenes(taller.id),
+        api.getClientes(taller.id),
+      ]);
       setOrdenes(ords);
+      setClientes(clis.filter((c) => c.is_active));
       setSelected((prev) => {
         if (!prev) return null;
         const found = ords.find((o) => o.id === prev.id);
@@ -181,6 +191,36 @@ export function OrdenesPage() {
     }
   };
 
+  const crearOrdenCliente = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!taller?.id || !nuevoClienteId || !nuevoServicio.trim()) {
+      setError('Selecciona un cliente y un servicio');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      const cli = clientes.find((c) => c.id === nuevoClienteId);
+      const orden = await api.createOrden({
+        taller_id: taller.id,
+        cliente_id: nuevoClienteId,
+        motero_id: cli?.motero_id || null,
+        mecanico_nombre: nuevoMecanico.trim() || 'Mecánico',
+        servicios: [{ nombre: nuevoServicio.trim() }],
+        notas: cli ? `Cliente taller: ${cli.first_name} ${cli.last_name}` : null,
+      });
+      setNuevaOpen(false);
+      setNuevoClienteId('');
+      setNuevoServicio('Servicio general');
+      await load();
+      await selectOrden(orden);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo crear la orden');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const pendientes = ordenes.filter((o) => o.estado === 'pendiente');
   const cerradas = ordenes.filter((o) => o.estado !== 'pendiente');
 
@@ -188,10 +228,24 @@ export function OrdenesPage() {
     <div>
       <PageHeader
         title="Órdenes de trabajo"
-        description="Agrega repuestos y cierra con evidencia (descripción + fotos). Luego queda bloqueada."
+        description="Crea órdenes para clientes del taller o desde Parche · Motos. Cierra con evidencia."
+        action={
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => {
+              setError('');
+              setNuevaOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" /> Nueva orden
+          </button>
+        }
       />
 
-      {error && !cerrarOpen && <p className="mb-4 text-sm text-pink-400">{error}</p>}
+      {error && !cerrarOpen && !nuevaOpen && (
+        <p className="mb-4 text-sm text-pink-400">{error}</p>
+      )}
 
       {tallerLoading || loading ? (
         <div className="flex h-48 items-center justify-center">
@@ -201,7 +255,12 @@ export function OrdenesPage() {
         <EmptyState
           icon={ClipboardList}
           title="Sin órdenes"
-          description="Crea una desde Parche · Motos con el código Parche."
+          description="Crea una para un cliente del taller, o desde Parche · Motos con QR"
+          action={
+            <button type="button" className="btn-primary" onClick={() => setNuevaOpen(true)}>
+              <Plus className="h-4 w-4" /> Nueva orden
+            </button>
+          }
         />
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
@@ -225,10 +284,16 @@ export function OrdenesPage() {
                   <p className="font-medium text-white">
                     {o.servicios?.[0]?.nombre || 'Servicio'}
                   </p>
-                  <Badge variant="warning">{o.estado}</Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant={o.origen === 'parche' ? 'success' : 'default'}>
+                      {o.origen === 'parche' ? 'Parche' : 'Taller'}
+                    </Badge>
+                    <Badge variant="warning">{o.estado}</Badge>
+                  </div>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
-                  {o.mecanico_nombre || '—'} · {new Date(o.created_at).toLocaleString('es-CO')}
+                  {o.cliente_nombre || 'Sin cliente'} · {o.mecanico_nombre || '—'} ·{' '}
+                  {new Date(o.created_at).toLocaleString('es-CO')}
                 </p>
               </button>
             ))}
@@ -238,11 +303,12 @@ export function OrdenesPage() {
             </h3>
             {cerradas.slice(0, 8).map((o) => (
               <div key={o.id} className="glass-card p-4 opacity-80">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <p className="text-sm text-white">{o.servicios?.[0]?.nombre || 'Servicio'}</p>
                   <Badge variant="success">completado</Badge>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
+                  {o.cliente_nombre || (o.origen === 'parche' ? 'Parche' : '—')} ·{' '}
                   {o.costo_total != null ? money(o.costo_total) : '—'} ·{' '}
                   {new Date(o.created_at).toLocaleString('es-CO')}
                 </p>
@@ -258,7 +324,13 @@ export function OrdenesPage() {
                 <h3 className="text-lg font-semibold text-white">
                   {selected.servicios?.[0]?.nombre || 'Orden'}
                 </h3>
-                <p className="text-sm text-slate-400">{selected.mecanico_nombre}</p>
+                <p className="text-sm text-slate-400">
+                  {selected.cliente_nombre
+                    ? `${selected.cliente_nombre} · `
+                    : ''}
+                  {selected.mecanico_nombre || '—'}
+                  {selected.origen === 'parche' ? ' · Parche' : ''}
+                </p>
 
                 <div className="mt-4 space-y-2">
                   {(selected.items || []).map((it) => (
@@ -352,8 +424,10 @@ export function OrdenesPage() {
           <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-parche-border bg-slate-900 p-6 shadow-2xl">
             <h2 className="text-xl font-bold text-white">Cerrar orden</h2>
             <p className="mt-1 text-xs text-slate-500">
-              Al cerrar, el historial queda verificado y no editable. Si hay error, ticket a soporte
-              Parche.
+              {selected.moto_id
+                ? 'Se escribe en historial Parche (verificado).'
+                : 'Cliente del taller: no se publica en Parche (sin moto vinculada).'}{' '}
+              Luego la orden queda bloqueada.
             </p>
 
             <div className="mt-5 space-y-4">
@@ -461,6 +535,78 @@ export function OrdenesPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {nuevaOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => !saving && setNuevaOpen(false)}
+          />
+          <div className="relative w-full max-w-md rounded-2xl border border-parche-border bg-slate-900 p-6 shadow-2xl">
+            <h2 className="text-xl font-bold text-white">Nueva orden</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Para clientes registrados en el taller (con o sin app Parche). Moteros Parche también
+              pueden abrirse desde Parche · Motos con QR.
+            </p>
+            <form onSubmit={crearOrdenCliente} className="mt-5 space-y-4">
+              <div>
+                <label className="label-field">Cliente *</label>
+                <select
+                  className="input-field"
+                  required
+                  value={nuevoClienteId}
+                  onChange={(e) => setNuevoClienteId(e.target.value)}
+                >
+                  <option value="">Seleccionar…</option>
+                  {clientes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.first_name} {c.last_name}
+                      {c.motero_id ? ' · Parche' : ''}
+                    </option>
+                  ))}
+                </select>
+                {clientes.length === 0 && (
+                  <p className="mt-1 text-xs text-amber-300/90">
+                    No hay clientes. Créalos en Clientes primero.
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="label-field">Motivo *</label>
+                <input
+                  className="input-field"
+                  required
+                  value={nuevoServicio}
+                  onChange={(e) => setNuevoServicio(e.target.value)}
+                  placeholder="Ej. revisión, frenos, aceite…"
+                />
+              </div>
+              <div>
+                <label className="label-field">Mecánico</label>
+                <input
+                  className="input-field"
+                  value={nuevoMecanico}
+                  onChange={(e) => setNuevoMecanico(e.target.value)}
+                />
+              </div>
+              {error && <p className="text-sm text-pink-400">{error}</p>}
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  className="btn-secondary flex-1"
+                  disabled={saving}
+                  onClick={() => setNuevaOpen(false)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary flex-1" disabled={saving || !clientes.length}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
