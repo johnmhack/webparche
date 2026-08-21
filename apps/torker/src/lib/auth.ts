@@ -1,6 +1,10 @@
+import { refreshSession } from './supabaseAuth';
+
 const TOKEN_KEY = 'torker_supabase_access_token';
 const REFRESH_KEY = 'torker_supabase_refresh_token';
 const USER_KEY = 'torker_supabase_user';
+
+let refreshInFlight: Promise<boolean> | null = null;
 
 export function getAccessToken(): string {
   return localStorage.getItem(TOKEN_KEY) || '';
@@ -35,7 +39,7 @@ export function getUserEmail(): string {
 }
 
 export function isAuthenticated(): boolean {
-  return !!(getAccessToken() || getPropietarioId());
+  return !!(getAccessToken() || getRefreshToken() || getPropietarioId());
 }
 
 export function saveSession(data: {
@@ -45,7 +49,9 @@ export function saveSession(data: {
 }) {
   localStorage.setItem(TOKEN_KEY, data.access_token);
   localStorage.setItem(REFRESH_KEY, data.refresh_token);
-  localStorage.setItem(USER_KEY, JSON.stringify(data.user || {}));
+  if (data.user && Object.keys(data.user).length > 0) {
+    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  }
   if (data.user?.id) {
     localStorage.setItem('torker_propietario_id', data.user.id);
   }
@@ -62,4 +68,62 @@ export const LOGIN_PATH = '/torker/login';
 
 export function redirectToLogin() {
   window.location.href = LOGIN_PATH;
+}
+
+/** true si el JWT ya venció o vence en menos de `skewSec` segundos */
+export function isAccessTokenExpired(skewSec = 60): boolean {
+  const token = getAccessToken();
+  if (!token) return true;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload?.exp) return true;
+    return Date.now() / 1000 >= Number(payload.exp) - skewSec;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Renueva el access_token con el refresh_token si hace falta.
+ * Evita el estado “logueado pero sin taller” al recargar la página.
+ */
+export async function ensureValidSession(): Promise<boolean> {
+  if (!isAccessTokenExpired()) return true;
+
+  const refresh = getRefreshToken();
+  if (!refresh) {
+    if (!getAccessToken()) signOut();
+    return !!getAccessToken();
+  }
+
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    try {
+      const session = await refreshSession(refresh);
+      const prevUser = (() => {
+        try {
+          return JSON.parse(localStorage.getItem(USER_KEY) || '{}') as {
+            id?: string;
+            email?: string;
+          };
+        } catch {
+          return {};
+        }
+      })();
+      saveSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token || refresh,
+        user: session.user?.id ? session.user : prevUser,
+      });
+      return true;
+    } catch {
+      signOut();
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
 }

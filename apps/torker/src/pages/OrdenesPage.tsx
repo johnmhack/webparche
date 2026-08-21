@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ClipboardList, Loader2, Plus, Trash2 } from 'lucide-react';
+import { ClipboardList, Loader2, Plus, Trash2, Camera } from 'lucide-react';
 import { PageHeader, EmptyState, Badge } from '../components/ui';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api';
+import { uploadEvidencia } from '../lib/storageEvidencia';
 import type { Orden, Repuesto } from '../lib/types';
 
 function money(n: number) {
@@ -12,6 +13,8 @@ function money(n: number) {
     maximumFractionDigits: 0,
   }).format(n);
 }
+
+const MAX_FOTOS = 5;
 
 export function OrdenesPage() {
   const { taller, loading: tallerLoading } = useApp();
@@ -23,6 +26,13 @@ export function OrdenesPage() {
   const [cantidad, setCantidad] = useState('1');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const [cerrarOpen, setCerrarOpen] = useState(false);
+  const [costo, setCosto] = useState('');
+  const [km, setKm] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [fotosFiles, setFotosFiles] = useState<File[]>([]);
+  const [fotosPreview, setFotosPreview] = useState<string[]>([]);
 
   const load = async () => {
     if (!taller?.id) {
@@ -64,6 +74,12 @@ export function OrdenesPage() {
     if (tallerLoading) return;
     load();
   }, [taller?.id, tallerLoading]);
+
+  useEffect(() => {
+    return () => {
+      fotosPreview.forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, [fotosPreview]);
 
   const refreshSelectedItems = async (ordenId: string) => {
     const items = await api.getOrdenItems(ordenId);
@@ -107,24 +123,55 @@ export function OrdenesPage() {
     }
   };
 
-  const cerrar = async () => {
+  const openCerrar = () => {
     if (!selected) return;
     const itemsTotal = (selected.items || []).reduce(
       (s, i) => s + i.cantidad * i.precio_unitario,
       0,
     );
-    const costo = prompt('Costo total (COP):', String(itemsTotal || 0));
-    if (costo === null) return;
-    const km = prompt('Kilometraje:', '');
-    if (km === null) return;
+    setCosto(String(itemsTotal || 0));
+    setKm('');
+    setDescripcion('');
+    setFotosFiles([]);
+    setFotosPreview([]);
+    setCerrarOpen(true);
+  };
+
+  const onPickFotos = (files: FileList | null) => {
+    if (!files) return;
+    const next = [...fotosFiles, ...Array.from(files)].slice(0, MAX_FOTOS);
+    fotosPreview.forEach((u) => URL.revokeObjectURL(u));
+    setFotosFiles(next);
+    setFotosPreview(next.map((f) => URL.createObjectURL(f)));
+  };
+
+  const removeFoto = (idx: number) => {
+    URL.revokeObjectURL(fotosPreview[idx]);
+    setFotosFiles((prev) => prev.filter((_, i) => i !== idx));
+    setFotosPreview((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const confirmarCerrar = async () => {
+    if (!selected || !taller?.id) return;
+    if (!descripcion.trim()) {
+      setError('La descripción del mecánico es obligatoria');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
+      const urls: string[] = [];
+      for (const file of fotosFiles) {
+        urls.push(await uploadEvidencia(taller.id, selected.id, file));
+      }
       await api.cerrarOrden(selected.id, {
-        costo_total: Number(costo),
+        costo_total: Number(costo) || 0,
         kilometraje: km ? Number(km) : null,
         tipo_servicio: selected.servicios?.[0]?.nombre,
+        descripcion: descripcion.trim(),
+        fotos: urls,
       });
+      setCerrarOpen(false);
       setSelected(null);
       await load();
     } catch (e) {
@@ -141,10 +188,10 @@ export function OrdenesPage() {
     <div>
       <PageHeader
         title="Órdenes de trabajo"
-        description="Agrega repuestos y cierra la orden (descuenta stock e historial Parche)"
+        description="Agrega repuestos y cierra con evidencia (descripción + fotos). Luego queda bloqueada."
       />
 
-      {error && <p className="mb-4 text-sm text-pink-400">{error}</p>}
+      {error && !cerrarOpen && <p className="mb-4 text-sm text-pink-400">{error}</p>}
 
       {tallerLoading || loading ? (
         <div className="flex h-48 items-center justify-center">
@@ -154,7 +201,7 @@ export function OrdenesPage() {
         <EmptyState
           icon={ClipboardList}
           title="Sin órdenes"
-          description="Crea una desde Parche · Motos buscando la placa."
+          description="Crea una desde Parche · Motos con el código Parche."
         />
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
@@ -187,7 +234,7 @@ export function OrdenesPage() {
             ))}
 
             <h3 className="pt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Cerradas
+              Cerradas (solo lectura)
             </h3>
             {cerradas.slice(0, 8).map((o) => (
               <div key={o.id} className="glass-card p-4 opacity-80">
@@ -285,17 +332,122 @@ export function OrdenesPage() {
                 <button
                   type="button"
                   className="btn-primary mt-6 w-full"
-                  onClick={cerrar}
+                  onClick={openCerrar}
                   disabled={saving}
                 >
-                  {saving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    'Cerrar orden (descontar stock)'
-                  )}
+                  Cerrar orden con evidencia
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {cerrarOpen && selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => !saving && setCerrarOpen(false)}
+          />
+          <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-parche-border bg-slate-900 p-6 shadow-2xl">
+            <h2 className="text-xl font-bold text-white">Cerrar orden</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Al cerrar, el historial queda verificado y no editable. Si hay error, ticket a soporte
+              Parche.
+            </p>
+
+            <div className="mt-5 space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="label-field">Costo total (COP)</label>
+                  <input
+                    className="input-field"
+                    type="number"
+                    min={0}
+                    value={costo}
+                    onChange={(e) => setCosto(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label-field">Kilometraje</label>
+                  <input
+                    className="input-field"
+                    type="number"
+                    min={0}
+                    value={km}
+                    onChange={(e) => setKm(e.target.value)}
+                    placeholder="Opcional"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="label-field">Descripción del mecánico *</label>
+                <textarea
+                  className="input-field min-h-[100px]"
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
+                  placeholder="Qué se hizo, hallazgos, recomendaciones…"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="label-field">Fotos de evidencia (máx. {MAX_FOTOS})</label>
+                <label className="btn-secondary mt-1 inline-flex cursor-pointer items-center gap-2">
+                  <Camera className="h-4 w-4" />
+                  Subir fotos
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => onPickFotos(e.target.files)}
+                  />
+                </label>
+                {fotosPreview.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {fotosPreview.map((src, i) => (
+                      <div key={src} className="relative">
+                        <img
+                          src={src}
+                          alt=""
+                          className="h-20 w-20 rounded-lg object-cover border border-white/10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFoto(i)}
+                          className="absolute -right-1 -top-1 rounded-full bg-slate-900 px-1.5 text-xs text-pink-400"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {error && <p className="text-sm text-pink-400">{error}</p>}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  className="btn-secondary flex-1"
+                  disabled={saving}
+                  onClick={() => setCerrarOpen(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary flex-1"
+                  disabled={saving}
+                  onClick={confirmarCerrar}
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar cierre'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

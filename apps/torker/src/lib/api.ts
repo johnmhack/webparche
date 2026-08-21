@@ -38,14 +38,45 @@ export const api = {
     return supabaseApi.updateCliente(id, body as Record<string, unknown>);
   },
 
-  getTiposServicio: (tallerId: string) => {
+  getTiposServicio: (tallerId: string, soloActivos = true) => {
     assertReady();
-    return supabaseApi.getTiposServicio(tallerId);
+    return supabaseApi.getTiposServicio(tallerId, soloActivos);
   },
 
   sembrarTiposServicio: (tallerId: string) => {
     assertReady();
     return supabaseApi.sembrarTiposServicio(tallerId);
+  },
+
+  createTipoServicio: (
+    tallerId: string,
+    body: {
+      name: string;
+      description?: string;
+      category?: string;
+      estimated_duration?: number;
+      base_price?: number;
+      color?: string;
+    },
+  ) => {
+    assertReady();
+    return supabaseApi.createTipoServicio(tallerId, body);
+  },
+
+  updateTipoServicio: (
+    id: string,
+    body: Partial<{
+      name: string;
+      description: string;
+      category: string;
+      estimated_duration: number;
+      base_price: number;
+      color: string;
+      is_active: boolean;
+    }>,
+  ) => {
+    assertReady();
+    return supabaseApi.updateTipoServicio(id, body);
   },
 
   getCitas: (tallerId: string) => {
@@ -63,9 +94,19 @@ export const api = {
     return supabaseApi.cancelarCita(id, tallerId);
   },
 
-  buscarMoto: (placa: string) => {
+  buscarMoto: (query: string, tallerId?: string) => {
     assertReady();
-    return supabaseApi.buscarMoto(placa);
+    return supabaseApi.buscarMoto(query, tallerId);
+  },
+
+  getHistorialMoto: (motoId: string, tallerId: string) => {
+    assertReady();
+    return supabaseApi.getHistorialMoto(motoId, tallerId);
+  },
+
+  getHistorialMotero: (moteroId: string, tallerId: string) => {
+    assertReady();
+    return supabaseApi.getHistorialMotero(moteroId, tallerId);
   },
 
   getOrdenes: (tallerId: string) => {

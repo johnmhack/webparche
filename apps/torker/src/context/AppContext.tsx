@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { ensureValidSession, redirectToLogin, signOut } from '../lib/auth';
 import { ensureTaller, clearTallerCache } from '../lib/api';
 import type { Taller } from '../lib/types';
 
@@ -16,6 +17,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refreshTaller = async () => {
     clearTallerCache();
+    const ok = await ensureValidSession();
+    if (!ok) {
+      setTaller(null);
+      return;
+    }
     try {
       const t = await ensureTaller();
       setTaller(t);
@@ -25,7 +31,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    refreshTaller().finally(() => setLoading(false));
+    (async () => {
+      try {
+        const ok = await ensureValidSession();
+        if (!ok) {
+          signOut();
+          redirectToLogin();
+          return;
+        }
+        await refreshTaller();
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   return (

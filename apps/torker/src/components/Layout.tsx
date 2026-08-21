@@ -19,6 +19,7 @@ const nav = [
   { to: '/', icon: Home, label: 'Inicio' },
   { to: '/clientes', icon: Users, label: 'Clientes' },
   { to: '/agenda', icon: Calendar, label: 'Agenda' },
+  { to: '/servicios', icon: Wrench, label: 'Servicios' },
   { to: '/inventario', icon: Package, label: 'Inventario' },
   { to: '/ordenes', icon: ClipboardList, label: 'Órdenes' },
   { to: '/parche', icon: Bike, label: 'Parche · Motos' },

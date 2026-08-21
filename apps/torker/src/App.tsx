@@ -8,6 +8,7 @@ import { AgendaPage } from './pages/AgendaPage';
 import { ParchePage } from './pages/ParchePage';
 import { InventarioPage } from './pages/InventarioPage';
 import { OrdenesPage } from './pages/OrdenesPage';
+import { ServiciosPage } from './pages/ServiciosPage';
 import { LoginPage } from './pages/LoginPage';
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="agenda" element={<AgendaPage />} />
             <Route path="inventario" element={<InventarioPage />} />
             <Route path="ordenes" element={<OrdenesPage />} />
+            <Route path="servicios" element={<ServiciosPage />} />
             <Route path="parche" element={<ParchePage />} />
           </Route>
         </Route>

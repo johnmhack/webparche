@@ -22,13 +22,18 @@ export interface Cliente {
   notes?: string | null;
   full_address?: string | null;
   get_document_type_display: string;
+  motero_id?: string | null;
 }
 
 export interface TipoServicio {
   id: string;
   name: string;
+  description?: string | null;
+  category: string;
   estimated_duration: number;
+  base_price: number;
   color: string;
+  is_active: boolean;
 }
 
 export interface Cita {
@@ -50,9 +55,44 @@ export interface Cita {
 export interface Moto {
   id: string;
   placa: string;
+  codigo_parche?: string | null;
   marca: string;
   modelo: string;
+  anio?: number | null;
+  color?: string | null;
   kilometraje_actual?: number;
+  dueno_id?: string;
+  dueno_nombre?: string | null;
+  dueno_telefono?: string | null;
+  dueno_ciudad?: string | null;
+  dueno_email?: string | null;
+  es_cliente?: boolean;
+  cliente_id?: string | null;
+  cliente_nombre?: string | null;
+  cliente_apellido?: string | null;
+  cliente_telefono?: string | null;
+  cliente_email?: string | null;
+  cliente_direccion?: string | null;
+  cliente_ciudad?: string | null;
+}
+
+export interface RegistroHistorialMoto {
+  id: string;
+  moto_id: string;
+  tipo_servicio: string;
+  descripcion?: string | null;
+  kilometraje?: number | null;
+  costo?: number | null;
+  fecha: string;
+  origen: 'taller' | 'propietario';
+  taller_id?: string | null;
+  taller_nombre?: string | null;
+  mecanico_nombre?: string | null;
+  verificado?: boolean;
+  placa?: string | null;
+  marca?: string | null;
+  modelo?: string | null;
+  fotos_urls?: string[];
 }
 
 export interface OrdenItem {

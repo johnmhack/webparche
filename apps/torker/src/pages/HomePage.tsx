@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Users, Bike, Package, ClipboardList, ArrowRight, Loader2 } from 'lucide-react';
+import { Calendar, Users, Bike, Package, ClipboardList, Wrench, ArrowRight, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PageHeader, StatCard } from '../components/ui';
 import { useApp } from '../context/AppContext';
@@ -47,6 +47,13 @@ export function HomePage() {
       title: 'Agenda',
       desc: 'Programa citas y visualiza el calendario',
       color: 'text-cyan-400',
+    },
+    {
+      to: '/servicios',
+      icon: Wrench,
+      title: 'Servicios',
+      desc: 'Etiquetas para la agenda (sin tiempo fijo)',
+      color: 'text-sky-400',
     },
     {
       to: '/inventario',

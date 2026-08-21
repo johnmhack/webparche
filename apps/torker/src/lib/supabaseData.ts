@@ -2,9 +2,18 @@
  * Acceso directo a Supabase REST (Netlify / producción sin Django).
  * En local con Django (:8000 o Vite proxy) se usa api.ts → /api.
  */
-import { getAccessToken, getPropietarioId } from './auth';
+import { ensureValidSession, getAccessToken, getPropietarioId, signOut } from './auth';
 import { getSupabaseAnonKey, getSupabaseUrl, supabaseConfigured } from './supabaseEnv';
-import type { Cita, Cliente, Moto, Orden, Repuesto, Taller, TipoServicio } from './types';
+import type {
+  Cita,
+  Cliente,
+  Moto,
+  Orden,
+  RegistroHistorialMoto,
+  Repuesto,
+  Taller,
+  TipoServicio,
+} from './types';
 
 const DOC_LABELS: Record<string, string> = {
   cc: 'Cédula de Ciudadanía',
@@ -29,7 +38,30 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: 'Otro',
 };
 
-async function rest<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function forceRefreshSession(): Promise<boolean> {
+  const { getRefreshToken, saveSession, signOut: clear } = await import('./auth');
+  const { refreshSession } = await import('./supabaseAuth');
+  const rt = getRefreshToken();
+  if (!rt) {
+    clear();
+    return false;
+  }
+  try {
+    const session = await refreshSession(rt);
+    saveSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token || rt,
+      user: session.user,
+    });
+    return true;
+  } catch {
+    clear();
+    return false;
+  }
+}
+
+async function rest<T>(path: string, options: RequestInit = {}, retried = false): Promise<T> {
+  await ensureValidSession();
   const token = getAccessToken();
   if (!token) throw new Error('Inicia sesión con tu cuenta Parche');
   if (!supabaseConfigured()) {
@@ -47,10 +79,21 @@ async function rest<T>(path: string, options: RequestInit = {}): Promise<T> {
     },
   });
 
+  if ((res.status === 401 || res.status === 403) && !retried) {
+    if (await forceRefreshSession()) {
+      return rest<T>(path, options, true);
+    }
+    throw new Error('Sesión expirada. Vuelve a iniciar sesión');
+  }
+
   if (res.status === 204) return undefined as T;
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      signOut();
+      throw new Error('Sesión expirada. Vuelve a iniciar sesión');
+    }
     const msg =
       (data as { message?: string; error?: string; hint?: string }).message ||
       (data as { error?: string }).error ||
@@ -60,7 +103,8 @@ async function rest<T>(path: string, options: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
-async function rpc<T>(fn: string, body: object): Promise<T> {
+async function rpc<T>(fn: string, body: object, retried = false): Promise<T> {
+  await ensureValidSession();
   const token = getAccessToken();
   if (!token) throw new Error('Inicia sesión con tu cuenta Parche');
   const res = await fetch(`${getSupabaseUrl()}/rest/v1/rpc/${fn}`, {
@@ -72,8 +116,20 @@ async function rpc<T>(fn: string, body: object): Promise<T> {
     },
     body: JSON.stringify(body),
   });
+
+  if ((res.status === 401 || res.status === 403) && !retried) {
+    if (await forceRefreshSession()) {
+      return rpc<T>(fn, body, true);
+    }
+    throw new Error('Sesión expirada. Vuelve a iniciar sesión');
+  }
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      signOut();
+      throw new Error('Sesión expirada. Vuelve a iniciar sesión');
+    }
     const msg = (data as { message?: string }).message || `Error RPC ${res.status}`;
     throw new Error(msg);
   }
@@ -100,6 +156,7 @@ function serializarCliente(row: Record<string, unknown>): Cliente {
     notes: (row.notas as string) || null,
     full_address: parts.length ? parts.join(', ') : null,
     get_document_type_display: DOC_LABELS[tipo] || tipo,
+    motero_id: row.motero_id ? String(row.motero_id) : null,
   };
 }
 
@@ -139,8 +196,12 @@ function serializarTipo(row: Record<string, unknown>): TipoServicio {
   return {
     id: String(row.id),
     name: String(row.nombre || ''),
+    description: (row.descripcion as string) || null,
+    category: String(row.categoria || 'general'),
     estimated_duration: Number(row.duracion_estimada_min || 60),
+    base_price: Number(row.precio_base || 0),
     color: String(row.color || '#3b82f6'),
+    is_active: row.activo !== false,
   };
 }
 
@@ -200,6 +261,7 @@ export const supabaseApi = {
   async createCliente(tallerId: string, body: Record<string, unknown>): Promise<Cliente> {
     const payload = {
       taller_id: tallerId,
+      motero_id: body.motero_id || null,
       nombre: body.first_name,
       apellido: body.last_name || '',
       telefono: body.phone || null,
@@ -248,9 +310,10 @@ export const supabaseApi = {
     return serializarCliente(Array.isArray(rows) ? rows[0] : rows);
   },
 
-  async getTiposServicio(tallerId: string): Promise<TipoServicio[]> {
+  async getTiposServicio(tallerId: string, soloActivos = true): Promise<TipoServicio[]> {
+    const filtro = soloActivos ? '&activo=eq.true' : '';
     const rows = await rest<Record<string, unknown>[]>(
-      `tipos_servicio_taller?taller_id=eq.${tallerId}&activo=eq.true&select=*&order=nombre.asc`,
+      `tipos_servicio_taller?taller_id=eq.${tallerId}${filtro}&select=*&order=nombre.asc`,
     );
     return (rows || []).map(serializarTipo);
   },
@@ -269,6 +332,7 @@ export const supabaseApi = {
             categoria: 'maintenance',
             color: '#3b82f6',
             duracion_estimada_min: 60,
+            precio_base: 0,
           },
           {
             taller_id: tallerId,
@@ -276,6 +340,7 @@ export const supabaseApi = {
             categoria: 'repair',
             color: '#ef4444',
             duracion_estimada_min: 120,
+            precio_base: 0,
           },
           {
             taller_id: tallerId,
@@ -283,11 +348,68 @@ export const supabaseApi = {
             categoria: 'diagnostic',
             color: '#f59e0b',
             duracion_estimada_min: 45,
+            precio_base: 0,
           },
         ]),
       });
     }
-    return supabaseApi.getTiposServicio(tallerId);
+    return supabaseApi.getTiposServicio(tallerId, true);
+  },
+
+  async createTipoServicio(
+    tallerId: string,
+    data: {
+      name: string;
+      description?: string;
+      category?: string;
+      estimated_duration?: number;
+      base_price?: number;
+      color?: string;
+    },
+  ): Promise<TipoServicio> {
+    const rows = await rest<Record<string, unknown>[]>('tipos_servicio_taller', {
+      method: 'POST',
+      body: JSON.stringify({
+        taller_id: tallerId,
+        nombre: data.name.trim(),
+        descripcion: data.description?.trim() || null,
+        categoria: data.category || 'general',
+        duracion_estimada_min: Number(data.estimated_duration) || 60,
+        precio_base: Number(data.base_price) || 0,
+        color: data.color || '#3b82f6',
+        activo: true,
+      }),
+    });
+    return serializarTipo(Array.isArray(rows) ? rows[0] : rows);
+  },
+
+  async updateTipoServicio(
+    id: string,
+    data: Partial<{
+      name: string;
+      description: string;
+      category: string;
+      estimated_duration: number;
+      base_price: number;
+      color: string;
+      is_active: boolean;
+    }>,
+  ): Promise<TipoServicio> {
+    const payload: Record<string, unknown> = {};
+    if (data.name !== undefined) payload.nombre = data.name.trim();
+    if (data.description !== undefined) payload.descripcion = data.description.trim() || null;
+    if (data.category !== undefined) payload.categoria = data.category;
+    if (data.estimated_duration !== undefined) {
+      payload.duracion_estimada_min = Number(data.estimated_duration);
+    }
+    if (data.base_price !== undefined) payload.precio_base = Number(data.base_price);
+    if (data.color !== undefined) payload.color = data.color;
+    if (data.is_active !== undefined) payload.activo = data.is_active;
+    const rows = await rest<Record<string, unknown>[]>(`tipos_servicio_taller?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+    return serializarTipo(Array.isArray(rows) ? rows[0] : rows);
   },
 
   async getCitas(tallerId: string): Promise<Cita[]> {
@@ -355,18 +477,87 @@ export const supabaseApi = {
     return found;
   },
 
-  async buscarMoto(placa: string): Promise<Moto> {
-    const row = await rpc<Record<string, unknown> | null>('buscar_moto_por_placa', {
-      p_placa: placa.trim().toUpperCase(),
-    });
+  async buscarMoto(query: string, tallerId?: string): Promise<Moto> {
+    const q = query.trim().toUpperCase();
+    const params: Record<string, unknown> = { p_query: q };
+    if (tallerId) params.p_taller_id = tallerId;
+    const row = await rpc<Record<string, unknown> | null>('buscar_moto_parche', params);
     if (!row || row === null) throw new Error('Moto no encontrada');
     return {
       id: String(row.id),
       placa: String(row.placa),
+      codigo_parche: (row.codigo_parche as string) || null,
       marca: String(row.marca || ''),
       modelo: String(row.modelo || ''),
+      anio: row.anio != null ? Number(row.anio) : null,
+      color: (row.color as string) || null,
       kilometraje_actual: row.kilometraje_actual != null ? Number(row.kilometraje_actual) : undefined,
+      dueno_id: row.dueno_id ? String(row.dueno_id) : undefined,
+      dueno_nombre: (row.dueno_nombre as string) || null,
+      dueno_telefono: (row.dueno_telefono as string) || null,
+      dueno_ciudad: (row.dueno_ciudad as string) || null,
+      dueno_email: (row.dueno_email as string) || null,
+      es_cliente: Boolean(row.es_cliente),
+      cliente_id: row.cliente_id ? String(row.cliente_id) : null,
+      cliente_nombre: (row.cliente_nombre as string) || null,
+      cliente_apellido: (row.cliente_apellido as string) || null,
+      cliente_telefono: (row.cliente_telefono as string) || null,
+      cliente_email: (row.cliente_email as string) || null,
+      cliente_direccion: (row.cliente_direccion as string) || null,
+      cliente_ciudad: (row.cliente_ciudad as string) || null,
     };
+  },
+
+  async getHistorialMoto(motoId: string, tallerId: string): Promise<RegistroHistorialMoto[]> {
+    const data = await rpc<RegistroHistorialMoto[] | null>('historial_moto_para_taller', {
+      p_moto_id: motoId,
+      p_taller_id: tallerId,
+    });
+    const rows = Array.isArray(data) ? data : [];
+    return rows.map((r) => ({
+      id: String(r.id),
+      moto_id: String(r.moto_id),
+      tipo_servicio: String(r.tipo_servicio || ''),
+      descripcion: r.descripcion ?? null,
+      kilometraje: r.kilometraje != null ? Number(r.kilometraje) : null,
+      costo: r.costo != null ? Number(r.costo) : null,
+      fecha: String(r.fecha || ''),
+      origen: r.origen === 'propietario' ? 'propietario' : 'taller',
+      taller_id: r.taller_id ? String(r.taller_id) : null,
+      taller_nombre: r.taller_nombre ?? null,
+      mecanico_nombre: r.mecanico_nombre ?? null,
+      verificado: Boolean(r.verificado),
+      placa: r.placa ?? null,
+      marca: r.marca ?? null,
+      modelo: r.modelo ?? null,
+      fotos_urls: Array.isArray(r.fotos_urls) ? r.fotos_urls.map(String) : [],
+    }));
+  },
+
+  async getHistorialMotero(moteroId: string, tallerId: string): Promise<RegistroHistorialMoto[]> {
+    const data = await rpc<RegistroHistorialMoto[] | null>('historial_motero_para_taller', {
+      p_motero_id: moteroId,
+      p_taller_id: tallerId,
+    });
+    const rows = Array.isArray(data) ? data : [];
+    return rows.map((r) => ({
+      id: String(r.id),
+      moto_id: String(r.moto_id),
+      tipo_servicio: String(r.tipo_servicio || ''),
+      descripcion: r.descripcion ?? null,
+      kilometraje: r.kilometraje != null ? Number(r.kilometraje) : null,
+      costo: r.costo != null ? Number(r.costo) : null,
+      fecha: String(r.fecha || ''),
+      origen: r.origen === 'propietario' ? 'propietario' : 'taller',
+      taller_id: r.taller_id ? String(r.taller_id) : null,
+      taller_nombre: r.taller_nombre ?? null,
+      mecanico_nombre: r.mecanico_nombre ?? null,
+      verificado: Boolean(r.verificado),
+      placa: r.placa ?? null,
+      marca: r.marca ?? null,
+      modelo: r.modelo ?? null,
+      fotos_urls: Array.isArray(r.fotos_urls) ? r.fotos_urls.map(String) : [],
+    }));
   },
 
   async getOrdenes(tallerId: string): Promise<Orden[]> {
@@ -409,9 +600,12 @@ export const supabaseApi = {
   async createOrden(body: Record<string, unknown>) {
     let motoId = body.moto_id;
     let moteroId = body.motero_id;
-    if (!motoId && body.placa) {
-      const moto = await supabaseApi.buscarMoto(String(body.placa));
+    if (!motoId && (body.placa || body.codigo_parche || body.query)) {
+      const moto = await supabaseApi.buscarMoto(
+        String(body.placa || body.codigo_parche || body.query),
+      );
       motoId = moto.id;
+      if (!moteroId && moto.dueno_id) moteroId = moto.dueno_id;
     }
     const payload = {
       taller_id: body.taller_id,
@@ -476,6 +670,7 @@ export const supabaseApi = {
       p_kilometraje: body.kilometraje ?? null,
       p_tipo_servicio: body.tipo_servicio ?? null,
       p_descripcion: body.descripcion ?? null,
+      p_fotos: Array.isArray(body.fotos) ? body.fotos : [],
     });
   },
 
