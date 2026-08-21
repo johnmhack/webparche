@@ -394,17 +394,30 @@ export function OrdenesPage() {
 
               <div>
                 <label className="label-field">Fotos de evidencia (máx. {MAX_FOTOS})</label>
-                <label className="btn-secondary mt-1 inline-flex cursor-pointer items-center gap-2">
-                  <Camera className="h-4 w-4" />
-                  Subir fotos
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => onPickFotos(e.target.files)}
-                  />
-                </label>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  <label className="btn-secondary inline-flex cursor-pointer items-center gap-2">
+                    <Camera className="h-4 w-4" />
+                    Galería
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => onPickFotos(e.target.files)}
+                    />
+                  </label>
+                  <label className="btn-secondary inline-flex cursor-pointer items-center gap-2">
+                    <Camera className="h-4 w-4" />
+                    Cámara
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => onPickFotos(e.target.files)}
+                    />
+                  </label>
+                </div>
                 {fotosPreview.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {fotosPreview.map((src, i) => (

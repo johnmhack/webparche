@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Bike,
   Loader2,
@@ -11,12 +9,16 @@ import {
   MapPin,
   User,
   ClipboardList,
+  ScanLine,
 } from 'lucide-react';
 import { PageHeader, EmptyState, Badge } from '../components/ui';
 import { FotosHistorial } from '../components/FotosHistorial';
+import { QrScannerModal } from '../components/QrScannerModal';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api';
 import type { Moto, Orden, RegistroHistorialMoto } from '../lib/types';
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 function splitNombre(full: string | null | undefined) {
   const parts = (full || '').trim().split(/\s+/).filter(Boolean);
@@ -46,6 +48,7 @@ export function ParchePage() {
   const [servicio, setServicio] = useState('Cambio de aceite');
   const [mecanico, setMecanico] = useState('Mecánico');
   const [buscando, setBuscando] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const loadOrdenes = async () => {
     if (!taller?.id) return;
@@ -74,21 +77,30 @@ export function ParchePage() {
     loadOrdenes();
   }, [taller?.id]);
 
-  const buscar = async () => {
-    if (!query.trim() || !taller?.id) return;
-    setBuscando(true);
-    setHistorial([]);
-    try {
-      const found = await api.buscarMoto(query.trim(), taller.id);
-      setMoto(found);
-      await loadHistorial(found.id, Boolean(found.es_cliente));
-    } catch {
-      setMoto(null);
+  const buscarCodigo = useCallback(
+    async (codigo: string) => {
+      if (!codigo.trim() || !taller?.id) return;
+      setQuery(codigo.trim().toUpperCase());
+      setBuscando(true);
       setHistorial([]);
-      alert('Moto no encontrada');
-    } finally {
-      setBuscando(false);
-    }
+      setScannerOpen(false);
+      try {
+        const found = await api.buscarMoto(codigo.trim(), taller.id);
+        setMoto(found);
+        await loadHistorial(found.id, Boolean(found.es_cliente));
+      } catch {
+        setMoto(null);
+        setHistorial([]);
+        alert('Moto no encontrada');
+      } finally {
+        setBuscando(false);
+      }
+    },
+    [taller?.id],
+  );
+
+  const buscar = async () => {
+    await buscarCodigo(query);
   };
 
   const crearOrden = async () => {
@@ -173,10 +185,25 @@ export function ParchePage() {
               onKeyDown={(e) => e.key === 'Enter' && buscar()}
             />
           </div>
+          <button
+            type="button"
+            className="btn-secondary inline-flex items-center justify-center gap-2"
+            onClick={() => setScannerOpen(true)}
+            disabled={buscando}
+          >
+            <ScanLine className="h-4 w-4" />
+            Escanear QR
+          </button>
           <button type="button" className="btn-primary" onClick={buscar} disabled={buscando}>
             {buscando ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar'}
           </button>
         </div>
+
+        <QrScannerModal
+          open={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onScan={buscarCodigo}
+        />
 
         {moto && (
           <div
